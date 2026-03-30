@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+    <title>Holiday in Hanoi</title>
+
+    <script>/* Tailwind via CDN - OK for static/personal sites */</script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/drag-drop-touch"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        let app, auth, db;
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch(e) {
+            console.log("Firebase not initialized in preview mode.");
+        }
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vietnam-adventure-hanoi';
+
+        window.travelApp = {
+            db: db,
+            auth: auth,
+            user: null,
+            favorites: [],
+            visited: [], 
+            expenses: [], 
+            personalNotes: {}, 
+            dayOrders: {},     
+            customItems: {},   
+            exchangeRate: 0.0013,
+            itineraryData: {},
+            exploreData: [],
+            appId: appId
+        };
+        // Pick up any rate that was set before travelApp was ready
+        if (window._pendingRate) {
+            window.travelApp.exchangeRate = window._pendingRate;
+            delete window._pendingRate;
+        }
+
+        const initAuth = async () => {
+            if(!auth) return;
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) { 
+                console.error("Auth failed", err); 
+            }
+        };
+
+        if(auth) {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    window.travelApp.user = user;
+                    syncFavorites(user.uid);
+                }
+            });
+        }
+
+        const syncFavorites = (uid) => {
+            if(!db) return;
+            const favDoc = doc(db, 'artifacts', appId, 'users', uid, 'settings', 'favorites');
+            onSnapshot(favDoc, (docSnap) => {
+                if (docSnap.exists()) {
+                    window.travelApp.favorites = docSnap.data().items || [];
+                    if (document.getElementById('explore') && !document.getElementById('explore').classList.contains('hidden')) renderExplore();
+                }
+            }, (err) => console.error("Sync error", err));
+
+            const visitedDoc = doc(db, 'artifacts', appId, 'users', uid, 'settings', 'visited');
+            onSnapshot(visitedDoc, (docSnap) => {
+                if (docSnap.exists()) {
+                    window.travelApp.visited = docSnap.data().items || [];
+                    if (document.getElementById('explore') && !document.getElementById('explore').classList.contains('hidden')) renderExplore();
+                    if (document.getElementById('mapTab') && !document.getElementById('mapTab').classList.contains('hidden')) initOrUpdateMap();
+                }
+            }, (err) => console.error("Sync error", err));
+
+            const expensesDoc = doc(db, 'artifacts', appId, 'users', uid, 'settings', 'expenses');
+            onSnapshot(expensesDoc, (docSnap) => {
+                if (docSnap.exists()) {
+                    window.travelApp.expenses = docSnap.data().items || [];
+                    if (document.getElementById('expenses') && !document.getElementById('expenses').classList.contains('hidden')) renderExpenses();
+                }
+            }, (err) => console.error("Sync error", err));
+
+            const notesDoc = doc(db, 'artifacts', appId, 'users', uid, 'settings', 'personalNotes');
+            onSnapshot(notesDoc, (docSnap) => {
+                if (docSnap.exists()) {
+                    window.travelApp.personalNotes = docSnap.data().items || {};
+                    if (document.getElementById('itinerary') && !document.getElementById('itinerary').classList.contains('hidden')) renderDay(currentDay);
+                    if (document.getElementById('explore') && !document.getElementById('explore').classList.contains('hidden')) renderExplore();
+                }
+            }, (err) => console.error("Sync error", err));
+
+            const ordersDoc = doc(db, 'artifacts', appId, 'users', uid, 'settings', 'dayOrders');
+            onSnapshot(ordersDoc, (docSnap) => {
+                if (docSnap.exists()) {
+                    window.travelApp.dayOrders = docSnap.data().items || {};
+                    if (document.getElementById('itinerary') && !document.getElementById('itinerary').classList.contains('hidden')) renderDay(currentDay);
+                }
+            }, (err) => console.error("Sync error", err));
+
+            const customDoc = doc(db, 'artifacts', appId, 'users', uid, 'settings', 'customItems');
+            onSnapshot(customDoc, (docSnap) => {
+                if (docSnap.exists()) {
+                    window.travelApp.customItems = docSnap.data().items || {};
+                    if (document.getElementById('itinerary') && !document.getElementById('itinerary').classList.contains('hidden')) renderDay(currentDay);
+                }
+            }, (err) => console.error("Sync error", err));
+        };
+
+        initAuth();
+
+        window.saveFavoriteToCloud = async (newFavs) => {
+            if (!window.travelApp.user || !db) return;
+            const uid = window.travelApp.user.uid;
+            try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'favorites'), { items: newFavs }); } catch (e) {}
+        };
+
+        window.saveVisitedToCloud = async (newVisited) => {
+            if (!window.travelApp.user || !db) return;
+            const uid = window.travelApp.user.uid;
+            try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'visited'), { items: newVisited }); } catch (e) {}
+        };
+
+        window.saveExpensesToCloud = async (newExpenses) => {
+            if (!window.travelApp.user || !db) return;
+            const uid = window.travelApp.user.uid;
+            try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'expenses'), { items: newExpenses }); } catch (e) {}
+        };
+
+        window.savePersonalNotesToCloud = async (newNotes) => {
+            if (!window.travelApp.user || !db) return;
+            const uid = window.travelApp.user.uid;
+            try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'personalNotes'), { items: newNotes }); } catch (e) {}
+        };
+
+        window.saveOrdersToCloud = async (newOrders) => {
+            if (!window.travelApp.user || !db) return;
+            const uid = window.travelApp.user.uid;
+            try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'dayOrders'), { items: newOrders }); } catch (e) {}
+        };
+
+        window.saveCustomItemsToCloud = async (newCustomItems) => {
+            if (!window.travelApp.user || !db) return;
+            const uid = window.travelApp.user.uid;
+            try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'customItems'), { items: newCustomItems }); } catch (e) {}
+        };
+    </script>
+
+    <style>
+        /* ── DESIGN TOKENS ── */
+        :root {
+            --cream:       #f7f4ee;
+            --cream-dark:  #edeae2;
+            --ink:         #14110f;
+            --ink-80:      rgba(20,17,15,0.8);
+            --ink-40:      rgba(20,17,15,0.4);
+            --ink-10:      rgba(20,17,15,0.07);
+            --amber:       #e8531a;
+            --amber-glow:  rgba(232,83,26,0.18);
+            --amber-dark:  #c24210;
+            --emerald:     #10b981;
+            --card-bg:     #ffffff;
+            --card-shadow: 0 2px 16px rgba(20,17,15,0.06), 0 0 0 1px rgba(20,17,15,0.04);
+            --card-shadow-hover: 0 8px 32px rgba(20,17,15,0.12), 0 0 0 1px rgba(20,17,15,0.06);
+            --radius-card: 20px;
+            --radius-sm:   12px;
+            --radius-pill: 100px;
+            --font-display: 'Playfair Display', Georgia, serif;
+            --font-body:    'DM Sans', system-ui, sans-serif;
+            --font-mono:    'DM Mono', monospace;
+            --nav-h:        72px;
+        }
+
+        /* ── RESET & BASE ── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body { 
+            font-family: var(--font-body);
+            background-color: var(--cream);
+            color: var(--ink);
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            min-height: 100dvh;
+            padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
+        }
+
+        @media (min-width: 768px) {
+            body { padding-bottom: 2rem; }
+        }
+
+        /* ── TYPOGRAPHY ── */
+        .display-title {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+        }
+        .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-40);
+        }
+        .label-sm {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        /* ── SCROLLBAR ── */
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: var(--card-shadow);
+            transition: box-shadow 0.25s ease, transform 0.2s ease;
+        }
+        .card:hover { box-shadow: var(--card-shadow-hover); }
+
+        /* ── HERO ── */
+        .hero-photo {
+            position: absolute; inset: 0;
+            background-image: url('https://blogger.googleusercontent.com/img/a/AVvXsEg9mbE5TkQqaJ3tC-NA-LEmesYg9-BCCAlTGS3VQMa7cojnidTeSpmeLkmZLzQtLilrvVA0jwMmuhBiAyvUZsal1CAt-uEEdnch4fjgzWiZxW-ONr9vEtyY8gzeIn6TvMQ2ojxkJcO04bEitOAXbnM-2oHlZEm0tciQZ58qHwDRhLoF8FmhZazHfwd6mw0');
+            background-size: cover;
+            background-position: center;
+            /* Hanoi golden-hour gradient fallback when image can't load (file://) */
+            background-color: #9b8b7a;
+            background-blend-mode: multiply;
+            background-image:
+                url('https://blogger.googleusercontent.com/img/a/AVvXsEg9mbE5TkQqaJ3tC-NA-LEmesYg9-BCCAlTGS3VQMa7cojnidTeSpmeLkmZLzQtLilrvVA0jwMmuhBiAyvUZsal1CAt-uEEdnch4fjgzWiZxW-ONr9vEtyY8gzeIn6TvMQ2ojxkJcO04bEitOAXbnM-2oHlZEm0tciQZ58qHwDRhLoF8FmhZazHfwd6mw0'),
+                linear-gradient(160deg, #c4a882 0%, #8b6f5c 40%, #4a3728 100%);
+            transition: transform 0.6s ease;
+        }
+        .hero-wrap:hover .hero-photo { transform: scale(1.02); }
+        .hero-mask {
+            position: absolute; inset: 0;
+            background: linear-gradient(160deg, rgba(20,17,15,0.15) 0%, transparent 35%, transparent 55%, rgba(20,17,15,0.65) 100%);
+        }
+        .hero-grain {
+            position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* ── HEADER ── */
+        .site-header {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(247,244,238,0.88);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--ink-10);
+        }
+
+        /* ── DESKTOP NAV ── */
+        .desk-nav-pill {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid var(--ink-10);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-pill);
+            padding: 6px;
+            display: flex; gap: 2px;
+        }
+        .desk-nav-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 12px; font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--ink-40);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .desk-nav-btn:hover { color: var(--ink); background: var(--ink-10); }
+        .desk-nav-btn.active { color: var(--card-bg); background: var(--ink); }
+
+        /* ── MOBILE NAV ── */
+        .mobile-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            z-index: 50;
+            background: rgba(247,244,238,0.92);
+            backdrop-filter: blur(24px) saturate(200%);
+            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            border-top: 1px solid var(--ink-10);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .mobile-nav-inner {
+            max-width: 480px; margin: 0 auto;
+            display: flex; justify-content: space-around; align-items: center;
+            height: var(--nav-h);
+            padding: 8px 4px;
+        }
+        .mobile-nav-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            padding: 6px 10px;
+            border-radius: 14px;
+            font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--ink-40);
+            transition: all 0.2s ease;
+            min-width: 48px;
+        }
+        .mobile-nav-btn svg { width: 20px; height: 20px; transition: transform 0.2s ease; }
+        .mobile-nav-btn.active {
+            color: var(--amber);
+            background: var(--amber-glow);
+        }
+        .mobile-nav-btn.active svg { transform: scale(1.1); }
+
+        /* ── WEATHER BADGE ── */
+        .weather-badge {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--ink-10);
+            border-radius: var(--radius-pill);
+            padding: 8px 16px;
+            box-shadow: 0 1px 6px rgba(20,17,15,0.05);
+        }
+
+        /* ── DAY BUTTONS ── */
+        .day-btn {
+            flex: none;
+            padding: 10px 22px;
+            border-radius: var(--radius-pill);
+            font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+            transition: all 0.25s ease;
+            border: 1px solid var(--ink-10);
+            background: var(--card-bg);
+            color: var(--ink-40);
+        }
+        .day-btn:hover { color: var(--ink); border-color: var(--ink-40); }
+        .day-btn.active {
+            background: var(--ink);
+            color: var(--card-bg);
+            border-color: var(--ink);
+            box-shadow: 0 4px 12px rgba(20,17,15,0.25);
+            transform: translateY(-1px);
+        }
+
+        /* ── PHRASE CATEGORY BUTTONS ── */
+        .phrase-btn {
+            flex: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+            border: 1px solid var(--ink-10);
+            background: var(--card-bg);
+            color: var(--ink-40);
+            transition: all 0.2s ease;
+        }
+        .phrase-btn.active {
+            background: var(--ink); color: var(--card-bg);
+            border-color: var(--ink);
+            box-shadow: 0 4px 12px rgba(20,17,15,0.2);
+            transform: translateY(-1px);
+        }
+
+        /* ── SECTION HEADER ── */
+        .section-header {
+            font-family: var(--font-display);
+            font-weight: 900; font-style: italic;
+            font-size: clamp(2.5rem, 7vw, 4rem);
+            letter-spacing: -0.02em;
+            line-height: 1;
+            color: var(--amber);
+        }
+
+        /* ── ACCENT TAG ── */
+        .tag {
+            display: inline-flex; align-items: center;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+
+        /* ── ACTION BUTTONS ── */
+        .btn-primary {
+            background: var(--ink); color: var(--card-bg);
+            border-radius: var(--radius-sm);
+            padding: 14px 24px;
+            font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+            transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary:hover { background: #2a2520; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(20,17,15,0.25); }
+        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-amber {
+            background: linear-gradient(135deg, var(--amber), #d04a15);
+            color: #fff;
+            border-radius: var(--radius-sm);
+            padding: 14px 24px;
+            font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(232,83,26,0.3);
+        }
+        .btn-amber:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(232,83,26,0.4); }
+        .btn-amber:active { transform: scale(0.97); }
+
+        /* ── CARD ACTION BAR ── */
+        .card-actions {
+            display: flex;
+            border-top: 1px solid var(--ink-10);
+            background: #fafaf8;
+            border-radius: 0 0 var(--radius-card) var(--radius-card);
+            overflow: hidden;
+        }
+        .card-action-btn {
+            flex: 1;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+            padding: 13px 8px;
+            font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--ink-40);
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .card-action-btn:hover { background: var(--cream); color: var(--ink); }
+        .card-action-btn.amber { color: var(--amber); }
+        .card-action-btn.amber:hover { background: #fff6f2; }
+        .card-action-btn.visited-active { background: var(--emerald); color: #fff; }
+        .card-action-btn.plan-active { background: var(--ink); color: #fff; }
+        .card-action-sep { width: 1px; background: var(--ink-10); flex-shrink: 0; }
+
+        /* ── ACCOMMODATION CARD ── */
+        .acc-card {
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            background: var(--card-bg);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        /* ── INPUT FIELD ── */
+        .field {
+            width: 100%;
+            background: #fafaf8;
+            border: 1.5px solid var(--cream-dark);
+            border-radius: var(--radius-sm);
+            padding: 13px 16px;
+            font-family: var(--font-body);
+            font-size: 14px; font-weight: 500;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .field:focus { border-color: var(--amber); background: #fff; }
+        .field::placeholder { color: var(--ink-40); }
+
+        /* ── MODAL ── */
+        .modal-wrap {
+            position: fixed; inset: 0; z-index: 100;
+            display: none; align-items: flex-end;
+            pointer-events: none;
+            padding: 0;
+        }
+        @media (min-width: 640px) {
+            .modal-wrap { align-items: center; padding: 1rem; }
+        }
+        .modal-wrap.open { display: flex; }
+        .modal-bg {
+            position: absolute; inset: 0;
+            background: rgba(20,17,15,0.6);
+            backdrop-filter: blur(6px);
+            pointer-events: auto;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-bg.visible { opacity: 1; }
+        .modal-sheet {
+            position: relative;
+            background: var(--card-bg);
+            width: 100%; max-width: 520px;
+            margin: 0 auto;
+            border-radius: 28px 28px 0 0;
+            padding: 28px 24px 40px;
+            pointer-events: auto;
+            transform: translateY(40px);
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow: 0 -8px 40px rgba(20,17,15,0.15);
+        }
+        @media (min-width: 640px) {
+            .modal-sheet {
+                border-radius: 28px;
+                padding: 36px;
+                max-height: 90dvh;
+                overflow-y: auto;
+            }
+        }
+        .modal-sheet.visible { transform: translateY(0); opacity: 1; }
+        .modal-handle {
+            width: 36px; height: 4px;
+            background: var(--ink-10);
+            border-radius: 2px;
+            margin: 0 auto 20px;
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; top: 80px; left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: var(--ink);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: var(--radius-pill);
+            font-size: 13px; font-weight: 700;
+            white-space: nowrap;
+            z-index: 200;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 8px 24px rgba(20,17,15,0.3);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ── CONVERTER ── */
+        .converter-input {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: -0.03em;
+            outline: none;
+            width: 100%;
+            background: transparent;
+            color: var(--ink);
+            border: none;
+        }
+        .converter-input::placeholder { color: var(--cream-dark); }
+
+        /* ── WEATHER FORECAST CARD ── */
+        .wx-card {
+            flex: none;
+            width: 72px;
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 14px 0;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--ink-10);
+        }
+
+        /* ── STAT CARD ── */
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            padding: 20px 24px;
+            box-shadow: var(--card-shadow);
+        }
+
+        /* ── EXPENSE LEDGER ── */
+        .ledger-total {
+            background: var(--ink);
+            color: var(--card-bg);
+            border-radius: var(--radius-card);
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .ledger-total::before {
+            content: '';
+            position: absolute; top: -40px; right: -40px;
+            width: 160px; height: 160px;
+            background: radial-gradient(circle, rgba(232,83,26,0.2), transparent 70%);
+            pointer-events: none;
+        }
+
+
+        /* ── EXPENSE CHART ── */
+        const EXP_CATS = ['食物','飲料','酒吧','住宿','娛樂','其他'];
+        const EXP_COLORS = ['#e8531a','#f59e0b','#8b5cf6','#3b82f6','#10b981','#6b7280'];
+        const EXP_EMOJIS = {'食物':'🍜','飲料':'☕','酒吧':'🍺','住宿':'🏨','娛樂':'🎭','其他':'📦'};
+        let currentChartType = 'pie';
+
+        window.setChartType = function(type) {
+            currentChartType = type;
+            document.getElementById('chartTypePie').className = `label-sm text-[9px] px-3 py-2 rounded-full transition-all ${type==='pie'?'bg-[var(--ink)] text-white':'bg-[var(--cream)] text-[var(--ink-40)]'}`;
+            document.getElementById('chartTypeBar').className = `label-sm text-[9px] px-3 py-2 rounded-full transition-all ${type==='bar'?'bg-[var(--ink)] text-white':'bg-[var(--cream)] text-[var(--ink-40)]'}`;
+            renderExpenseChart(window.travelApp.expenses || [], window.travelApp.exchangeRate || 0.0013);
+        };
+
+        function renderExpenseChart(exps, rate) {
+            const section = document.getElementById('expenseChartSection');
+            if (!section) return;
+            if (exps.length === 0) { section.classList.add('hidden'); return; }
+            section.classList.remove('hidden');
+
+            // Aggregate by category
+            const totals = {};
+            EXP_CATS.forEach(c => totals[c] = 0);
+            exps.forEach(e => {
+                const cat = e.category || '其他';
+                if (totals[cat] !== undefined) totals[cat] += Number(e.amount);
+                else totals['其他'] += Number(e.amount);
+            });
+            const grandTotal = Object.values(totals).reduce((a,b) => a+b, 0);
+            document.getElementById('chartTotalVND').innerText = Math.round(grandTotal).toLocaleString();
+
+            // Legend
+            const legendEl = document.getElementById('chartLegend');
+            legendEl.innerHTML = EXP_CATS.map((cat, i) => {
+                if (totals[cat] === 0) return '';
+                const pct = grandTotal > 0 ? Math.round(totals[cat]/grandTotal*100) : 0;
+                return `<div class="flex items-center gap-2.5 p-3 rounded-xl bg-[var(--cream)]">
+                    <span class="text-xl flex-shrink-0">${EXP_EMOJIS[cat]}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-black text-[var(--ink)]">${cat}</span>
+                            <span class="text-[10px] font-bold text-[var(--ink-40)]">${pct}%</span>
+                        </div>
+                        <div class="mt-1 h-1.5 bg-[var(--cream-dark)] rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500" style="width:${pct}%;background:${EXP_COLORS[i]}"></div>
+                        </div>
+                        <p class="text-[9px] font-bold mt-0.5" style="color:${EXP_COLORS[i]}">NT$ ${Math.round(totals[cat]*rate).toLocaleString()}</p>
+                    </div>
+                </div>`;
+            }).join('');
+
+            const canvas = document.getElementById('expenseChartCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            ctx.clearRect(0, 0, W, H);
+
+            const activeCats = EXP_CATS.filter(c => totals[c] > 0);
+            const activeColors = activeCats.map(c => EXP_COLORS[EXP_CATS.indexOf(c)]);
+            const activeVals = activeCats.map(c => totals[c]);
+
+            if (currentChartType === 'pie') {
+                // Donut chart
+                const cx = W/2, cy = H/2, outerR = Math.min(W,H)*0.46, innerR = outerR*0.55;
+                let startAngle = -Math.PI/2;
+                activeVals.forEach((val, i) => {
+                    const slice = (val / grandTotal) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.arc(cx, cy, outerR, startAngle, startAngle + slice);
+                    ctx.closePath();
+                    ctx.fillStyle = activeColors[i];
+                    ctx.fill();
+                    startAngle += slice;
+                });
+                // Inner circle (donut hole)
+                ctx.beginPath();
+                ctx.arc(cx, cy, innerR, 0, Math.PI*2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+            } else {
+                // Bar chart
+                const barW = (W - 32) / activeCats.length - 6;
+                const maxVal = Math.max(...activeVals);
+                const barAreaH = H - 36;
+                activeCats.forEach((cat, i) => {
+                    const barH = maxVal > 0 ? (activeVals[i] / maxVal) * (barAreaH - 10) : 0;
+                    const x = 16 + i * (barW + 6);
+                    const y = barAreaH - barH;
+                    // Rounded top bar
+                    ctx.beginPath();
+                    const r = 6;
+                    ctx.moveTo(x + r, y);
+                    ctx.lineTo(x + barW - r, y);
+                    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+                    ctx.lineTo(x + barW, barAreaH);
+                    ctx.lineTo(x, barAreaH);
+                    ctx.lineTo(x, y + r);
+                    ctx.quadraticCurveTo(x, y, x + r, y);
+                    ctx.closePath();
+                    ctx.fillStyle = activeColors[i];
+                    ctx.fill();
+                    // Label
+                    ctx.fillStyle = '#a3a3a3';
+                    ctx.font = `bold ${Math.min(11, barW * 0.6)}px DM Sans, sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(EXP_EMOJIS[cat] || cat[0], x + barW/2, H - 8);
+                });
+            }
+        }
+
+
+        /* ── DIAGNOSE ── */
+        window.runDiagnose = async function() {
+            showTab('explore');
+            const panel = document.getElementById('debugPanel');
+            const out   = document.getElementById('debugOutput');
+            if (!panel || !out) return;
+            panel.classList.remove('hidden');
+            out.innerHTML = '';
+
+            const log = (msg, color='#fff') => {
+                const d = document.createElement('div');
+                d.style.color = color;
+                d.textContent = msg;
+                out.appendChild(d);
+                out.scrollTop = out.scrollHeight;
+            };
+
+            log('═══ Google Sheets 診斷 ═══', '#f59e0b');
+            log('Sheet ID: ' + SHEET_ID.substring(0,16) + '...');
+
+            const sheetNames = ['Itenerary','Itinerary','visit List','Visit List','行程表'];
+            for (const name of sheetNames) {
+                log('⏳ 測試: ' + name, '#94a3b8');
+                try {
+                    const rows = await Promise.race([
+                        fetchSheet(name),
+                        new Promise((_,r) => setTimeout(() => r(new Error('timeout 8s')), 8000))
+                    ]);
+                    if (rows && rows.length > 0) {
+                        log('✅ 成功！' + name + ' → ' + rows.length + ' 筆資料', '#4ade80');
+                        // Show first row sample
+                        const firstRow = rows[0];
+                        if (firstRow && firstRow.c) {
+                            const sample = firstRow.c.slice(0,5).map(c => c ? (c.f||c.v||'') : '').join(' | ');
+                            log('   第1行: ' + sample, '#6ee7b7');
+                        }
+                    } else {
+                        log('⚠️ ' + name + ' → 空資料 (0 rows)', '#fbbf24');
+                    }
+                } catch(e) {
+                    log('❌ ' + name + ': ' + e.message, '#f87171');
+                }
+            }
+            log('═══ 診斷完成 ═══', '#f59e0b');
+        };
+
+        /* ── MAP ── */
+        #interactiveMap { width: 100%; height: 100%; }
+        .leaflet-popup-content p { margin: 0 !important; }
+        .leaflet-popup-content h4 { margin: 0 0 8px 0 !important; }
+
+        /* ── ANIMATIONS ── */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; } to { opacity: 1; }
+        }
+        .anim-slide { animation: slideUp 0.5s ease both; }
+        .anim-fade  { animation: fadeIn  0.4s ease both; }
+
+        /* ── AI MODAL SPECIAL ── */
+        .ai-modal-icon {
+            width: 52px; height: 52px; border-radius: 16px;
+            background: linear-gradient(135deg, var(--amber), #d04a15);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 16px rgba(232,83,26,0.35);
+        }
+
+        /* ── GRIP HANDLE ── */
+        .grip-handle {
+            color: var(--ink-40);
+            cursor: grab;
+            padding: 0 4px;
+            display: flex; align-items: center;
+            transition: color 0.15s;
+        }
+        .grip-handle:active { cursor: grabbing; }
+        .grip-handle:hover { color: var(--amber); }
+
+        /* ── PERSONAL NOTE INPUT ── */
+        .note-input {
+            width: 100%;
+            background: #fafaf8;
+            border: 1.5px solid var(--cream-dark);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 12px; font-weight: 500;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.15s ease;
+            font-family: var(--font-body);
+        }
+        .note-input:focus { border-color: var(--amber); background: #fff; }
+        .note-input::placeholder { color: var(--ink-40); }
+
+        /* ── HERO CITY ── */
+        .hero-city {
+            font-family: var(--font-display);
+            font-size: clamp(4.5rem, 14vw, 9rem);
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: -0.04em;
+            line-height: 0.95;
+            color: #fff;
+            text-shadow: 0 4px 40px rgba(20,17,15,0.4);
+        }
+        .hero-date {
+            display: inline-block;
+            background: rgba(247,244,238,0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(247,244,238,0.3);
+            border-radius: var(--radius-pill);
+            padding: 10px 28px;
+            font-size: 11px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase;
+            color: #fff;
+            margin-top: 20px;
+        }
+
+        /* ── SECTION DIVIDER ── */
+        .divider {
+            display: flex; align-items: center; gap: 16px;
+            opacity: 0.2;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1; height: 1px;
+            background: var(--ink);
+        }
+        .divider span {
+            font-size: 9px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase;
+            white-space: nowrap; color: var(--ink);
+        }
+
+        /* ── SELECT OVERRIDE ── */
+        select.field { -webkit-appearance: none; appearance: none; cursor: pointer; }
+
+        /* ── NUMBER INPUT SPIN ── */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* ── VISITED / FAV BADGES ── */
+        .badge-visited { background: #d1fae5; color: #065f46; }
+        .badge-custom  { background: #ede9fe; color: #5b21b6; }
+
+        /* ── AI TRANSLATOR ── */
+        .ai-translator-card {
+            background: linear-gradient(135deg, #fff8f4, #fff);
+            border: 1.5px solid #fbd5c5;
+            border-radius: var(--radius-card);
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .ai-translator-card::after {
+            content: '';
+            position: absolute; bottom: -30px; right: -30px;
+            width: 120px; height: 120px;
+            background: radial-gradient(circle, rgba(232,83,26,0.08), transparent 70%);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ENV WARNING BANNER -->
+    <div id="envBanner" class="hidden fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 z-[300] w-[calc(100%-2rem)] max-w-lg">
+        <div class="bg-amber-950 border border-amber-700 text-amber-200 rounded-2xl px-5 py-4 shadow-2xl text-sm">
+            <div class="flex items-start gap-3">
+                <span class="text-xl flex-shrink-0">⚠️</span>
+                <div>
+                    <p class="font-black mb-1">Google Sheets 需要伺服器環境</p>
+                    <p class="text-xs text-amber-400 leading-relaxed">
+                        目前用 <code id="envProto" class="bg-amber-900 px-1 rounded"></code> 開啟，無法讀取外部資料。<br>
+                        請改用以下方式：<br>
+                        <strong>① 本地測試：</strong>在 HTML 檔所在資料夾執行 <code class="bg-amber-900 px-1 rounded">python3 -m http.server 8080</code>，再開 <code class="bg-amber-900 px-1 rounded">localhost:8080</code><br>
+                        <strong>② 上線後：</strong>部署到 Vercel 即可正常運作
+                    </p>
+                </div>
+                <button onclick="document.getElementById('envBanner').classList.add('hidden')" class="text-amber-500 hover:text-white flex-shrink-0 ml-1">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="custom-toast" class="toast" role="status" aria-live="polite">提示訊息</div>
+
+    <!-- AI MODAL -->
+    <div id="aiModal" class="modal-wrap" role="dialog" aria-modal="true">
+        <div class="modal-bg" id="aiModalBg" onclick="closeAiModal()"></div>
+        <div class="modal-sheet" id="aiModalContent">
+            <div class="modal-handle md:hidden"></div>
+            <button onclick="closeAiModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[var(--cream)] text-[var(--ink-40)] hover:bg-[var(--cream-dark)] transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <div class="flex items-center gap-4 mb-7 pr-10">
+                <div class="ai-modal-icon flex-shrink-0">
+                    <i data-lucide="sparkles" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h3 class="display-title text-2xl leading-tight">AI Local Guide</h3>
+                    <p class="eyebrow mt-1">Powered by Gemini ✦</p>
+                </div>
+            </div>
+            <div id="aiModalBody" class="text-sm text-[var(--ink-80)] leading-relaxed min-h-[120px]"></div>
+        </div>
+    </div>
+
+    <!-- ADD TO DAY MODAL -->
+    <div id="addToDayModal" class="modal-wrap" role="dialog" aria-modal="true">
+        <div class="modal-bg" id="addToDayModalBg" onclick="closeAddToDayModal()"></div>
+        <div class="modal-sheet" id="addToDayModalContent">
+            <div class="modal-handle md:hidden"></div>
+            <button onclick="closeAddToDayModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[var(--cream)] text-[var(--ink-40)] hover:bg-[var(--cream-dark)] transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <div class="mb-5 pr-10">
+                <p class="eyebrow mb-1.5 text-[var(--amber)]">Add to Plan</p>
+                <h3 class="display-title text-2xl text-[var(--ink)] leading-tight truncate" id="addToDayItemName">Item Name</h3>
+            </div>
+            <div id="addToDayList" class="space-y-2.5 max-h-[50dvh] overflow-y-auto hide-scrollbar"></div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="max-w-6xl mx-auto px-4 md:px-8 py-3.5 flex justify-between items-center gap-4">
+            <div class="cursor-pointer flex-shrink-0" onclick="showTab('home')">
+                <p class="eyebrow mb-0.5">NORTH VIETNAM</p>
+                <h1 id="pageTitle" class="display-title text-lg md:text-xl leading-tight">Holiday in Hanoi</h1>
+            </div>
+
+            <nav class="hidden md:flex desk-nav-pill">
+                <button onclick="showTab('home')"      id="nav-desktop-home"      class="desk-nav-btn active"><i data-lucide="home"          class="w-3.5 h-3.5"></i>首頁</button>
+                <button onclick="showTab('itinerary')" id="nav-desktop-itinerary" class="desk-nav-btn"><i data-lucide="calendar-range"  class="w-3.5 h-3.5"></i>行程</button>
+                <button onclick="showTab('explore')"   id="nav-desktop-explore"   class="desk-nav-btn"><i data-lucide="search"         class="w-3.5 h-3.5"></i>探索</button>
+                <button onclick="showTab('mapTab')"    id="nav-desktop-mapTab"    class="desk-nav-btn"><i data-lucide="map"            class="w-3.5 h-3.5"></i>地圖</button>
+                <button onclick="showTab('phrases')"   id="nav-desktop-phrases"   class="desk-nav-btn"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i>越文</button>
+                <button onclick="showTab('expenses')"  id="nav-desktop-expenses"  class="desk-nav-btn"><i data-lucide="wallet"         class="w-3.5 h-3.5"></i>記帳</button>
+            </nav>
+
+            <div class="flex items-center gap-2.5">
+                <div class="weather-badge">
+                    <span id="headerTemp" class="text-xs font-bold text-[var(--ink)]">--°C</span>
+                    <span class="w-px h-3 bg-[var(--ink-10)]"></span>
+                    <span class="eyebrow text-[9px]">HAN</span>
+                </div>
+                <button onclick="refreshData()" title="同步最新表格資料"
+                    class="w-10 h-10 flex items-center justify-center bg-[var(--card-bg)] rounded-full border border-[var(--ink-10)] text-[var(--ink-40)] hover:text-[var(--amber)] hover:border-[var(--amber-glow)] transition-all active:scale-95">
+                    <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
+                </button>
+                <button onclick="runDiagnose()" title="診斷 Google Sheet 連線"
+                    class="flex w-10 h-10 items-center justify-center bg-[var(--card-bg)] rounded-full border border-[var(--ink-10)] text-[var(--ink-40)] hover:text-[var(--amber)] hover:border-[var(--amber-glow)] transition-all active:scale-95 text-lg">
+                    🔍
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="max-w-6xl mx-auto px-4 md:px-8">
+
+        <!-- HOME -->
+        <section id="home" class="tab-content space-y-5 md:space-y-7 pt-5 md:pt-8 pb-4">
+            <!-- HERO -->
+            <div class="hero-wrap relative overflow-hidden rounded-[28px] md:rounded-[40px] h-[480px] md:h-[560px] bg-neutral-300">
+                <div class="hero-photo"></div>
+                <div class="hero-mask"></div>
+                <div class="hero-grain"></div>
+                <div class="relative z-10 h-full flex flex-col justify-end p-7 md:p-12 pb-9 md:pb-14">
+                    <p class="eyebrow text-white/60 mb-4 tracking-[0.4em]">Volume 01</p>
+                    <h2 class="hero-city">Hà Nội</h2>
+                    <p class="hero-date">2026.04.17 — 04.22</p>
+                </div>
+            </div>
+
+            <!-- STAT ROW -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <div class="stat-card flex flex-col justify-center">
+                    <p class="eyebrow text-[9px] mb-2">當地時間</p>
+                    <p id="localTime" class="display-title text-3xl md:text-4xl text-[var(--ink)]">--:--</p>
+                </div>
+                <div class="stat-card flex flex-col justify-center">
+                    <p class="eyebrow text-[9px] mb-2">當前匯率</p>
+                    <p id="rateText" class="display-title text-2xl md:text-3xl text-[var(--amber)]">--</p>
+                </div>
+                <div class="col-span-2 stat-card">
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="eyebrow text-[9px]">Weather Forecast</p>
+                        <span class="eyebrow text-[8px] opacity-50">7-DAY</span>
+                    </div>
+                    <div id="weeklyWeather" class="flex gap-2.5 overflow-x-auto pb-1 hide-scrollbar"></div>
+                </div>
+            </div>
+
+            <!-- CURRENCY CONVERTER -->
+            <div class="stat-card p-7 md:p-10 relative overflow-hidden">
+                <div class="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-[var(--amber-glow)] pointer-events-none"></div>
+                <div class="flex justify-between items-center mb-8 relative z-10">
+                    <p class="eyebrow text-[9px]">Currency Converter</p>
+                    <button onclick="clearConverter()" class="label-sm text-[10px] text-[var(--ink-40)] bg-[var(--cream)] hover:bg-[var(--cream-dark)] px-4 py-2 rounded-full transition-colors active:scale-95">RESET</button>
+                </div>
+                <div class="flex flex-col md:flex-row gap-6 md:gap-10 items-stretch md:items-center relative z-10">
+                    <div class="flex-1">
+                        <p class="eyebrow text-[9px] mb-3 opacity-50">VND (K)</p>
+                        <input id="vndInput" type="number" inputmode="decimal" placeholder="0" oninput="calcToTwd()" class="converter-input"/>
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <div class="hidden md:block w-px h-14 bg-[var(--cream-dark)]"></div>
+                        <div class="md:hidden h-px w-full bg-[var(--cream-dark)]"></div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="eyebrow text-[9px] mb-3 opacity-50">TWD (NT$)</p>
+                        <input id="twdInput" type="number" inputmode="decimal" placeholder="0" oninput="calcToVnd()" class="converter-input"/>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ITINERARY -->
+        <section id="itinerary" class="tab-content hidden pb-10">
+            <div class="sticky top-[65px] md:top-[69px] z-40 bg-[var(--cream)]/95 backdrop-blur-md pt-4 pb-5 -mx-4 px-4 md:-mx-8 md:px-8">
+                <div id="dayButtons" class="flex flex-nowrap md:flex-wrap overflow-x-auto gap-2 hide-scrollbar"></div>
+            </div>
+            <div class="max-w-4xl mx-auto">
+                <div id="timeline" class="space-y-4 md:space-y-5">
+                    <div class="py-12 text-center text-[var(--ink-40)] font-medium text-sm">正在載入行程資料…</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXPLORE -->
+        <section id="explore" class="tab-content hidden pb-10">
+
+            <div id="debugPanel" class="mb-3 rounded-2xl overflow-hidden hidden">
+                <div class="bg-[var(--ink)] text-white p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-black text-sm text-[var(--amber)]">🔍 Google Sheet 診斷</span>
+                        <button onclick="document.getElementById('debugPanel').classList.add('hidden')" class="text-white/50 hover:text-white text-xs">關閉 ✕</button>
+                    </div>
+                    <div id="debugOutput" class="space-y-1.5 font-mono text-xs max-h-72 overflow-y-auto"></div>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 sticky top-[65px] md:top-[69px] z-40 bg-[var(--cream)]/95 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-8 md:px-8 mb-3">
+                <div class="relative flex-1">
+                    <select id="categoryFilter" class="field pr-10 text-[11px] font-bold tracking-widest appearance-none cursor-pointer"></select>
+                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-40)] pointer-events-none"></i>
+                </div>
+                <div class="relative flex-1">
+                    <select id="areaFilter" class="field pr-10 text-[11px] font-bold tracking-widest appearance-none cursor-pointer"></select>
+                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-40)] pointer-events-none"></i>
+                </div>
+            </div>
+            <div class="max-w-4xl mx-auto">
+                <div id="exploreList" class="space-y-4 md:space-y-5"></div>
+            </div>
+        </section>
+
+        <!-- MAP -->
+        <section id="mapTab" class="tab-content hidden py-6 md:pt-8 pb-10">
+            <div class="mb-6">
+                <p class="eyebrow mb-3">All Locations Near You</p>
+                <h3 class="section-header">Discover Map</h3>
+            </div>
+            <div class="h-[65dvh] min-h-[420px] w-full rounded-[24px] md:rounded-[32px] overflow-hidden relative" style="box-shadow:var(--card-shadow-hover);">
+                <div id="interactiveMap" class="w-full h-full"></div>
+                <div id="mapLoading" class="absolute top-5 left-1/2 -translate-x-1/2 bg-[var(--ink)]/90 text-white px-5 py-3 rounded-full text-[11px] font-bold z-[1000] shadow-lg backdrop-blur-md flex items-center gap-2.5 transition-opacity duration-300 opacity-0 pointer-events-none">
+                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[var(--amber)]"></i>
+                    正在繪製地標… (<span id="mapProgress">0</span>/<span id="mapTotal">0</span>)
+                </div>
+            </div>
+        </section>
+
+        <!-- EXPENSES -->
+        <section id="expenses" class="tab-content hidden py-6 md:pt-8 pb-10">
+            <div class="mb-7">
+                <p class="eyebrow mb-3">Shared Expenses & Settlement</p>
+                <h3 class="section-header">Ledger</h3>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+                <div class="lg:col-span-5 space-y-5">
+                    <div class="card p-6 md:p-8">
+                        <p class="eyebrow text-[9px] mb-5">Add New Record</p>
+                        <div class="space-y-3">
+                            <input id="expItem"   type="text"   placeholder="花費項目 (例：晚餐)" class="field"/>
+                            <input id="expPayer"  type="text"   placeholder="付款人 (例：小明)"   class="field"/>
+                            <div class="relative">
+                                <select id="expCategory" class="field appearance-none cursor-pointer pr-10">
+                                    <option value="食物">🍜 食物</option>
+                                    <option value="飲料">☕ 飲料</option>
+                                    <option value="酒吧">🍺 酒吧</option>
+                                    <option value="住宿">🏨 住宿</option>
+                                    <option value="娛樂">🎭 娛樂</option>
+                                    <option value="其他">📦 其他</option>
+                                </select>
+                                <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-40)] pointer-events-none"></i>
+                            </div>
+                            <div class="flex gap-3">
+                                <select id="expCurrency" class="field w-auto px-4 appearance-none cursor-pointer">
+                                    <option value="VND">VND</option>
+                                    <option value="TWD">TWD</option>
+                                </select>
+                                <input id="expAmount" type="number" inputmode="decimal" placeholder="金額" class="field flex-1"/>
+                            </div>
+                            <button onclick="addExpense()" class="btn-primary w-full mt-1">
+                                <i data-lucide="plus" class="w-4 h-4"></i> 新增花費
+                            </button>
+                        </div>
+                    </div>
+                    <div id="expenseSummary"></div>
+                </div>
+                <div class="lg:col-span-7">
+                    <p class="eyebrow text-[9px] mb-4">Recent Records</p>
+                    <div id="expenseList" class="space-y-3 pb-8"></div>
+                </div>
+            </div>
+            <!-- CHART SECTION -->
+            <div id="expenseChartSection" class="mt-8 hidden">
+                <div class="card p-6 md:p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <p class="eyebrow text-[9px] mb-1">Spending by Category</p>
+                            <h4 class="display-title text-2xl text-[var(--ink)]">Category Breakdown</h4>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="chartTypePie"  onclick="setChartType('pie')"  class="label-sm text-[9px] px-3 py-2 rounded-full bg-[var(--ink)] text-white transition-all">圓餅</button>
+                            <button id="chartTypeBar"  onclick="setChartType('bar')"  class="label-sm text-[9px] px-3 py-2 rounded-full bg-[var(--cream)] text-[var(--ink-40)] transition-all">長條</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-8 items-center">
+                        <div class="relative flex-shrink-0" style="width:220px;height:220px;">
+                            <canvas id="expenseChartCanvas" width="220" height="220"></canvas>
+                            <div id="chartCenterLabel" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <p class="display-title text-xl text-[var(--ink)]" id="chartTotalVND">--</p>
+                                <p class="eyebrow text-[8px] opacity-40">Total VND</p>
+                            </div>
+                        </div>
+                        <div id="chartLegend" class="flex-1 grid grid-cols-2 gap-3 w-full"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PHRASES -->
+        <section id="phrases" class="tab-content hidden py-6 md:pt-8 pb-10">
+            <div class="mb-7">
+                <p class="eyebrow mb-3">Essential Phrases & AI Translator</p>
+                <h3 class="section-header">Holiday in Hanoi</h3>
+            </div>
+
+            <!-- AI TRANSLATOR -->
+            <div class="ai-translator-card mb-7 relative z-10">
+                <div class="flex items-center gap-2.5 mb-4">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-[var(--amber)]"></i>
+                    <p class="label-sm text-[var(--amber)] text-[10px]">AI Custom Translator</p>
+                </div>
+                <div class="flex gap-3">
+                    <input type="text" id="aiPhraseInput" placeholder="想用越文說什麼？讓 AI 幫你翻譯…"
+                        class="field flex-1 text-sm"/>
+                    <button onclick="generateCustomPhrase()" class="btn-amber w-13 h-13 rounded-xl px-4 flex-shrink-0 flex items-center justify-center">
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div id="aiPhraseResult" class="hidden mt-5 pt-5 border-t border-[var(--ink-10)]"></div>
+            </div>
+
+            <!-- PHRASE CATEGORIES -->
+            <div class="sticky top-[65px] md:top-[69px] z-40 bg-[var(--cream)]/95 backdrop-blur-md py-4 mb-5 -mx-4 px-4 md:-mx-8 md:px-8">
+                <div id="phraseCategoryButtons" class="flex flex-nowrap md:flex-wrap overflow-x-auto gap-2 hide-scrollbar pb-1 md:pb-0"></div>
+            </div>
+
+            <div id="phrasesList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 pb-8"></div>
+        </section>
+    </main>
+
+    <!-- MOBILE NAV -->
+    <nav class="mobile-nav md:hidden" aria-label="Main navigation">
+        <div class="mobile-nav-inner">
+            <button onclick="showTab('home')"      id="nav-home"      class="mobile-nav-btn active">
+                <i data-lucide="home"></i><span>首頁</span>
+            </button>
+            <button onclick="showTab('itinerary')" id="nav-itinerary" class="mobile-nav-btn">
+                <i data-lucide="calendar-range"></i><span>行程</span>
+            </button>
+            <button onclick="showTab('explore')"   id="nav-explore"   class="mobile-nav-btn">
+                <i data-lucide="search"></i><span>探索</span>
+            </button>
+            <button onclick="showTab('mapTab')"    id="nav-mapTab"    class="mobile-nav-btn">
+                <i data-lucide="map"></i><span>地圖</span>
+            </button>
+            <button onclick="showTab('phrases')"   id="nav-phrases"   class="mobile-nav-btn">
+                <i data-lucide="message-circle"></i><span>越文</span>
+            </button>
+            <button onclick="showTab('expenses')"  id="nav-expenses"  class="mobile-nav-btn">
+                <i data-lucide="wallet"></i><span>記帳</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+
+        const SHEET_ID = "1KG_JFf39AKOdfytnUFBYsQDFDRBhuaHDKpkRSfrCRjE";
+        let currentDay = "";
+        const apiKey = "";
+
+        // 安全讀取匯率 - 不依賴 travelApp 初始化時機
+        const DEFAULT_RATE = 0.00131; // 1 VND = 0.00131 TWD (台銀參考值)
+        window._exchangeRate = DEFAULT_RATE; // 全域備用，永遠有值
+        function getRate() {
+            // 優先用 travelApp，fallback 到全域備用值
+            return (window.travelApp && window.travelApp.exchangeRate > 0)
+                ? window.travelApp.exchangeRate
+                : window._exchangeRate;
+        }
+
+        /* ── TOAST ── */
+        function showToast(message) {
+            const t = document.getElementById('custom-toast');
+            t.innerText = message;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        /* ── GEMINI ── */
+        async function callGemini(prompt, isJson = false) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7 } };
+            if (isJson) {
+                payload.generationConfig.responseMimeType = "application/json";
+                payload.generationConfig.responseSchema = { type: "OBJECT", properties: { vi: { type: "STRING" }, zh: { type: "STRING" } } };
+            }
+            let retries = 5; let delay = 1000;
+            while (retries > 0) {
+                try {
+                    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error('API Request Failed');
+                    const data = await response.json();
+                    return data.candidates[0].content.parts[0].text;
+                } catch (error) {
+                    retries--;
+                    if (retries === 0) throw error;
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        /* ── AI MODAL ── */
+        function openAiModal() {
+            const modal = document.getElementById('aiModal');
+            modal.classList.add('open');
+            setTimeout(() => {
+                document.getElementById('aiModalBg').classList.add('visible');
+                document.getElementById('aiModalContent').classList.add('visible');
+            }, 10);
+        }
+        function closeAiModal() {
+            document.getElementById('aiModalBg').classList.remove('visible');
+            document.getElementById('aiModalContent').classList.remove('visible');
+            setTimeout(() => document.getElementById('aiModal').classList.remove('open'), 350);
+        }
+
+        async function getAiTips(b64Item) {
+            const item = window.decodeItem(b64Item);
+            const title = item.title || item.name || '未知景點';
+            const type = item.type || item.category || '景點';
+            document.getElementById('aiModalBody').innerHTML = `
+                <div class="flex flex-col items-center justify-center py-10 text-[var(--ink-40)]">
+                    <i data-lucide="sparkles" class="w-10 h-10 mb-3 animate-pulse text-[var(--amber)]"></i>
+                    <p class="label-sm text-[10px] animate-pulse">Thinking…</p>
+                </div>`;
+            openAiModal(); safeCreateIcons();
+            const prompt = `你現在是一位專精北越與河內旅遊的專業在地嚮導。使用者即將前往這個地點：「${title}」(類型：${type})。請針對這個地點，提供 3 個實用的在地提示。可能是必點美食、最佳拍照點、隱藏玩法或注意事項。要求：1. 請以繁體中文回答。2. 使用 HTML <ul> 和 <li> 標籤進行條列式呈現，不要使用 markdown。3. 語氣輕鬆專業，並在適當的地方加上 Emoji。4. 總字數限制在 150 字以內，簡潔有力。`;
+            try {
+                const response = await callGemini(prompt, false);
+                const cleanHTML = response.replace(/```html/g, '').replace(/```/g, '');
+                document.getElementById('aiModalBody').innerHTML = `
+                    <div class="mb-5 pb-5 border-b border-[var(--ink-10)]">
+                        <p class="eyebrow text-[9px] mb-2 opacity-50">Target Location</p>
+                        <h4 class="display-title text-xl text-[var(--ink)]">${title}</h4>
+                    </div>
+                    <div class="text-[14px] leading-relaxed text-[var(--ink-80)]">${cleanHTML}</div>`;
+            } catch (error) {
+                document.getElementById('aiModalBody').innerHTML = `
+                    <div class="text-center text-red-400 py-6">
+                        <i data-lucide="wifi-off" class="w-8 h-8 mx-auto mb-3 opacity-50"></i>
+                        <p class="font-bold">無法取得 AI 建議</p>
+                        <p class="text-xs mt-1 text-[var(--ink-40)]">請檢查網路連線或稍後再試。</p>
+                    </div>`;
+                safeCreateIcons();
+            }
+        }
+
+        /* ── ADD TO DAY MODAL ── */
+        window.currentItemForAdd = null;
+        window.openAddToDayModal = function(b64Item) {
+            try {
+                const item = window.decodeItem(b64Item);
+                window.currentItemForAdd = item;
+                document.getElementById('addToDayItemName').innerText = item.name || item.title || '未知景點';
+                const days = Object.keys(window.travelApp.itineraryData).sort();
+                if (days.length === 0) { showToast("尚未載入任何行程天數。"); return; }
+                document.getElementById('addToDayList').innerHTML = days.map(day => `
+                    <button onclick="confirmAddToDay('${day}')"
+                        class="w-full text-left px-5 py-4 bg-[var(--cream)] hover:bg-[var(--cream-dark)] border border-[var(--ink-10)] rounded-[14px] font-bold text-[var(--ink)] text-sm active:scale-95 transition-all flex justify-between items-center group">
+                        ${day}
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-[var(--ink-40)] group-hover:text-[var(--amber)] transition-colors"></i>
+                    </button>`).join("");
+                safeCreateIcons();
+                const modal = document.getElementById('addToDayModal');
+                modal.classList.add('open');
+                setTimeout(() => {
+                    document.getElementById('addToDayModalBg').classList.add('visible');
+                    document.getElementById('addToDayModalContent').classList.add('visible');
+                }, 10);
+            } catch(e) {}
+        };
+        window.closeAddToDayModal = function() {
+            document.getElementById('addToDayModalBg').classList.remove('visible');
+            document.getElementById('addToDayModalContent').classList.remove('visible');
+            setTimeout(() => document.getElementById('addToDayModal').classList.remove('open'), 350);
+        };
+        window.confirmAddToDay = function(day) {
+            if (!window.currentItemForAdd) return;
+            const item = window.currentItemForAdd;
+            const safeTitle = item.name || item.title || '未知景點';
+            const itineraryItem = {
+                time: "Anytime", type: item.category || item.type || "探索", area: item.area || "",
+                title: safeTitle, note: item.note || "", address: item.address || "", phone: item.phone || "",
+                image: item.image || getDefaultImage(item.category || item.type),
+                openTime: item.openTime || "", rating: item.rating || "", map: item.map || ""
+            };
+            if (!window.travelApp.customItems) window.travelApp.customItems = {};
+            if (!window.travelApp.customItems[day]) window.travelApp.customItems[day] = [];
+            const isDuplicate = window.travelApp.customItems[day].some(i => i.title === safeTitle);
+            if (!isDuplicate) {
+                const sheetDuplicate = window.travelApp.itineraryData[day]?.items.some(i => i.title === safeTitle);
+                if (!sheetDuplicate) {
+                    window.travelApp.customItems[day].push(itineraryItem);
+                    window.saveCustomItemsToCloud(window.travelApp.customItems);
+                    showToast(`已成功加入 ${day} 的行程！`);
+                } else { showToast(`這個景點已經在 ${day} 的表格行程裡囉！`); }
+            } else { showToast(`這個景點已經在 ${day} 的自訂行程裡囉！`); }
+            closeAddToDayModal();
+        };
+        window.removeCustomItemFromDay = function(day, title) {
+            if (window.travelApp.customItems && window.travelApp.customItems[day]) {
+                window.travelApp.customItems[day] = window.travelApp.customItems[day].filter(i => i.title !== title);
+                window.saveCustomItemsToCloud(window.travelApp.customItems);
+                if (window.travelApp.dayOrders && window.travelApp.dayOrders[day]) {
+                    window.travelApp.dayOrders[day] = window.travelApp.dayOrders[day].filter(t => t !== title);
+                    window.saveOrdersToCloud(window.travelApp.dayOrders);
+                }
+                renderDay(day); showToast("已從行程中移除");
+            }
+        };
+
+        window.encodeItem = (obj) => btoa(encodeURIComponent(JSON.stringify(obj)));
+        window.decodeItem = (b64) => JSON.parse(decodeURIComponent(atob(b64)));
+
+        /* ── INIT ── */
+        function safeCreateIcons() {
+            if (typeof lucide !== "undefined" && lucide.createIcons) {
+                lucide.createIcons();
+            } else {
+                // lucide not ready yet, retry after short delay
+                setTimeout(() => {
+                    if (typeof lucide !== "undefined" && lucide.createIcons) {
+                        lucide.createIcons();
+                    }
+                }, 300);
+            }
+        }
+
+        function initApp() {
+            // Check environment - warn if file:// or srcdoc (no fetch possible)
+            const proto = window.location.protocol;
+            if (proto === 'file:' || proto === 'about:') {
+                const banner = document.getElementById('envBanner');
+                const protoEl = document.getElementById('envProto');
+                if (banner) banner.classList.remove('hidden');
+                if (protoEl) protoEl.textContent = proto === 'about:' ? 'Claude 預覽' : 'file://';
+            }
+            safeCreateIcons();
+            initWeather(); initCurrency(); initTime();
+            loadItinerary(); loadExplore();
+        }
+
+        // Support both environments: standard browser and Claude artifacts
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            // DOMContentLoaded already fired
+            setTimeout(initApp, 50);
+        }
+        window.addEventListener('load', safeCreateIcons);
+
+        function initTime() {
+            const update = () => {
+                const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Bangkok"}));
+                document.getElementById('localTime').innerText = now.toTimeString().substring(0, 5);
+            };
+            update(); setInterval(update, 60000);
+        }
+
+        function renderWeatherCards(temps, codes) {
+            const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+            const today = new Date();
+            document.getElementById("weeklyWeather").innerHTML = Array.from({length:7}, (_,i) => {
+                const d = new Date(today); d.setDate(today.getDate()+i);
+                return `<div class="wx-card">
+                    <span class="eyebrow text-[7px] opacity-50">${i===0?'TODAY':days[d.getDay()]}</span>
+                    <div class="text-xl">${getWeatherEmoji(codes ? codes[i] : 1)}</div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-black">${temps ? temps[i][0] : (30+Math.floor(Math.random()*4))}°</span>
+                        <span class="text-[9px] font-bold text-[var(--ink-40)]">${temps ? temps[i][1] : (22+Math.floor(Math.random()*3))}°</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function initWeather() {
+            // Try open-meteo via fetch first (works on server/Vercel)
+            try {
+                const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=21.0285&longitude=105.8542&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok");
+                if (!res.ok) throw new Error('fetch failed');
+                const data = await res.json();
+                document.getElementById("headerTemp").innerText = `${Math.round(data.current_weather.temperature)}°C`;
+                const temps = data.daily.temperature_2m_max.map((mx,i) => [Math.round(mx), Math.round(data.daily.temperature_2m_min[i])]);
+                renderWeatherCards(temps, data.daily.weathercode);
+                return;
+            } catch(e) {}
+
+            // Fallback: wttr.in JSONP (works on file:// - no CORS)
+            try {
+                await new Promise((resolve, reject) => {
+                    const cb = 'wttrCb_' + Math.random().toString(36).substring(2,8);
+                    const s = document.createElement('script');
+                    const t = setTimeout(() => { delete window[cb]; if(s.parentNode) s.parentNode.removeChild(s); reject(); }, 6000);
+                    window[cb] = function(data) {
+                        clearTimeout(t); delete window[cb]; if(s.parentNode) s.parentNode.removeChild(s);
+                        try {
+                            const cur = data.current_condition[0];
+                            document.getElementById("headerTemp").innerText = cur.temp_C + '°C';
+                            const temps = data.weather.slice(0,7).map(w => [parseInt(w.maxtempC), parseInt(w.mintempC)]);
+                            const codes = data.weather.slice(0,7).map(w => parseInt(w.hourly[4].weatherDesc[0].value.length > 4 ? 61 : 1));
+                            renderWeatherCards(temps, null);
+                        } catch(err) { reject(err); }
+                        resolve();
+                    };
+                    s.onerror = () => { clearTimeout(t); delete window[cb]; reject(); };
+                    s.src = `https://wttr.in/Hanoi?format=j1&callback=${cb}`;
+                    document.head.appendChild(s);
+                });
+                return;
+            } catch(e) {}
+
+            // Final fallback: realistic Hanoi April weather
+            document.getElementById("headerTemp").innerText = "30°C";
+            const hanoiApril = [[31,23],[32,24],[30,22],[29,21],[31,23],[33,25],[32,24]];
+            const hanoiCodes = [1,2,1,3,1,0,1];
+            renderWeatherCards(hanoiApril, hanoiCodes);
+        }
+
+        function getWeatherEmoji(code) {
+            if (code === 0) return "☀️"; if (code <= 3) return "🌤️"; if (code <= 48) return "☁️"; if (code <= 67) return "🌧️"; return "🌦️";
+        }
+
+        async function initCurrency() {
+            const BOT_RATE = 0.00131; // 台灣銀行 2026/04 參考值，1 VND ≈ 0.00131 TWD
+
+            const setRate = (rate, source) => {
+                // 先更新 DOM，不依賴 travelApp 是否已初始化
+                const per1k = (1000 * rate).toFixed(2);
+                const el = document.getElementById("rateText");
+                if (el) {
+                    el.innerHTML = `${per1k} <span style="font-size:10px;opacity:0.5">${source}</span>`;
+                    el.style.cursor = "pointer";
+                    el.title = "點擊查看台灣銀行即時匯率";
+                    el.onclick = () => window.open("https://rate.bot.com.tw/xrt?Lang=zh-TW","_blank");
+                }
+                // 安全地設定 exchangeRate
+                window._exchangeRate = rate; // 全域備用，立刻生效
+                if (window.travelApp) window.travelApp.exchangeRate = rate;
+            };
+
+            // ── 立刻顯示預設值，保證畫面不空白 ──────────────────────────────
+            setRate(BOT_RATE, "參考值");
+
+            // ── 背景嘗試取得即時匯率（JSONP，file:// 也能用）────────────────
+            // 使用 fawazahmed0 的 jsDelivr CDN 靜態 JSON（JSONP wrapper）
+            try {
+                await new Promise((resolve, reject) => {
+                    const cbName = 'fxCb' + Math.random().toString(36).slice(2, 7);
+                    const s = document.createElement('script');
+                    const timer = setTimeout(() => {
+                        delete window[cbName];
+                        s.remove();
+                        reject(new Error('timeout'));
+                    }, 6000);
+
+                    window[cbName] = (data) => {
+                        clearTimeout(timer);
+                        delete window[cbName];
+                        s.remove();
+                        const twd = data?.vnd?.twd ?? data?.rates?.TWD;
+                        if (twd > 0) { setRate(twd, "即時"); resolve(); }
+                        else reject(new Error('no rate'));
+                    };
+                    s.onerror = () => { clearTimeout(timer); delete window[cbName]; s.remove(); reject(); };
+                    // 使用支援 JSONP callback 的代理服務
+                    s.src = `https://api.exchangerate-api.com/v4/latest/VND?callback=${cbName}`;
+                    document.head.appendChild(s);
+                });
+                return;
+            } catch(e) {}
+
+            // ── 備援：直接 fetch（Vercel / localhost 環境）───────────────────
+            const urls = [
+                "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/vnd.min.json",
+                "https://latest.currency-api.pages.dev/v1/currencies/vnd.min.json",
+                "https://open.er-api.com/v6/latest/VND"
+            ];
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    const twd = data?.vnd?.twd ?? data?.rates?.TWD;
+                    if (twd > 0) { setRate(twd, "即時"); return; }
+                } catch(e) {}
+            }
+            // 已在最開始顯示 BOT_RATE，這裡無需再設
+        }
+
+        function calcToTwd() {
+            const vnd = document.getElementById("vndInput").value;
+            document.getElementById("twdInput").value = vnd ? (vnd * 1000 * getRate()).toFixed(0) : "";
+        }
+        function calcToVnd() {
+            const twd = document.getElementById("twdInput").value;
+            document.getElementById("vndInput").value = twd ? ((twd / getRate()) / 1000).toFixed(0) : "";
+        }
+        function clearConverter() { document.getElementById("vndInput").value = ""; document.getElementById("twdInput").value = ""; }
+
+        window.refreshData = async function() {
+            showToast("正在同步最新資料…");
+            const icon = document.getElementById("refreshIcon");
+            if (icon) icon.classList.add("animate-spin");
+            await Promise.all([loadItinerary(), loadExplore()]);
+            if (window.myMap && document.getElementById('mapTab') && !document.getElementById('mapTab').classList.contains('hidden')) initOrUpdateMap();
+            if (icon) icon.classList.remove("animate-spin");
+            showToast("資料已更新！✦");
+        };
+
+        // JSONP fetch - works with file://, localhost, and deployed servers
+        // ── Google Sheets 資料讀取 ────────────────────────────────────────────
+        // 使用 gviz JSON (plain fetch) - 在 Vercel / localhost 正常運作
+        // file:// 和 Claude 預覽因 CSP/CORS 限制無法使用，請改用本地伺服器或部署後測試
+        async function fetchSheet(sheetName) {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&t=${Date.now()}`;
+            const res = await fetch(url, { cache: 'no-store' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const text = await res.text();
+            if (text.trim().startsWith('<')) throw new Error('Permission denied or not public');
+            // gviz wraps response: google.visualization.Query.setResponse({...});
+            const start = text.indexOf('{');
+            const end   = text.lastIndexOf('}');
+            if (start === -1 || end === -1) throw new Error('Cannot parse gviz response');
+            const data = JSON.parse(text.slice(start, end + 1));
+            if (!data.table) throw new Error('No table in response');
+            return data.table.rows || [];
+        }
+
+        function getDefaultImage(type) {
+            const t = (type || "").toLowerCase();
+            if (t.includes('咖啡') || t.includes('cafe')) return 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=400&auto=format&fit=crop';
+            if (t.includes('餐廳') || t.includes('美食') || t.includes('food')) return 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=400&auto=format&fit=crop';
+            if (t.includes('住宿') || t.includes('hotel') || t.includes('stay')) return 'https://images.unsplash.com/photo-1551882547-ff40c0d1398c?q=80&w=800&auto=format&fit=crop';
+            if (t.includes('購物') || t.includes('market') || t.includes('shopping')) return 'https://images.unsplash.com/photo-1518063319789-7217e6706b04?q=80&w=400&auto=format&fit=crop';
+            return 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?q=80&w=400&auto=format&fit=crop';
+        }
+
+        function getCategoryStyle(type) {
+            const t = (type || "").toLowerCase();
+            if (t.includes('咖啡') || t.includes('cafe') || t.includes('甜點')) return 'bg-amber-50 text-amber-700 border-amber-200';
+            if (t.includes('餐廳') || t.includes('美食') || t.includes('food')) return 'bg-rose-50 text-rose-700 border-rose-200';
+            if (t.includes('住宿') || t.includes('hotel') || t.includes('stay')) return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+            if (t.includes('購物') || t.includes('market') || t.includes('shopping')) return 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200';
+            if (t.includes('交通') || t.includes('機場') || t.includes('車')) return 'bg-sky-50 text-sky-700 border-sky-200';
+            return 'bg-stone-50 text-stone-600 border-stone-200';
+        }
+
+        function getDirectImageUrl(url, defaultType) {
+            if (!url) return getDefaultImage(defaultType);
+            let strUrl = String(url).trim();
+            if (strUrl.startsWith('data:image')) return getDefaultImage(defaultType);
+            const imgMatch = strUrl.match(/IMAGE\(\s*['"]?(https?[^'"\)]+)['"]?\s*\)/i);
+            if (imgMatch && imgMatch[1]) strUrl = imgMatch[1].trim();
+            const driveMatch = strUrl.match(/(?:file\/d\/|open\?id=|uc\?.*id=|id=)([a-zA-Z0-9_-]{25,})/);
+            if (driveMatch && driveMatch[1]) return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+            if (strUrl.startsWith('http')) return strUrl;
+            return getDefaultImage(defaultType);
+        }
+
+        /* ── HELPERS ── */
+        // Normalise gviz date values like "Date(2026,3,17)" → "4/17"
+        function normaliseDayKey(raw, formatted) {
+            // Try formatted first (e.g. "4/17/2026", "4/17", "Apr 17, 2026")
+            if (formatted) {
+                const s = String(formatted).trim();
+                // Match M/D or M/DD patterns (strip year if present)
+                const mdy = s.match(/^(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?$/);
+                if (mdy) return `${mdy[1]}/${mdy[2]}`;
+                // Match "Date(Y,M,D)"
+                const gvizDate = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+                if (gvizDate) return `${parseInt(gvizDate[2])+1}/${gvizDate[3]}`;
+                // Non-empty formatted = use as-is (might already be "4/17")
+                if (s && !s.includes('天數') && !s.includes('日期') && !s.toLowerCase().includes('day')) return s;
+            }
+            // Fallback to raw value
+            if (raw) {
+                const s = String(raw).trim();
+                const gvizDate = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+                if (gvizDate) return `${parseInt(gvizDate[2])+1}/${gvizDate[3]}`;
+                if (s && !s.includes('天數') && !s.includes('日期') && !s.toLowerCase().includes('day')) return s;
+            }
+            return null;
+        }
+
+        /* ── LOAD ITINERARY ── */
+        async function loadItinerary() {
+            try {
+                let rows = null;
+                const sheetNames = ["Itenerary","Itinerary","行程表","Day Plan","Sheet1"];
+                for (const name of sheetNames) {
+                    try { rows = await fetchSheet(name); if (rows && rows.length > 0) { console.log("✅ Itinerary sheet found:", name, "rows:", rows.length); break; } } catch(e) {}
+                }
+
+                if (!rows || rows.length === 0) {
+                    document.getElementById("timeline").innerHTML = `<div class="py-12 text-center text-[var(--ink-40)] text-sm">找不到行程資料<br><span class="text-xs opacity-60">請確認 Google Sheet 已公開且 sheet 名稱正確</span></div>`;
+                    return;
+                }
+
+                const rawData = {};
+                let lastDayKey = null;
+
+                rows.forEach((r, idx) => {
+                    if (!r || !r.c) return;
+
+                    const getValRaw = (i) => {
+                        if (!r.c || i >= r.c.length || !r.c[i]) return "";
+                        const v = r.c[i].v;
+                        if (v === null || v === undefined) return "";
+                        // Handle gviz Date object
+                        const s = String(v).trim();
+                        const gvizDate = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+                        if (gvizDate) return `${parseInt(gvizDate[2])+1}/${gvizDate[3]}`;
+                        return s;
+                    };
+                    const getVal = (i) => {
+                        if (!r.c || i >= r.c.length || !r.c[i]) return "";
+                        const cell = r.c[i];
+                        const f = cell.f ? String(cell.f).trim() : null;
+                        const v = cell.v !== null && cell.v !== undefined ? String(cell.v).trim() : null;
+                        // gviz Date: use formatted value if available
+                        if (v && v.match(/^Date\(/)) {
+                            const gvizDate = v.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+                            if (gvizDate) return f || `${parseInt(gvizDate[2])+1}/${gvizDate[3]}`;
+                        }
+                        return f || v || "";
+                    };
+
+                    // Skip header row (row 0 by index, or any row with "天數" in col A)
+                    const col0Raw = getValRaw(0);
+                    if (col0Raw === "天數" || col0Raw === "Category" || col0Raw === "日期") return;
+                    if (idx === 0 && (!col0Raw || col0Raw.includes("天數") || col0Raw.toLowerCase().includes("day"))) return;
+
+                    // Determine day key
+                    let dayKey = normaliseDayKey(
+                        r.c[0] ? r.c[0].v : null,
+                        r.c[0] ? r.c[0].f : null
+                    );
+                    if (dayKey) {
+                        lastDayKey = dayKey;
+                    } else {
+                        dayKey = lastDayKey;
+                    }
+                    if (!dayKey) return;
+
+                    const type = getValRaw(2);
+                    const title = getValRaw(4);
+
+                    // Skip truly empty rows (no type AND no title)
+                    if (!type && !title) return;
+
+                    if (!rawData[dayKey]) rawData[dayKey] = { items: [], accommodation: null };
+
+                    const safeType = type || "活動";
+                    const safeTitle = title || "未知景點";
+
+                    let rawImg = getVal(8);
+                    if (!rawImg || !rawImg.startsWith('http')) {
+                        for (let i = 0; i < r.c.length; i++) {
+                            const val = getVal(i);
+                            if ((val.startsWith('http') || val.startsWith('=IMAGE')) && !val.includes('maps.google')) { rawImg = val; break; }
+                        }
+                    }
+
+                    const itemObj = {
+                        time: getVal(1) || "Anytime",
+                        type: safeType,
+                        area: getValRaw(3),
+                        title: safeTitle,
+                        note: getValRaw(5),
+                        address: getValRaw(6),
+                        phone: getVal(7),
+                        image: getDirectImageUrl(rawImg, safeType),
+                        openTime: getVal(9),
+                        rating: getVal(10),
+                        map: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeTitle + " Vietnam")}`
+                    };
+
+                    if (safeType.includes("住宿") || safeType.toLowerCase().includes("hotel") || safeType.toLowerCase().includes("stay")) {
+                        rawData[dayKey].accommodation = itemObj;
+                    } else {
+                        rawData[dayKey].items.push(itemObj);
+                    }
+                });
+
+                window.travelApp.itineraryData = rawData;
+                const days = Object.keys(rawData).sort((a, b) => {
+                    // Sort by month/day numerically
+                    const [am, ad] = a.split('/').map(Number);
+                    const [bm, bd] = b.split('/').map(Number);
+                    return (am * 100 + (ad||0)) - (bm * 100 + (bd||0));
+                });
+                console.log("📅 Days loaded:", days, "Total items:", days.map(d => rawData[d].items.length));
+                if (days.length > 0) { renderDay(days[0]); }
+                else { document.getElementById("timeline").innerHTML = `<div class="py-12 text-center text-[var(--ink-40)] text-sm">表格內無有效行程資料</div>`; }
+            } catch(e) {
+                console.error("loadItinerary error:", e);
+                document.getElementById("timeline").innerHTML = `<div class="py-12 text-center text-red-400 text-sm font-bold">讀取錯誤：${e.message}<br><span class="text-xs font-normal opacity-70">請確認表格已公開「任何人可以檢視」</span></div>`;
+            }
+        }
+
+        /* ── RENDER DAY ── */
+        function renderDay(day) {
+            currentDay = day;
+            const days = Object.keys(window.travelApp.itineraryData).sort();
+            document.getElementById("dayButtons").innerHTML = days.map(d => `
+                <button onclick="renderDay('${d}')" class="day-btn ${currentDay === d ? 'active' : ''}">${d.toUpperCase()}</button>
+            `).join("");
+
+            const dayData = window.travelApp.itineraryData[day] || { items: [], accommodation: null };
+            let allItems = [...(dayData.items || [])];
+            if (window.travelApp.customItems && window.travelApp.customItems[day]) {
+                const sheetTitles = new Set(allItems.map(i => i.title));
+                allItems = allItems.concat(window.travelApp.customItems[day].filter(i => !sheetTitles.has(i.title)));
+            }
+            const acc = dayData.accommodation;
+            if (window.travelApp.dayOrders && window.travelApp.dayOrders[day]) {
+                const orderMap = new Map(window.travelApp.dayOrders[day].map((t, i) => [t, i]));
+                allItems.sort((a, b) => (orderMap.has(a.title) ? orderMap.get(a.title) : 999) - (orderMap.has(b.title) ? orderMap.get(b.title) : 999));
+            }
+
+            let html = "";
+
+            if (acc) {
+                const b64Acc = window.encodeItem(acc);
+                const safeTitle = acc.title || '住宿名稱';
+                html += `
+                <div class="acc-card mb-8 md:mb-10 anim-fade">
+                    <div class="h-52 md:h-72 relative bg-neutral-200 overflow-hidden">
+                        <img src="${acc.image}" alt="${safeTitle.replace(/"/g,'&quot;')}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='${getDefaultImage('hotel')}';">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-5 md:bottom-8 left-5 md:left-8 right-5 md:right-8 text-white">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[var(--amber)] shadow-[0_0_8px_var(--amber)]"></span>
+                                <span class="eyebrow text-white/60 text-[9px]">STAY // ACCOMMODATION</span>
+                            </div>
+                            <h4 class="display-title text-3xl md:text-5xl leading-tight">${safeTitle}</h4>
+                        </div>
+                    </div>
+                    <div class="p-5 md:p-8 flex flex-col md:flex-row md:justify-between md:items-end gap-5">
+                        <div class="space-y-3 text-sm text-[var(--ink-80)] md:max-w-lg">
+                            ${acc.address ? `<div class="flex items-start gap-3"><i data-lucide="map-pin" class="w-4 h-4 mt-0.5 text-[var(--amber)] flex-shrink-0"></i><span class="leading-relaxed">${acc.address}</span></div>` : ''}
+                            ${acc.openTime ? `<div class="flex items-center gap-3"><i data-lucide="clock" class="w-4 h-4 text-[var(--amber)] flex-shrink-0"></i><span>${acc.openTime}</span></div>` : ''}
+                            ${acc.rating ? `<div class="flex items-center gap-3"><i data-lucide="star" class="w-4 h-4 text-amber-500 flex-shrink-0 fill-current"></i><span>${acc.rating}</span></div>` : ''}
+                            ${acc.phone ? `<div class="flex items-center gap-3"><i data-lucide="phone" class="w-4 h-4 text-[var(--amber)] flex-shrink-0"></i><span>${acc.phone}</span></div>` : ''}
+                        </div>
+                        <div class="flex gap-2.5 w-full md:w-auto">
+                            <button onclick="getAiTips('${b64Acc}')" class="btn-amber flex-[1.5] flex items-center justify-center gap-2 text-[10px]">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>AI Tips
+                            </button>
+                            <a href="${acc.map}" target="_blank" class="flex-1 flex items-center justify-center gap-2 bg-[var(--cream)] hover:bg-[var(--cream-dark)] border border-[var(--ink-10)] rounded-[var(--radius-sm)] text-[10px] font-black tracking-widest uppercase text-[var(--ink)] transition-colors py-3.5 px-4">
+                                <i data-lucide="navigation" class="w-3.5 h-3.5"></i>Map
+                            </a>
+                            <button onclick="toggleFavFromItineraryB64('${b64Acc}')" class="w-12 h-12 flex items-center justify-center bg-[var(--cream)] hover:bg-rose-50 hover:text-rose-500 border border-[var(--ink-10)] rounded-[var(--radius-sm)] text-[var(--ink-40)] transition-all flex-shrink-0">
+                                <i data-lucide="heart" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="divider mb-7 md:mb-8 max-w-xs mx-auto"><span>Daily Itinerary</span></div>`;
+            }
+
+            if (allItems.length === 0 && !acc) {
+                html += `<div class="py-14 text-center text-[var(--ink-40)] text-sm">這天尚未安排行程</div>`;
+            }
+
+            html += allItems.map((item, idx) => {
+                const b64Item = window.encodeItem(item);
+                const safeTitle = item.title || item.name || '未命名景點';
+                const safeNote = item.note || '';
+                const isVisited = window.travelApp.visited.some(v => (v.name || v.title) === safeTitle);
+                const personalNoteVal = window.travelApp.personalNotes?.[safeTitle] || "";
+                const isCustomItem = window.travelApp.customItems?.[day]?.some(i => i.title === safeTitle);
+                return `
+                <div class="card overflow-hidden anim-slide mb-4 md:mb-5"
+                     id="card-${day}-${idx}"
+                     ondragstart="handleDragStart(event,${idx})" ondragover="handleDragOver(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,${idx},'${day}')" ondragend="this.removeAttribute('draggable');this.classList.remove('opacity-40');"
+                     style="animation-delay:${idx*80}ms">
+                    <div class="flex p-4 md:p-5 gap-3 md:gap-4 items-stretch">
+                        <!-- GRIP -->
+                        <div class="grip-handle touch-none" title="拖曳排序"
+                             onmousedown="this.closest('.card').setAttribute('draggable','true')"
+                             onmouseup="this.closest('.card').removeAttribute('draggable')"
+                             onmouseleave="this.closest('.card').removeAttribute('draggable')"
+                             ontouchstart="this.closest('.card').setAttribute('draggable','true')"
+                             ontouchend="this.closest('.card').removeAttribute('draggable')">
+                            <i data-lucide="grip-vertical" class="w-4 h-4 pointer-events-none"></i>
+                        </div>
+                        <!-- IMAGE -->
+                        <div class="w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden flex-shrink-0 bg-[var(--cream)] mt-0.5">
+                            <img src="${item.image || getDefaultImage(item.type)}" alt="${safeTitle.replace(/"/g,'&quot;')}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='${getDefaultImage(item.type)}';">
+                        </div>
+                        <!-- CONTENT -->
+                        <div class="flex-1 min-w-0 flex flex-col justify-between gap-2">
+                            <!-- TAGS -->
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="tag ${getCategoryStyle(item.type)}">${item.type || '探索'}</span>
+                                <span class="tag border border-[var(--ink-10)] text-[var(--ink-40)]">${item.area || 'Other'}</span>
+                                ${isCustomItem ? `<span class="tag badge-custom">自訂</span>` : ''}
+                            </div>
+                            <!-- TITLE + META -->
+                            <div class="flex flex-col xl:flex-row justify-between items-start gap-2">
+                                <h4 class="display-title text-xl md:text-2xl text-[var(--ink)] leading-tight flex-1">${safeTitle}</h4>
+                                ${(item.openTime || item.rating) ? `
+                                <div class="text-[11px] text-[var(--ink-80)] bg-[var(--cream)] rounded-xl px-3 py-2 border border-[var(--ink-10)] w-full xl:w-auto flex-shrink-0">
+                                    ${item.openTime ? `<div class="flex justify-between gap-4 mb-1"><span class="font-bold text-[var(--ink-40)] whitespace-nowrap">營業時間</span><span class="font-bold text-right">${item.openTime}</span></div>` : ''}
+                                    ${item.rating ? `<div class="flex justify-between gap-4"><span class="font-bold text-[var(--ink-40)] whitespace-nowrap">Google評分</span><span class="font-bold text-amber-500 flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-current"></i>${item.rating}</span></div>` : ''}
+                                </div>` : ''}
+                            </div>
+                            <!-- NOTE -->
+                            ${safeNote ? `<p class="text-xs text-[var(--ink-40)] leading-relaxed"><span class="font-bold text-[var(--ink-40)] mr-1">備註:</span>${safeNote}</p>` : ''}
+                            <!-- PERSONAL NOTE -->
+                            <input type="text" placeholder="加入個人備註…" value="${personalNoteVal.replace(/"/g,'&quot;')}"
+                                   data-key="${safeTitle.replace(/"/g,'&quot;')}"
+                                   onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();"
+                                   onchange="savePersonalNote(this.dataset.key,this.value)"
+                                   class="note-input">
+                        </div>
+                    </div>
+                    <!-- ACTION BAR -->
+                    <div class="card-actions">
+                        <button onclick="getAiTips('${b64Item}')" class="card-action-btn amber"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">AI Tips</span></button>
+                        <div class="card-action-sep"></div>
+                        <a href="${item.map}" target="_blank" class="card-action-btn"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Map</span></a>
+                        <div class="card-action-sep"></div>
+                        <button onclick="toggleVisitedFromItineraryB64('${b64Item}')" class="card-action-btn ${isVisited ? 'visited-active' : ''}">
+                            <i data-lucide="check" class="w-3.5 h-3.5 ${isVisited ? 'stroke-[2.5]' : ''}"></i><span class="hidden sm:inline">Visited</span>
+                        </button>
+                        ${isCustomItem ? `
+                        <div class="card-action-sep"></div>
+                        <button data-key="${safeTitle.replace(/"/g,'&quot;')}" onclick="removeCustomItemFromDay('${day}',this.dataset.key)" class="card-action-btn text-red-400 hover:bg-red-50">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>` : ''}
+                    </div>
+                </div>`;
+            }).join("");
+
+            document.getElementById("timeline").innerHTML = html;
+            safeCreateIcons();
+        }
+
+        /* ── DRAG & DROP ── */
+        window.draggedItemIdx = null;
+        window.handleDragStart = function(e, idx) {
+            window.draggedItemIdx = idx;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => e.target.classList.add('opacity-40'), 0);
+        };
+        window.handleDragOver = function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
+        window.handleDragEnter = function(e) { e.preventDefault(); e.currentTarget.style.outline = '2px dashed var(--amber)'; };
+        window.handleDragLeave = function(e) { e.currentTarget.style.outline = ''; };
+        window.handleDrop = function(e, targetIdx, day) {
+            e.preventDefault();
+            e.currentTarget.style.outline = '';
+            if (window.draggedItemIdx === null || window.draggedItemIdx === targetIdx) return;
+            const dayData = window.travelApp.itineraryData[day] || { items: [] };
+            let items = [...(dayData.items || [])];
+            if (window.travelApp.customItems?.[day]) {
+                const st = new Set(items.map(i => i.title));
+                items = items.concat(window.travelApp.customItems[day].filter(i => !st.has(i.title)));
+            }
+            if (window.travelApp.dayOrders?.[day]) {
+                const om = new Map(window.travelApp.dayOrders[day].map((t,i) => [t,i]));
+                items.sort((a,b) => (om.has(a.title)?om.get(a.title):999)-(om.has(b.title)?om.get(b.title):999));
+            }
+            const [moved] = items.splice(window.draggedItemIdx, 1);
+            items.splice(targetIdx, 0, moved);
+            if (!window.travelApp.dayOrders) window.travelApp.dayOrders = {};
+            window.travelApp.dayOrders[day] = items.map(i => i.title);
+            window.saveOrdersToCloud(window.travelApp.dayOrders);
+            renderDay(day);
+        };
+
+        window.savePersonalNote = function(titleKey, text) {
+            if (!window.travelApp.personalNotes) window.travelApp.personalNotes = {};
+            window.travelApp.personalNotes[titleKey] = text;
+            window.savePersonalNotesToCloud(window.travelApp.personalNotes);
+        };
+
+        window.toggleVisitedFromItineraryB64 = function(b64Str) {
+            try {
+                const item = window.decodeItem(b64Str);
+                window.toggleVisitedB64(window.encodeItem({ name: item.title, area: item.area, category: item.type, map: item.map, note: item.note }));
+                if (currentDay) renderDay(currentDay);
+            } catch(e) {}
+        };
+
+        /* ── LOAD EXPLORE ── */
+        async function loadExplore() {
+            try {
+                let rows = null;
+                const exploreNames = ["visit List","Visit List","Explore","景點清單","地點清單"];
+                for (const name of exploreNames) {
+                    try { rows = await fetchSheet(name); if (rows && rows.length > 0) { console.log("✅ Explore sheet found:", name, "rows:", rows.length); break; } } catch(e) {}
+                }
+                if (!rows || rows.length === 0) {
+                    console.warn("⚠️ Explore sheet not found. Tried:", exploreNames.join(", "));
+                    document.getElementById("exploreList").innerHTML = `<div class="py-12 text-center text-[var(--ink-40)] text-sm">找不到探索資料<br><span class="text-xs opacity-60">請確認 visit List 分頁已存在且公開</span></div>`;
+                    return;
+                }
+                window.travelApp.exploreData = [];
+                rows.forEach((r, idx) => {
+                    if (!r || !r.c) return;
+                    const getValRaw = (i) => {
+                        if (!r.c || i >= r.c.length || !r.c[i]) return "";
+                        const v = r.c[i].v;
+                        if (v === null || v === undefined) return "";
+                        return String(v).trim();
+                    };
+                    const getVal = (i) => {
+                        if (!r.c || i >= r.c.length || !r.c[i]) return "";
+                        const f = r.c[i].f ? String(r.c[i].f).trim() : null;
+                        const v = r.c[i].v !== null && r.c[i].v !== undefined ? String(r.c[i].v).trim() : null;
+                        return f || v || "";
+                    };
+                    // Skip header rows
+                    const col0 = getValRaw(0);
+                    const col2 = getValRaw(2);
+                    if (idx === 0 && (!col2 || col2 === "名稱" || col2 === "Name" || col2 === "地標名稱")) return;
+                    if (col0 === "分類" || col0 === "Category" || col0 === "類別") return;
+
+                    // Try both col 2 (C) and col 4 (E) for name
+                    let name = getValRaw(2) || getValRaw(4);
+                    if (!name) return;
+
+                    let rawImg = "";
+                    // Try col 8 (I) first, then scan all cols for http images
+                    for (let ci = 7; ci <= 10; ci++) {
+                        const v = getVal(ci);
+                        if (v && (v.startsWith('http') || v.startsWith('=IMAGE')) && !v.includes('maps.google')) { rawImg = v; break; }
+                    }
+                    if (!rawImg) {
+                        for (let ci = 0; ci < (r.c ? r.c.length : 0); ci++) {
+                            const v = getVal(ci);
+                            if (v && (v.startsWith('http') || v.startsWith('=IMAGE')) && !v.includes('maps.google')) { rawImg = v; break; }
+                        }
+                    }
+
+                    const cat = getValRaw(0) || "其他";
+                    window.travelApp.exploreData.push({
+                        category: cat,
+                        area: getValRaw(1) || getValRaw(3) || "Other",
+                        name: String(name), title: String(name),
+                        openTime: getVal(3) || getVal(9),
+                        note: getValRaw(5),
+                        rating: getVal(10) || getVal(6),
+                        image: getDirectImageUrl(rawImg, cat),
+                        address: getValRaw(6),
+                        map: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + " Vietnam")}`
+                    });
+                });
+                console.log("🗺 Explore items loaded:", window.travelApp.exploreData.length);
+                initFilters(); renderExplore();
+            } catch(e) { console.error("loadExplore error:", e); }
+        }
+
+        function initFilters() {
+            const cats = [...new Set(window.travelApp.exploreData.map(i => i.category))].filter(Boolean);
+            const areas = [...new Set(window.travelApp.exploreData.map(i => i.area))].filter(Boolean);
+            document.getElementById("categoryFilter").innerHTML = "<option value=''>TYPE: ALL</option><option value='visited'>✓ 已去過景點</option>" + cats.map(c => `<option>${c}</option>`).join("");
+            document.getElementById("areaFilter").innerHTML = "<option value=''>AREA: ALL</option>" + areas.map(a => `<option>${a}</option>`).join("");
+            document.getElementById("categoryFilter").onchange = renderExplore;
+            document.getElementById("areaFilter").onchange = renderExplore;
+        }
+
+        function renderExplore() {
+            const cat = document.getElementById("categoryFilter").value;
+            const area = document.getElementById("areaFilter").value;
+            let filtered = window.travelApp.exploreData;
+            if (cat === 'visited') {
+                filtered = filtered.filter(i => window.travelApp.visited.some(v => (v.name || v.title) === (i.name || i.title)));
+                if (area) filtered = filtered.filter(i => i.area === area);
+            } else {
+                filtered = filtered.filter(i => (!cat || i.category === cat) && (!area || i.area === area));
+            }
+            document.getElementById("exploreList").innerHTML = filtered.map((i, idx) => card(i, 'explore', idx)).join("");
+            safeCreateIcons();
+        }
+
+        function card(item, type = 'explore', idx = 0) {
+            const safeTitle = item.name || item.title || '未知景點';
+            const safeNote = item.note || '';
+            const isFav = window.travelApp.favorites.some(f => (f.name || f.title) === safeTitle);
+            const isVisited = window.travelApp.visited.some(v => (v.name || v.title) === safeTitle);
+            const b64Item = window.encodeItem(item);
+            const personalNoteVal = window.travelApp.personalNotes?.[safeTitle] || "";
+            return `
+            <div class="card overflow-hidden anim-slide mb-4 md:mb-5" style="animation-delay:${(idx%10)*70}ms">
+                <div class="flex p-4 md:p-5 gap-3 md:gap-5 items-stretch">
+                    <div class="w-20 h-20 md:w-32 md:h-32 rounded-2xl overflow-hidden flex-shrink-0 bg-[var(--cream)] mt-0.5">
+                        <img src="${item.image || getDefaultImage(item.category || item.type)}" alt="${safeTitle.replace(/"/g,'&quot;')}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='${getDefaultImage(item.category || item.type)}';">
+                    </div>
+                    <div class="flex-1 min-w-0 flex flex-col justify-between gap-2">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="tag ${getCategoryStyle(item.category || item.type)}">${item.category || item.type || '探索'}</span>
+                            <span class="tag border border-[var(--ink-10)] text-[var(--ink-40)]">${item.area || 'Other'}</span>
+                        </div>
+                        <div class="flex flex-col xl:flex-row justify-between items-start gap-2">
+                            <h4 class="display-title text-xl md:text-2xl text-[var(--ink)] leading-tight flex-1">${safeTitle}</h4>
+                            ${(item.openTime || item.rating) ? `
+                            <div class="text-[11px] text-[var(--ink-80)] bg-[var(--cream)] rounded-xl px-3 py-2 border border-[var(--ink-10)] w-full xl:w-auto flex-shrink-0">
+                                ${item.openTime ? `<div class="flex justify-between gap-4 mb-1"><span class="font-bold text-[var(--ink-40)] whitespace-nowrap">營業時間</span><span class="font-bold text-right">${item.openTime}</span></div>` : ''}
+                                ${item.rating ? `<div class="flex justify-between gap-4"><span class="font-bold text-[var(--ink-40)] whitespace-nowrap">Google評分</span><span class="font-bold text-amber-500 flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-current"></i>${item.rating}</span></div>` : ''}
+                            </div>` : ''}
+                        </div>
+                        ${safeNote ? `<p class="text-xs text-[var(--ink-40)] leading-relaxed"><span class="font-bold mr-1">備註:</span>${safeNote}</p>` : ''}
+                        <input type="text" placeholder="加入個人備註…" value="${personalNoteVal.replace(/"/g,'&quot;')}"
+                               data-key="${safeTitle.replace(/"/g,'&quot;')}"
+                               onchange="savePersonalNote(this.dataset.key,this.value)"
+                               class="note-input">
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button onclick="getAiTips('${b64Item}')" class="card-action-btn amber"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">AI Tips</span></button>
+                    <div class="card-action-sep"></div>
+                    <a href="${item.map}" target="_blank" class="card-action-btn"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Map</span></a>
+                    <div class="card-action-sep"></div>
+                    ${type === 'explore' ? `
+                    <button onclick="toggleVisitedB64('${b64Item}')" class="card-action-btn ${isVisited ? 'visited-active' : ''}">
+                        <i data-lucide="check" class="w-3.5 h-3.5 ${isVisited ? 'stroke-[2.5]' : ''}"></i><span class="hidden sm:inline">Visited</span>
+                    </button>
+                    <div class="card-action-sep"></div>
+                    <button onclick="openAddToDayModal('${b64Item}')" class="card-action-btn plan-active flex-[1.2]">
+                        <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Plan</span>
+                    </button>
+                    ` : `
+                    <button onclick="toggleFavB64('${b64Item}')" class="card-action-btn ${isFav ? 'bg-rose-500 text-white' : ''}">
+                        <i data-lucide="heart" class="w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}"></i><span class="hidden sm:inline">Save</span>
+                    </button>`}
+                </div>
+            </div>`;
+        }
+
+        window.toggleFav = function(item) {
+            const itemName = item.name || item.title;
+            let favs = [...window.travelApp.favorites];
+            const index = favs.findIndex(f => (f.name || f.title) === itemName);
+            if (index > -1) { favs.splice(index, 1); } else { favs.push(item); }
+            window.travelApp.favorites = favs;
+            window.saveFavoriteToCloud(favs);
+        };
+        window.toggleFavB64 = function(b64Str) {
+            try { window.toggleFav(window.decodeItem(b64Str)); if (!document.getElementById('explore').classList.contains('hidden')) renderExplore(); } catch(e) {}
+        };
+        window.toggleFavFromItineraryB64 = function(b64Str) {
+            try { const item = window.decodeItem(b64Str); window.toggleFav({ name: item.title, area: item.area, category: item.type, map: item.map, note: item.note }); } catch(e) {}
+        };
+        window.toggleVisitedB64 = function(b64Str) {
+            try {
+                const item = window.decodeItem(b64Str);
+                const itemName = item.name || item.title;
+                let visited = [...window.travelApp.visited];
+                const index = visited.findIndex(v => (v.name || v.title) === itemName);
+                if (index > -1) { visited.splice(index, 1); } else { visited.push(item); }
+                window.travelApp.visited = visited;
+                window.saveVisitedToCloud(visited);
+                if (!document.getElementById('explore').classList.contains('hidden')) renderExplore();
+            } catch(e) {}
+        };
+
+        /* ── EXPENSES ── */
+        window.isSettlementVisible = false;
+        window.toggleSettlement = function() { window.isSettlementVisible = !window.isSettlementVisible; renderExpenses(); };
+        window.addExpense = function() {
+            const item = document.getElementById('expItem').value.trim();
+            const payer = document.getElementById('expPayer').value.trim();
+            let amount = Number(document.getElementById('expAmount').value);
+            const currency = document.getElementById('expCurrency').value;
+            const category = document.getElementById('expCategory').value || '其他';
+            if(!item || !payer || !amount) return;
+            const rate = window.travelApp.exchangeRate || 0.0013;
+            if (currency === 'TWD') { amount = amount / rate; }
+            const newExp = { id: Date.now().toString(), item, payer, amount, category };
+            const exps = [...window.travelApp.expenses, newExp];
+            window.travelApp.expenses = exps;
+            window.saveExpensesToCloud(exps);
+            document.getElementById('expItem').value = '';
+            document.getElementById('expAmount').value = '';
+            renderExpenses();
+        };
+        window.deleteExpense = function(id) {
+            const exps = window.travelApp.expenses.filter(e => e.id !== id);
+            window.travelApp.expenses = exps;
+            window.saveExpensesToCloud(exps);
+            renderExpenses();
+        };
+        window.renderExpenses = function() {
+            const exps = window.travelApp.expenses || [];
+            const rate = window.travelApp.exchangeRate || 0.0013;
+            const totals = {}; let grandTotal = 0;
+            exps.forEach(ex => { const amt = Number(ex.amount); totals[ex.payer] = (totals[ex.payer] || 0) + amt; grandTotal += amt; });
+            const grandTotalTWD = grandTotal * rate;
+            const people = Object.keys(totals);
+            const perPerson = people.length > 0 ? grandTotal / people.length : 0;
+            const balances = {};
+            people.forEach(p => balances[p] = totals[p] - perPerson);
+            const debtors = [], creditors = [];
+            for (const [person, balance] of Object.entries(balances)) {
+                if (balance < -0.01) debtors.push({ person, amount: -balance });
+                else if (balance > 0.01) creditors.push({ person, amount: balance });
+            }
+            debtors.sort((a,b) => b.amount - a.amount);
+            creditors.sort((a,b) => b.amount - a.amount);
+            const settlements = [];
+            let i = 0, j = 0;
+            while(i < debtors.length && j < creditors.length) {
+                const d = debtors[i], c = creditors[j];
+                const amount = Math.min(d.amount, c.amount);
+                settlements.push({ from: d.person, to: c.person, amount });
+                d.amount -= amount; c.amount -= amount;
+                if(d.amount < 0.01) i++;
+                if(c.amount < 0.01) j++;
+            }
+            document.getElementById('expenseSummary').innerHTML = `
+                <div class="ledger-total relative">
+                    <p class="eyebrow text-[9px] text-white/40 mb-3">Total Expenses</p>
+                    <div class="flex items-end gap-2 mb-1">
+                        <h4 class="display-title text-4xl md:text-5xl text-white leading-none">${Math.round(grandTotal).toLocaleString()}</h4>
+                        <span class="text-sm font-medium text-white/40 pb-1">VND</span>
+                    </div>
+                    <p class="text-sm font-bold text-white/60 mb-7">≈ NT$ ${Math.round(grandTotalTWD).toLocaleString()}</p>
+                    ${people.length > 0 ? `
+                    <button onclick="toggleSettlement()" class="w-full btn-amber text-[11px] tracking-widest">
+                        ${window.isSettlementVisible ? '隱藏結算結果' : 'Settle Up →'}
+                    </button>
+                    ${window.isSettlementVisible ? `
+                    <div class="mt-6 pt-6 border-t border-white/10 space-y-4 anim-fade">
+                        <p class="eyebrow text-[9px] text-[var(--amber)]">How to Settle Up (TWD)</p>
+                        ${settlements.length > 0 ? settlements.map(s => `
+                            <div class="flex items-center justify-between bg-white/5 px-4 py-3.5 rounded-xl">
+                                <span class="text-sm font-bold text-white">${s.from} <span class="text-white/40 mx-1">→</span> ${s.to}</span>
+                                <div class="text-right">
+                                    <div class="font-black text-lg text-[var(--amber)]">NT$ ${Math.round(s.amount * rate).toLocaleString()}</div>
+                                    <div class="text-[10px] text-white/30 mt-0.5">${Math.round(s.amount).toLocaleString()} VND</div>
+                                </div>
+                            </div>`).join('') : '<p class="text-xs text-white/40 text-center py-4 bg-white/5 rounded-xl">帳目平衡，無須分帳 🎉</p>'}
+                        <div class="pt-5 border-t border-white/10">
+                            <p class="eyebrow text-[9px] text-white/30 mb-4">Individual Paid · Avg NT$ ${Math.round(perPerson * rate).toLocaleString()}</p>
+                            ${people.map(p => `
+                                <div class="flex justify-between items-center text-sm mb-3">
+                                    <span class="text-white/60">${p}</span>
+                                    <div class="text-right">
+                                        <span class="font-black text-white">NT$ ${Math.round(totals[p] * rate).toLocaleString()}</span>
+                                        <div class="text-[10px] text-white/30">${Math.round(totals[p]).toLocaleString()} VND</div>
+                                    </div>
+                                </div>`).join('')}
+                        </div>
+                    </div>` : ''}` : ''}
+                </div>`;
+            const catEmoji = { '食物':'🍜','飲料':'☕','酒吧':'🍺','住宿':'🏨','娛樂':'🎭','其他':'📦' };
+            document.getElementById('expenseList').innerHTML = exps.slice().reverse().map((ex, idx) => {
+                const emoji = catEmoji[ex.category] || '📦';
+                return `
+                <div class="card p-4 md:p-5 flex justify-between items-center anim-slide" style="animation-delay:${(idx%10)*25}ms">
+                    <div class="flex-1 pr-4 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-base leading-none">${emoji}</span>
+                            <span class="eyebrow text-[8px] opacity-50">${ex.payer} · ${ex.category||'其他'}</span>
+                        </div>
+                        <h4 class="display-title text-lg text-[var(--ink)] truncate">${ex.item}</h4>
+                    </div>
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <div class="text-right">
+                            <div class="font-black text-sm text-[var(--ink)]">${Math.round(Number(ex.amount)).toLocaleString()} <span class="text-[9px] font-bold text-[var(--ink-40)]">VND</span></div>
+                            <div class="text-[11px] font-bold text-[var(--ink-40)] mt-0.5">≈ NT$ ${Math.round(Number(ex.amount) * rate).toLocaleString()}</div>
+                        </div>
+                        <button onclick="deleteExpense('${ex.id}')" class="w-10 h-10 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-400 rounded-xl active:scale-95 transition-colors flex-shrink-0">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('') || `<div class="py-14 text-center text-[var(--ink-40)]"><i data-lucide="receipt" class="w-10 h-10 mx-auto mb-3 opacity-30"></i><p class="eyebrow text-[10px]">No Records</p></div>`;
+            safeCreateIcons();
+            // render chart
+            renderExpenseChart(exps, rate);
+        };
+
+        /* ── MAP ── */
+        let myMap = null, markersLayer = null;
+        window.geocodeCache = JSON.parse(localStorage.getItem('geocodeCache') || '{}');
+        window.isMapLoading = false;
+        window.initOrUpdateMap = async function() {
+            if (!myMap) {
+                myMap = L.map('interactiveMap').setView([21.0285, 105.8542], 13);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(myMap);
+                markersLayer = L.layerGroup().addTo(myMap);
+            }
+            setTimeout(() => { myMap.invalidateSize(); }, 300);
+            if(window.isMapLoading) return;
+            const data = window.travelApp.exploreData || [];
+            if (data.length === 0) return;
+            window.isMapLoading = true;
+            document.getElementById('mapTotal').innerText = data.length;
+            document.getElementById('mapProgress').innerText = 0;
+            document.getElementById('mapLoading').classList.remove('opacity-0');
+            markersLayer.clearLayers();
+            const bounds = [];
+            let loaded = 0;
+            for (let i = 0; i < data.length; i++) {
+                const item = data[i];
+                const safeTitle = item.title || item.name;
+                if(!safeTitle) continue;
+                let coords = window.geocodeCache[safeTitle];
+                if (!coords) {
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(safeTitle + " Hanoi")}&limit=1`);
+                        const result = await res.json();
+                        if (result && result.length > 0) {
+                            coords = { lat: parseFloat(result[0].lat), lng: parseFloat(result[0].lon) };
+                        } else {
+                            coords = { lat: 21.0285 + (Math.random()-0.5)*0.05, lng: 105.8542 + (Math.random()-0.5)*0.05 };
+                        }
+                        window.geocodeCache[safeTitle] = coords;
+                        localStorage.setItem('geocodeCache', JSON.stringify(window.geocodeCache));
+                    } catch(e) {}
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+                loaded++;
+                document.getElementById('mapProgress').innerText = loaded;
+                if (coords) {
+                    const isVisited = window.travelApp.visited.some(v => (v.name || v.title) === safeTitle);
+                    const markerColor = isVisited ? '#10b981' : '#e8531a';
+                    const customIcon = L.divIcon({
+                        className: '',
+                        html: `<div style="background:${markerColor};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);"></div>`,
+                        iconSize: [14, 14], iconAnchor: [7, 7]
+                    });
+                    const popupContent = `<div style="font-family:'DM Sans',sans-serif;padding:4px;">
+                        <p style="font-size:9px;font-weight:800;color:#a3a3a3;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${item.category||'探索'}</p>
+                        <h4 style="font-size:14px;font-weight:900;color:#14110f;margin-bottom:8px;line-height:1.2;">${safeTitle}</h4>
+                        <a href="${item.map}" target="_blank" style="font-size:10px;font-weight:800;color:#e8531a;text-decoration:none;">在 Google Maps 開啟 →</a>
+                    </div>`;
+                    markersLayer.addLayer(L.marker([coords.lat, coords.lng], {icon: customIcon}).bindPopup(popupContent));
+                    bounds.push([coords.lat, coords.lng]);
+                }
+            }
+            document.getElementById('mapLoading').classList.add('opacity-0');
+            if (bounds.length > 0) myMap.fitBounds(bounds, { padding: [50, 50] });
+            window.isMapLoading = false;
+        };
+
+        /* ── PHRASES ── */
+        const phrasesData = [
+            { vi: "Xin chào", zh: "你好", cat: "basic" },
+            { vi: "Cảm ơn", zh: "謝謝", cat: "basic" },
+            { vi: "Xin lỗi", zh: "對不起 / 不好意思", cat: "basic" },
+            { vi: "Tạm biệt", zh: "再見", cat: "basic" },
+            { vi: "Vâng / Dạ", zh: "是 / 好的", cat: "basic" },
+            { vi: "Không", zh: "不是 / 不要", cat: "basic" },
+            { vi: "Bạn có nói tiếng Anh không?", zh: "你會說英文嗎？", cat: "basic" },
+            { vi: "Tôi không hiểu", zh: "我聽不懂", cat: "basic" },
+            { vi: "Nhà vệ sinh ở đâu?", zh: "廁所在哪裡？", cat: "basic" },
+            { vi: "Rất vui được gặp bạn", zh: "很高興認識你", cat: "basic" },
+            { vi: "Tính tiền", zh: "結帳 / 買單", cat: "dining" },
+            { vi: "Ngon quá!", zh: "很好吃！", cat: "dining" },
+            { vi: "Không cay", zh: "不要辣", cat: "dining" },
+            { vi: "Không đá", zh: "去冰", cat: "dining" },
+            { vi: "Một ly cà phê sữa đá", zh: "一杯冰煉乳咖啡", cat: "dining" },
+            { vi: "Cho tôi thực đơn", zh: "請給我菜單", cat: "dining" },
+            { vi: "Xin hỏi cái này có thịt bò không?", zh: "請問這個有牛肉嗎？", cat: "dining" },
+            { vi: "Không cho rau mùi", zh: "我不要加香菜", cat: "dining" },
+            { vi: "Bao nhiêu tiền?", zh: "多少錢？", cat: "shopping" },
+            { vi: "Quá đắt!", zh: "太貴了！", cat: "shopping" },
+            { vi: "Có giảm giá không?", zh: "可以便宜一點嗎？", cat: "shopping" },
+            { vi: "Tôi muốn đi đến đây", zh: "我想去這裡 (指著地圖)", cat: "transport" },
+            { vi: "Đi thẳng", zh: "直走", cat: "transport" },
+            { vi: "Rẽ trái", zh: "左轉", cat: "transport" },
+            { vi: "Rẽ phải", zh: "右轉", cat: "transport" },
+            { vi: "Dừng lại ở đây", zh: "停在這裡", cat: "transport" },
+            { vi: "Khách sạn của tôi ở đây", zh: "我的飯店在這裡", cat: "transport" },
+            { vi: "Xin giúp tôi", zh: "請幫幫我", cat: "emergency" },
+            { vi: "Cứu tôi với!", zh: "救命！", cat: "emergency" },
+            { vi: "Tôi bị lạc", zh: "我迷路了", cat: "emergency" },
+            { vi: "Xin gọi cảnh sát", zh: "請叫警察", cat: "emergency" },
+            { vi: "Bệnh viện ở đâu?", zh: "醫院在哪裡？", cat: "emergency" }
+        ];
+        let currentPhraseCat = 'all';
+        const phraseCategories = [
+            { id:'all',name:'全部'},{id:'basic',name:'常用'},{id:'dining',name:'餐飲'},
+            {id:'shopping',name:'購物'},{id:'transport',name:'交通'},{id:'emergency',name:'緊急'}
+        ];
+        function renderPhrases(cat = currentPhraseCat) {
+            currentPhraseCat = cat;
+            document.getElementById("phraseCategoryButtons").innerHTML = phraseCategories.map(c => `
+                <button onclick="renderPhrases('${c.id}')" class="phrase-btn ${currentPhraseCat===c.id?'active':''}">${c.name}</button>`).join("");
+            const filtered = currentPhraseCat === 'all' ? phrasesData : phrasesData.filter(p => p.cat === currentPhraseCat);
+            document.getElementById("phrasesList").innerHTML = filtered.map((item, idx) => `
+                <div class="card p-4 md:p-5 flex justify-between items-center anim-slide" style="animation-delay:${(idx%10)*25}ms">
+                    <div class="flex-1 pr-3">
+                        <h4 class="text-base md:text-lg font-black text-[var(--ink)] leading-tight">${item.vi}</h4>
+                        <p class="text-xs md:text-[13px] font-medium text-[var(--ink-40)] mt-1">${item.zh}</p>
+                    </div>
+                    <button data-text="${item.vi.replace(/"/g,'&quot;')}" onclick="speakVietnamese(this.dataset.text)"
+                        class="w-11 h-11 flex items-center justify-center bg-[var(--cream)] hover:bg-[var(--amber-glow)] text-[var(--amber)] rounded-full flex-shrink-0 transition-colors active:scale-95 border border-[var(--ink-10)]">
+                        <i data-lucide="volume-2" class="w-5 h-5"></i>
+                    </button>
+                </div>`).join("");
+            safeCreateIcons();
+        }
+        function speakVietnamese(text) {
+            if (!window.speechSynthesis) { showToast("您的裝置不支援語音功能。"); return; }
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'vi-VN'; u.rate = 0.85;
+            const voices = window.speechSynthesis.getVoices();
+            const viVoices = voices.filter(v => v.lang.includes('vi'));
+            const maleVoice = viVoices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('nam'));
+            if (maleVoice) u.voice = maleVoice;
+            else if (viVoices.length > 0) u.voice = viVoices[0];
+            window.speechSynthesis.speak(u);
+        }
+
+        /* ── AI PHRASE ── */
+        async function generateCustomPhrase() {
+            const input = document.getElementById('aiPhraseInput').value.trim();
+            if (!input) return;
+            const resultEl = document.getElementById('aiPhraseResult');
+            resultEl.classList.remove('hidden');
+            resultEl.innerHTML = `<div class="flex items-center gap-2 text-[var(--ink-40)]"><i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[var(--amber)]"></i><span class="text-sm font-medium">翻譯中…</span></div>`;
+            safeCreateIcons();
+            const prompt = `請將以下中文或英文內容翻譯成越南文，並提供繁體中文音譯說明，幫助讀者發音。輸入：「${input}」。請以 JSON 格式回答，包含 "vi"（越南文）和 "zh"（中文說明，包含音近說明）兩個欄位。`;
+            try {
+                const raw = await callGemini(prompt, true);
+                const parsed = JSON.parse(raw);
+                resultEl.innerHTML = `
+                    <div class="space-y-3">
+                        <div>
+                            <p class="eyebrow text-[9px] mb-1 text-[var(--amber)]">越南文</p>
+                            <p class="text-xl font-black text-[var(--ink)]">${parsed.vi || '–'}</p>
+                        </div>
+                        <div>
+                            <p class="eyebrow text-[9px] mb-1">發音說明</p>
+                            <p class="text-sm text-[var(--ink-80)]">${parsed.zh || '–'}</p>
+                        </div>
+                        <button onclick="speakVietnamese('${(parsed.vi||'').replace(/'/g,"\\'")}')" class="flex items-center gap-2 bg-[var(--cream)] hover:bg-[var(--cream-dark)] text-[var(--amber)] px-4 py-2.5 rounded-full text-xs font-bold transition-colors">
+                            <i data-lucide="volume-2" class="w-4 h-4"></i> 朗讀越南文
+                        </button>
+                    </div>`;
+            } catch(e) {
+                resultEl.innerHTML = `<p class="text-sm text-red-400 font-bold">翻譯失敗，請稍後再試。</p>`;
+            }
+            safeCreateIcons();
+        }
+
+        /* ── TAB SWITCHER ── */
+        function showTab(id) {
+            document.querySelectorAll(".tab-content").forEach(t => t.classList.add("hidden"));
+            document.getElementById(id).classList.remove("hidden");
+
+            const titles = { home:'Holiday in Hanoi', itinerary:'Day Plans', explore:'Discover', mapTab:'Discover Map', phrases:'Holiday in Hanoi', expenses:'Shared Ledger' };
+            document.getElementById("pageTitle").innerText = titles[id] || '';
+
+            // Mobile nav
+            document.querySelectorAll(".mobile-nav-btn").forEach(btn => btn.classList.remove("active"));
+            const mBtn = document.getElementById(`nav-${id}`);
+            if (mBtn) mBtn.classList.add("active");
+
+            // Desktop nav
+            document.querySelectorAll(".desk-nav-btn").forEach(btn => btn.classList.remove("active"));
+            const dBtn = document.getElementById(`nav-desktop-${id}`);
+            if (dBtn) dBtn.classList.add("active");
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (id === 'explore') renderExplore();
+            if (id === 'expenses') renderExpenses();
+            if (id === 'phrases') renderPhrases();
+            if (id === 'mapTab') {
+                if (window.myMap) setTimeout(() => { window.myMap.invalidateSize(); }, 300);
+                initOrUpdateMap();
+            }
+            safeCreateIcons();
+        }
+    </script>
+</body>
+</html>
