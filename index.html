@@ -169,704 +169,509 @@
     </script>
 
     <style>
-        /* ── DESIGN TOKENS ── */
+        /*
+         * HOLIDAY IN HANOI
+         * Direction: Olive green base · White floating cards
+         * Warm earthy editorial — ref: Atlanta tennis app screenshot
+         */
+
+        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400;1,700&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
         :root {
-            --cream:       #f7f4ee;
-            --cream-dark:  #edeae2;
-            --ink:         #14110f;
-            --ink-80:      rgba(20,17,15,0.8);
-            --ink-40:      rgba(20,17,15,0.4);
-            --ink-10:      rgba(20,17,15,0.07);
-            --amber:       #e8531a;
-            --amber-glow:  rgba(232,83,26,0.18);
-            --amber-dark:  #c24210;
-            --emerald:     #10b981;
-            --card-bg:     #ffffff;
-            --card-shadow: 0 2px 16px rgba(20,17,15,0.06), 0 0 0 1px rgba(20,17,15,0.04);
-            --card-shadow-hover: 0 8px 32px rgba(20,17,15,0.12), 0 0 0 1px rgba(20,17,15,0.06);
-            --radius-card: 20px;
-            --radius-sm:   12px;
-            --radius-pill: 100px;
-            --font-display: 'Playfair Display', Georgia, serif;
-            --font-body:    'DM Sans', system-ui, sans-serif;
-            --font-mono:    'DM Mono', monospace;
-            --nav-h:        72px;
+            --olive:      #3c4a35;
+            --olive-dark: #2e3929;
+            --olive-mid:  #4d5e44;
+            --olive-soft: #5a6e50;
+            --cream:      #f5f0e8;
+            --cream-dark: #ede6d8;
+            --white:      #ffffff;
+            --ink:        #1a1f17;
+            --ink-50:     rgba(26,31,23,0.5);
+            --ink-20:     rgba(26,31,23,0.2);
+            --ink-08:     rgba(26,31,23,0.08);
+
+            --font-display: 'Libre Baskerville', Georgia, serif;
+            --font-body:    'Outfit', system-ui, sans-serif;
+            --font-mono:    'JetBrains Mono', monospace;
+
+            --nav-h: 68px;
+
+            --card-radius: 20px;
+            --card-shadow: 0 4px 24px rgba(26,31,23,0.12), 0 1px 4px rgba(26,31,23,0.06);
+            --card-shadow-hover: 0 8px 36px rgba(26,31,23,0.18);
         }
 
-        /* ── RESET & BASE ── */
-        *, *::before, *::after { box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
 
-        body { 
+        body {
             font-family: var(--font-body);
-            background-color: var(--cream);
+            background: var(--olive);
             color: var(--ink);
             -webkit-tap-highlight-color: transparent;
             padding-top: env(safe-area-inset-top);
             min-height: 100dvh;
             padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
+            -webkit-font-smoothing: antialiased;
         }
+        @media (min-width: 768px) { body { padding-bottom: 2rem; } }
 
-        @media (min-width: 768px) {
-            body { padding-bottom: 2rem; }
-        }
-
-        /* ── TYPOGRAPHY ── */
-        .display-title {
-            font-family: var(--font-display);
-            font-weight: 900;
-            font-style: italic;
-            letter-spacing: -0.02em;
-            line-height: 1.05;
-        }
-        .eyebrow {
-            font-family: var(--font-mono);
-            font-size: 10px;
-            font-weight: 500;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: var(--ink-40);
-        }
-        .label-sm {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-        }
-
-        /* ── SCROLLBAR ── */
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-
-        /* ── CARDS ── */
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--radius-card);
-            box-shadow: var(--card-shadow);
-            transition: box-shadow 0.25s ease, transform 0.2s ease;
-        }
-        .card:hover { box-shadow: var(--card-shadow-hover); }
-
-        /* ── HERO ── */
-        .hero-photo {
-            position: absolute; inset: 0;
-            background-image: url('https://blogger.googleusercontent.com/img/a/AVvXsEg9mbE5TkQqaJ3tC-NA-LEmesYg9-BCCAlTGS3VQMa7cojnidTeSpmeLkmZLzQtLilrvVA0jwMmuhBiAyvUZsal1CAt-uEEdnch4fjgzWiZxW-ONr9vEtyY8gzeIn6TvMQ2ojxkJcO04bEitOAXbnM-2oHlZEm0tciQZ58qHwDRhLoF8FmhZazHfwd6mw0');
-            background-size: cover;
-            background-position: center;
-            /* Hanoi golden-hour gradient fallback when image can't load (file://) */
-            background-color: #9b8b7a;
-            background-blend-mode: multiply;
-            background-image:
-                url('https://blogger.googleusercontent.com/img/a/AVvXsEg9mbE5TkQqaJ3tC-NA-LEmesYg9-BCCAlTGS3VQMa7cojnidTeSpmeLkmZLzQtLilrvVA0jwMmuhBiAyvUZsal1CAt-uEEdnch4fjgzWiZxW-ONr9vEtyY8gzeIn6TvMQ2ojxkJcO04bEitOAXbnM-2oHlZEm0tciQZ58qHwDRhLoF8FmhZazHfwd6mw0'),
-                linear-gradient(160deg, #c4a882 0%, #8b6f5c 40%, #4a3728 100%);
-            transition: transform 0.6s ease;
-        }
-        .hero-wrap:hover .hero-photo { transform: scale(1.02); }
-        .hero-mask {
-            position: absolute; inset: 0;
-            background: linear-gradient(160deg, rgba(20,17,15,0.15) 0%, transparent 35%, transparent 55%, rgba(20,17,15,0.65) 100%);
-        }
-        .hero-grain {
-            position: absolute; inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-            opacity: 0.4;
+        /* Subtle texture on bg */
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(255,255,255,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 90%, rgba(0,0,0,0.15) 0%, transparent 60%);
             pointer-events: none;
         }
 
-        /* ── HEADER ── */
-        .site-header {
-            position: sticky; top: 0; z-index: 50;
-            background: rgba(247,244,238,0.88);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid var(--ink-10);
+        /* ── TYPOGRAPHY ─────────────────────── */
+        .display-title {
+            font-family: var(--font-display);
+            font-weight: 400; font-style: italic;
+            letter-spacing: -0.01em; line-height: 1.08;
+        }
+        .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 9px; font-weight: 500;
+            letter-spacing: 0.22em; text-transform: uppercase;
+            color: var(--ink-50);
+        }
+        .label-sm {
+            font-family: var(--font-body);
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
         }
 
-        /* ── DESKTOP NAV ── */
+        /* ── SCROLLBAR ──────────────────────── */
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* ── CARDS — white floating ─────────── */
+        .card {
+            background: var(--white);
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            transition: box-shadow 0.3s ease, transform 0.25s ease;
+        }
+        .card:hover {
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        /* ── HERO ───────────────────────────── */
+        .hero-wrap { overflow: hidden; position: relative; border-radius: 24px; }
+        .hero-photo {
+            position: absolute; inset: 0;
+            background-size: cover; background-position: center;
+            background-color: var(--olive-dark);
+            background-image: url('https://blogger.googleusercontent.com/img/a/AVvXsEg9mbE5TkQqaJ3tC-NA-LEmesYg9-BCCAlTGS3VQMa7cojnidTeSpmeLkmZLzQtLilrvVA0jwMmuhBiAyvUZsal1CAt-uEEdnch4fjgzWiZxW-ONr9vEtyY8gzeIn6TvMQ2ojxkJcO04bEitOAXbnM-2oHlZEm0tciQZ58qHwDRhLoF8FmhZazHfwd6mw0');
+            transition: transform 8s ease;
+        }
+        .hero-wrap:hover .hero-photo { transform: scale(1.04); }
+        .hero-mask {
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                160deg,
+                rgba(46,57,41,0.1) 0%,
+                transparent 40%,
+                rgba(26,31,23,0.75) 100%
+            );
+        }
+
+        /* ── HEADER ─────────────────────────── */
+        .site-header {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(60,74,53,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        /* Header title color override for olive bg */
+        .site-header .display-title,
+        .site-header h1 { color: var(--cream) !important; }
+        .site-header .eyebrow { color: rgba(245,240,232,0.5) !important; }
+
+        /* ── DESKTOP NAV ────────────────────── */
         .desk-nav-pill {
-            background: rgba(255,255,255,0.7);
-            border: 1px solid var(--ink-10);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: var(--radius-pill);
-            padding: 6px;
-            display: flex; gap: 2px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 100px;
+            padding: 4px;
+            display: flex; gap: 1px;
         }
         .desk-nav-btn {
             display: flex; align-items: center; gap: 6px;
-            padding: 8px 16px;
-            border-radius: var(--radius-pill);
-            font-size: 12px; font-weight: 700;
-            letter-spacing: 0.04em;
-            color: var(--ink-40);
-            transition: all 0.2s ease;
-            white-space: nowrap;
+            padding: 7px 16px; border-radius: 100px;
+            font-size: 12px; font-weight: 500; letter-spacing: 0.02em;
+            color: rgba(245,240,232,0.55);
+            transition: all 0.2s ease; white-space: nowrap;
         }
-        .desk-nav-btn:hover { color: var(--ink); background: var(--ink-10); }
-        .desk-nav-btn.active { color: var(--card-bg); background: var(--ink); }
+        .desk-nav-btn svg { width: 13px; height: 13px; }
+        .desk-nav-btn:hover { color: var(--cream); background: rgba(255,255,255,0.08); }
+        .desk-nav-btn.active {
+            background: var(--cream); color: var(--olive-dark);
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
 
-        /* ── MOBILE NAV ── */
+        /* ── MOBILE NAV ─────────────────────── */
         .mobile-nav {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            z-index: 50;
-            background: rgba(247,244,238,0.92);
-            backdrop-filter: blur(24px) saturate(200%);
-            -webkit-backdrop-filter: blur(24px) saturate(200%);
-            border-top: 1px solid var(--ink-10);
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+            background: var(--olive-dark);
             padding-bottom: env(safe-area-inset-bottom);
         }
         .mobile-nav-inner {
             max-width: 480px; margin: 0 auto;
             display: flex; justify-content: space-around; align-items: center;
             height: var(--nav-h);
-            padding: 8px 4px;
         }
         .mobile-nav-btn {
-            display: flex; flex-direction: column; align-items: center; gap: 3px;
-            padding: 6px 10px;
-            border-radius: 14px;
-            font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-            color: var(--ink-40);
-            transition: all 0.2s ease;
-            min-width: 48px;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 6px 10px; border-radius: 14px;
+            font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+            color: rgba(245,240,232,0.35);
+            transition: all 0.2s ease; min-width: 50px;
         }
         .mobile-nav-btn svg { width: 20px; height: 20px; transition: transform 0.2s ease; }
         .mobile-nav-btn.active {
-            color: var(--amber);
-            background: var(--amber-glow);
+            color: var(--cream);
+            background: rgba(255,255,255,0.1);
         }
         .mobile-nav-btn.active svg { transform: scale(1.1); }
 
-        /* ── WEATHER BADGE ── */
+        /* ── WEATHER BADGE ──────────────────── */
         .weather-badge {
             display: flex; align-items: center; gap: 8px;
-            background: var(--card-bg);
-            border: 1px solid var(--ink-10);
-            border-radius: var(--radius-pill);
-            padding: 8px 16px;
-            box-shadow: 0 1px 6px rgba(20,17,15,0.05);
+            background: rgba(255,255,255,0.1);
+            border-radius: 100px;
+            padding: 7px 16px;
         }
+        .weather-badge span { color: var(--cream); }
 
-        /* ── DAY BUTTONS ── */
+        /* ── DAY BUTTONS ────────────────────── */
         .day-btn {
             flex: none;
-            padding: 10px 22px;
-            border-radius: var(--radius-pill);
-            font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-            transition: all 0.25s ease;
-            border: 1px solid var(--ink-10);
-            background: var(--card-bg);
-            color: var(--ink-40);
+            padding: 9px 20px; border-radius: 100px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+            transition: all 0.2s ease;
+            background: var(--white); color: var(--ink-50);
+            box-shadow: 0 2px 8px rgba(26,31,23,0.1);
         }
-        .day-btn:hover { color: var(--ink); border-color: var(--ink-40); }
+        .day-btn:hover { color: var(--ink); box-shadow: 0 4px 16px rgba(26,31,23,0.15); }
         .day-btn.active {
-            background: var(--ink);
-            color: var(--card-bg);
-            border-color: var(--ink);
-            box-shadow: 0 4px 12px rgba(20,17,15,0.25);
+            background: var(--ink); color: var(--cream);
+            box-shadow: 0 4px 16px rgba(26,31,23,0.3);
             transform: translateY(-1px);
         }
 
-        /* ── PHRASE CATEGORY BUTTONS ── */
+        /* ── PHRASE BUTTONS ─────────────────── */
         .phrase-btn {
             flex: none;
-            padding: 10px 20px;
-            border-radius: var(--radius-pill);
-            font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-            border: 1px solid var(--ink-10);
-            background: var(--card-bg);
-            color: var(--ink-40);
+            padding: 9px 18px; border-radius: 100px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+            background: var(--white); color: var(--ink-50);
+            box-shadow: 0 2px 8px rgba(26,31,23,0.1);
             transition: all 0.2s ease;
         }
         .phrase-btn.active {
-            background: var(--ink); color: var(--card-bg);
-            border-color: var(--ink);
-            box-shadow: 0 4px 12px rgba(20,17,15,0.2);
-            transform: translateY(-1px);
+            background: var(--ink); color: var(--cream);
+            box-shadow: 0 4px 16px rgba(26,31,23,0.25);
         }
 
-        /* ── SECTION HEADER ── */
+        /* ── SECTION HEADER ─────────────────── */
         .section-header {
             font-family: var(--font-display);
-            font-weight: 900; font-style: italic;
-            font-size: clamp(2.5rem, 7vw, 4rem);
-            letter-spacing: -0.02em;
-            line-height: 1;
-            color: var(--amber);
+            font-weight: 700; font-style: italic;
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            letter-spacing: -0.02em; line-height: 0.95;
+            color: var(--cream);
         }
 
-        /* ── ACCENT TAG ── */
+        /* ── TAG ────────────────────────────── */
         .tag {
             display: inline-flex; align-items: center;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
-            border: 1px solid transparent;
+            padding: 2px 8px; border-radius: 6px;
+            font-size: 8.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
         }
 
-        /* ── ACTION BUTTONS ── */
+        /* ── BUTTONS ────────────────────────── */
         .btn-primary {
-            background: var(--ink); color: var(--card-bg);
-            border-radius: var(--radius-sm);
-            padding: 14px 24px;
-            font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+            background: var(--ink); color: var(--cream);
+            border-radius: 100px;
+            padding: 13px 28px;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
             transition: all 0.2s ease;
             display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 16px rgba(26,31,23,0.25);
         }
-        .btn-primary:hover { background: #2a2520; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(20,17,15,0.25); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,31,23,0.35); }
         .btn-primary:active { transform: scale(0.97); }
 
         .btn-amber {
-            background: linear-gradient(135deg, var(--amber), #d04a15);
-            color: #fff;
-            border-radius: var(--radius-sm);
-            padding: 14px 24px;
-            font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+            background: var(--olive); color: var(--cream);
+            border-radius: 100px;
+            padding: 13px 28px;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(232,83,26,0.3);
+            box-shadow: 0 4px 16px rgba(60,74,53,0.35);
         }
-        .btn-amber:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(232,83,26,0.4); }
+        .btn-amber:hover { background: var(--olive-mid); transform: translateY(-1px); }
         .btn-amber:active { transform: scale(0.97); }
 
-        /* ── CARD ACTION BAR ── */
+        /* ── CARD ACTION BAR ────────────────── */
         .card-actions {
             display: flex;
-            border-top: 1px solid var(--ink-10);
-            background: #fafaf8;
-            border-radius: 0 0 var(--radius-card) var(--radius-card);
-            overflow: hidden;
+            background: var(--cream);
+            border-radius: 0 0 var(--card-radius) var(--card-radius);
         }
         .card-action-btn {
             flex: 1;
             display: flex; align-items: center; justify-content: center; gap: 5px;
-            padding: 13px 8px;
-            font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
-            color: var(--ink-40);
-            transition: all 0.15s ease;
-            cursor: pointer;
+            padding: 12px 8px;
+            font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--ink-50);
+            transition: all 0.15s ease; cursor: pointer;
         }
-        .card-action-btn:hover { background: var(--cream); color: var(--ink); }
-        .card-action-btn.amber { color: var(--amber); }
-        .card-action-btn.amber:hover { background: #fff6f2; }
-        .card-action-btn.visited-active { background: var(--emerald); color: #fff; }
-        .card-action-btn.plan-active { background: var(--ink); color: #fff; }
-        .card-action-sep { width: 1px; background: var(--ink-10); flex-shrink: 0; }
+        .card-action-btn:hover { background: rgba(26,31,23,0.06); color: var(--ink); }
+        .card-action-btn.amber { color: var(--olive-mid); }
+        .card-action-btn.amber:hover { background: rgba(60,74,53,0.08); color: var(--olive-dark); }
+        .card-action-btn.visited-active { background: var(--olive); color: var(--cream); }
+        .card-action-btn.plan-active { background: var(--ink); color: var(--cream); }
+        .card-action-sep { width: 1px; background: rgba(26,31,23,0.08); flex-shrink: 0; }
 
-        /* ── ACCOMMODATION CARD ── */
+        /* ── ACCOMMODATION CARD ─────────────── */
         .acc-card {
-            border-radius: var(--radius-card);
-            overflow: hidden;
-            background: var(--card-bg);
+            overflow: hidden; background: var(--white);
+            border-radius: 24px;
             box-shadow: var(--card-shadow-hover);
         }
 
-        /* ── INPUT FIELD ── */
+        /* ── FIELD ──────────────────────────── */
         .field {
             width: 100%;
-            background: #fafaf8;
-            border: 1.5px solid var(--cream-dark);
-            border-radius: var(--radius-sm);
-            padding: 13px 16px;
+            background: var(--cream);
+            border: none; border-radius: 12px;
+            padding: 12px 16px;
             font-family: var(--font-body);
-            font-size: 14px; font-weight: 500;
-            color: var(--ink);
+            font-size: 14px; font-weight: 400; color: var(--ink);
             outline: none;
-            transition: border-color 0.15s ease, background 0.15s ease;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
         }
-        .field:focus { border-color: var(--amber); background: #fff; }
-        .field::placeholder { color: var(--ink-40); }
+        .field:focus { background: var(--cream-dark); box-shadow: 0 0 0 2px rgba(60,74,53,0.3); }
+        .field::placeholder { color: var(--ink-20); }
+        select.field { -webkit-appearance: none; appearance: none; cursor: pointer; }
 
-        /* ── MODAL ── */
+        /* ── MODAL / SHEET ──────────────────── */
         .modal-wrap {
             position: fixed; inset: 0; z-index: 100;
             display: none; align-items: flex-end;
-            pointer-events: none;
-            padding: 0;
+            pointer-events: none; padding: 0;
         }
-        @media (min-width: 640px) {
-            .modal-wrap { align-items: center; padding: 1rem; }
-        }
+        @media (min-width: 640px) { .modal-wrap { align-items: center; padding: 2rem; } }
         .modal-wrap.open { display: flex; }
         .modal-bg {
             position: absolute; inset: 0;
-            background: rgba(20,17,15,0.6);
+            background: rgba(26,31,23,0.6);
             backdrop-filter: blur(6px);
-            pointer-events: auto;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            pointer-events: auto; opacity: 0;
+            transition: opacity 0.25s ease;
         }
         .modal-bg.visible { opacity: 1; }
         .modal-sheet {
             position: relative;
-            background: var(--card-bg);
-            width: 100%; max-width: 520px;
-            margin: 0 auto;
-            border-radius: 28px 28px 0 0;
-            padding: 28px 24px 40px;
+            background: var(--white);
+            width: 100%; max-width: 520px; margin: 0 auto;
+            border-radius: 24px 24px 0 0;
+            padding: 28px 24px 44px;
             pointer-events: auto;
-            transform: translateY(40px);
-            opacity: 0;
-            transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
-            box-shadow: 0 -8px 40px rgba(20,17,15,0.15);
+            transform: translateY(40px); opacity: 0;
+            transition: all 0.32s cubic-bezier(0.22,1,0.36,1);
+            box-shadow: 0 -8px 48px rgba(26,31,23,0.2);
         }
         @media (min-width: 640px) {
-            .modal-sheet {
-                border-radius: 28px;
-                padding: 36px;
-                max-height: 90dvh;
-                overflow-y: auto;
-            }
+            .modal-sheet { border-radius: 24px; padding: 40px; max-height: 90dvh; overflow-y: auto; }
         }
         .modal-sheet.visible { transform: translateY(0); opacity: 1; }
         .modal-handle {
             width: 36px; height: 4px;
-            background: var(--ink-10);
-            border-radius: 2px;
-            margin: 0 auto 20px;
+            background: rgba(26,31,23,0.15);
+            border-radius: 2px; margin: 0 auto 24px;
         }
 
-        /* ── TOAST ── */
+        /* ── TOAST ──────────────────────────── */
         .toast {
             position: fixed; top: 80px; left: 50%;
             transform: translateX(-50%) translateY(-8px);
-            background: var(--ink);
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: var(--radius-pill);
-            font-size: 13px; font-weight: 700;
-            white-space: nowrap;
-            z-index: 200;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 8px 24px rgba(20,17,15,0.3);
+            background: var(--olive-dark); color: var(--cream);
+            padding: 11px 22px; border-radius: 100px;
+            font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+            white-space: nowrap; z-index: 200;
+            pointer-events: none; opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 4px 20px rgba(26,31,23,0.3);
         }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* ── CONVERTER ── */
+        /* ── CONVERTER ──────────────────────── */
         .converter-input {
             font-family: var(--font-display);
-            font-size: clamp(2.5rem, 8vw, 4rem);
-            font-weight: 900;
-            font-style: italic;
-            letter-spacing: -0.03em;
-            outline: none;
-            width: 100%;
-            background: transparent;
-            color: var(--ink);
-            border: none;
+            font-size: clamp(3rem, 10vw, 5.5rem);
+            font-weight: 700; font-style: italic;
+            letter-spacing: -0.02em;
+            outline: none; width: 100%;
+            background: transparent; color: var(--ink); border: none;
         }
-        .converter-input::placeholder { color: var(--cream-dark); }
+        .converter-input::placeholder { color: rgba(26,31,23,0.1); }
 
-        /* ── WEATHER FORECAST CARD ── */
+        /* ── WEATHER CARD ───────────────────── */
         .wx-card {
-            flex: none;
-            width: 72px;
-            background: var(--card-bg);
+            flex: none; width: 66px;
+            background: var(--white);
             border-radius: 18px;
-            padding: 14px 0;
-            display: flex; flex-direction: column; align-items: center; gap: 6px;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--ink-10);
+            padding: 13px 0;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            box-shadow: 0 2px 12px rgba(26,31,23,0.1);
         }
 
-        /* ── STAT CARD ── */
+        /* ── STAT CARD ──────────────────────── */
         .stat-card {
-            background: var(--card-bg);
-            border-radius: var(--radius-card);
-            padding: 20px 24px;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 22px 26px;
             box-shadow: var(--card-shadow);
         }
 
-        /* ── EXPENSE LEDGER ── */
+        /* ── LEDGER ─────────────────────────── */
         .ledger-total {
-            background: var(--ink);
-            color: var(--card-bg);
-            border-radius: var(--radius-card);
-            padding: 28px;
-            position: relative;
-            overflow: hidden;
+            background: var(--olive-dark); color: var(--cream);
+            border-radius: 20px;
+            padding: 32px;
+            position: relative; overflow: hidden;
+            box-shadow: 0 8px 32px rgba(26,31,23,0.3);
         }
         .ledger-total::before {
             content: '';
-            position: absolute; top: -40px; right: -40px;
-            width: 160px; height: 160px;
-            background: radial-gradient(circle, rgba(232,83,26,0.2), transparent 70%);
+            position: absolute; top: -60px; right: -40px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 65%);
             pointer-events: none;
         }
 
-
-        /* ── EXPENSE CHART ── */
-        const EXP_CATS = ['食物','飲料','酒吧','住宿','娛樂','其他'];
-        const EXP_COLORS = ['#e8531a','#f59e0b','#8b5cf6','#3b82f6','#10b981','#6b7280'];
-        const EXP_EMOJIS = {'食物':'🍜','飲料':'☕','酒吧':'🍺','住宿':'🏨','娛樂':'🎭','其他':'📦'};
-        let currentChartType = 'pie';
-
-        window.setChartType = function(type) {
-            currentChartType = type;
-            document.getElementById('chartTypePie').className = `label-sm text-[9px] px-3 py-2 rounded-full transition-all ${type==='pie'?'bg-[var(--ink)] text-white':'bg-[var(--cream)] text-[var(--ink-40)]'}`;
-            document.getElementById('chartTypeBar').className = `label-sm text-[9px] px-3 py-2 rounded-full transition-all ${type==='bar'?'bg-[var(--ink)] text-white':'bg-[var(--cream)] text-[var(--ink-40)]'}`;
-            renderExpenseChart(window.travelApp.expenses || [], window.travelApp.exchangeRate || 0.0013);
-        };
-
-        function renderExpenseChart(exps, rate) {
-            const section = document.getElementById('expenseChartSection');
-            if (!section) return;
-            if (exps.length === 0) { section.classList.add('hidden'); return; }
-            section.classList.remove('hidden');
-
-            // Aggregate by category
-            const totals = {};
-            EXP_CATS.forEach(c => totals[c] = 0);
-            exps.forEach(e => {
-                const cat = e.category || '其他';
-                if (totals[cat] !== undefined) totals[cat] += Number(e.amount);
-                else totals['其他'] += Number(e.amount);
-            });
-            const grandTotal = Object.values(totals).reduce((a,b) => a+b, 0);
-            document.getElementById('chartTotalVND').innerText = Math.round(grandTotal).toLocaleString();
-
-            // Legend
-            const legendEl = document.getElementById('chartLegend');
-            legendEl.innerHTML = EXP_CATS.map((cat, i) => {
-                if (totals[cat] === 0) return '';
-                const pct = grandTotal > 0 ? Math.round(totals[cat]/grandTotal*100) : 0;
-                return `<div class="flex items-center gap-2.5 p-3 rounded-xl bg-[var(--cream)]">
-                    <span class="text-xl flex-shrink-0">${EXP_EMOJIS[cat]}</span>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-black text-[var(--ink)]">${cat}</span>
-                            <span class="text-[10px] font-bold text-[var(--ink-40)]">${pct}%</span>
-                        </div>
-                        <div class="mt-1 h-1.5 bg-[var(--cream-dark)] rounded-full overflow-hidden">
-                            <div class="h-full rounded-full transition-all duration-500" style="width:${pct}%;background:${EXP_COLORS[i]}"></div>
-                        </div>
-                        <p class="text-[9px] font-bold mt-0.5" style="color:${EXP_COLORS[i]}">NT$ ${Math.round(totals[cat]*rate).toLocaleString()}</p>
-                    </div>
-                </div>`;
-            }).join('');
-
-            const canvas = document.getElementById('expenseChartCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const W = canvas.width, H = canvas.height;
-            ctx.clearRect(0, 0, W, H);
-
-            const activeCats = EXP_CATS.filter(c => totals[c] > 0);
-            const activeColors = activeCats.map(c => EXP_COLORS[EXP_CATS.indexOf(c)]);
-            const activeVals = activeCats.map(c => totals[c]);
-
-            if (currentChartType === 'pie') {
-                // Donut chart
-                const cx = W/2, cy = H/2, outerR = Math.min(W,H)*0.46, innerR = outerR*0.55;
-                let startAngle = -Math.PI/2;
-                activeVals.forEach((val, i) => {
-                    const slice = (val / grandTotal) * Math.PI * 2;
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy);
-                    ctx.arc(cx, cy, outerR, startAngle, startAngle + slice);
-                    ctx.closePath();
-                    ctx.fillStyle = activeColors[i];
-                    ctx.fill();
-                    startAngle += slice;
-                });
-                // Inner circle (donut hole)
-                ctx.beginPath();
-                ctx.arc(cx, cy, innerR, 0, Math.PI*2);
-                ctx.fillStyle = '#ffffff';
-                ctx.fill();
-            } else {
-                // Bar chart
-                const barW = (W - 32) / activeCats.length - 6;
-                const maxVal = Math.max(...activeVals);
-                const barAreaH = H - 36;
-                activeCats.forEach((cat, i) => {
-                    const barH = maxVal > 0 ? (activeVals[i] / maxVal) * (barAreaH - 10) : 0;
-                    const x = 16 + i * (barW + 6);
-                    const y = barAreaH - barH;
-                    // Rounded top bar
-                    ctx.beginPath();
-                    const r = 6;
-                    ctx.moveTo(x + r, y);
-                    ctx.lineTo(x + barW - r, y);
-                    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
-                    ctx.lineTo(x + barW, barAreaH);
-                    ctx.lineTo(x, barAreaH);
-                    ctx.lineTo(x, y + r);
-                    ctx.quadraticCurveTo(x, y, x + r, y);
-                    ctx.closePath();
-                    ctx.fillStyle = activeColors[i];
-                    ctx.fill();
-                    // Label
-                    ctx.fillStyle = '#a3a3a3';
-                    ctx.font = `bold ${Math.min(11, barW * 0.6)}px DM Sans, sans-serif`;
-                    ctx.textAlign = 'center';
-                    ctx.fillText(EXP_EMOJIS[cat] || cat[0], x + barW/2, H - 8);
-                });
-            }
+        /* ── HERO TYPOGRAPHY ────────────────── */
+        .hero-city {
+            font-family: var(--font-display);
+            font-size: clamp(5.5rem, 18vw, 12rem);
+            font-weight: 700; font-style: italic;
+            letter-spacing: -0.04em; line-height: 0.88;
+            color: #fff;
+        }
+        .hero-date {
+            display: inline-block;
+            background: rgba(245,240,232,0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 100px;
+            padding: 9px 26px;
+            font-size: 9px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+            font-family: var(--font-mono);
+            color: rgba(245,240,232,0.9);
+            margin-top: 24px;
+        }
+        .hero-vol {
+            font-family: var(--font-mono);
+            font-size: 9px; letter-spacing: 0.28em;
+            color: rgba(255,255,255,0.45);
+            text-transform: uppercase; margin-bottom: 12px;
         }
 
+        /* ── DIVIDER ────────────────────────── */
+        .divider { display: flex; align-items: center; gap: 16px; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(26,31,23,0.1); }
+        .divider span {
+            font-size: 8px; font-weight: 600; letter-spacing: 0.22em;
+            text-transform: uppercase; white-space: nowrap;
+            color: var(--ink-20); font-family: var(--font-mono);
+        }
 
-        /* ── DIAGNOSE ── */
-        window.runDiagnose = async function() {
-            showTab('explore');
-            const panel = document.getElementById('debugPanel');
-            const out   = document.getElementById('debugOutput');
-            if (!panel || !out) return;
-            panel.classList.remove('hidden');
-            out.innerHTML = '';
+        /* ── NOTE INPUT ─────────────────────── */
+        .note-input {
+            width: 100%;
+            background: var(--cream);
+            border: none; border-radius: 10px;
+            padding: 9px 13px;
+            font-size: 12px; font-weight: 400; color: var(--ink);
+            outline: none; transition: box-shadow 0.15s ease;
+            font-family: var(--font-body);
+        }
+        .note-input:focus { box-shadow: 0 0 0 2px rgba(60,74,53,0.3); }
+        .note-input::placeholder { color: var(--ink-20); }
 
-            const log = (msg, color='#fff') => {
-                const d = document.createElement('div');
-                d.style.color = color;
-                d.textContent = msg;
-                out.appendChild(d);
-                out.scrollTop = out.scrollHeight;
-            };
+        /* ── GRIP ───────────────────────────── */
+        .grip-handle {
+            color: var(--ink-20); cursor: grab; padding: 0 3px;
+            display: flex; align-items: center; transition: color 0.15s;
+        }
+        .grip-handle:active { cursor: grabbing; }
+        .grip-handle:hover { color: var(--olive-soft); }
 
-            log('═══ Google Sheets 診斷 ═══', '#f59e0b');
-            log('Sheet ID: ' + SHEET_ID.substring(0,16) + '...');
+        /* ── AI MODAL ICON ──────────────────── */
+        .ai-modal-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            background: var(--olive);
+            display: flex; align-items: center; justify-content: center;
+        }
 
-            const sheetNames = ['Itenerary','Itinerary','visit List','Visit List','行程表'];
-            for (const name of sheetNames) {
-                log('⏳ 測試: ' + name, '#94a3b8');
-                try {
-                    const rows = await Promise.race([
-                        fetchSheet(name),
-                        new Promise((_,r) => setTimeout(() => r(new Error('timeout 8s')), 8000))
-                    ]);
-                    if (rows && rows.length > 0) {
-                        log('✅ 成功！' + name + ' → ' + rows.length + ' 筆資料', '#4ade80');
-                        // Show first row sample
-                        const firstRow = rows[0];
-                        if (firstRow && firstRow.c) {
-                            const sample = firstRow.c.slice(0,5).map(c => c ? (c.f||c.v||'') : '').join(' | ');
-                            log('   第1行: ' + sample, '#6ee7b7');
-                        }
-                    } else {
-                        log('⚠️ ' + name + ' → 空資料 (0 rows)', '#fbbf24');
-                    }
-                } catch(e) {
-                    log('❌ ' + name + ': ' + e.message, '#f87171');
-                }
-            }
-            log('═══ 診斷完成 ═══', '#f59e0b');
-        };
+        /* ── AI TRANSLATOR ──────────────────── */
+        .ai-translator-card {
+            background: var(--cream);
+            border-radius: 20px; padding: 28px;
+        }
+        .ai-translator-card::after { display: none; }
 
-        /* ── MAP ── */
+        /* ── SECTION LABEL on olive bg ──────── */
+        .on-olive .eyebrow { color: rgba(245,240,232,0.5); }
+
+        /* ── ANIMATIONS ─────────────────────── */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .anim-slide { animation: slideUp 0.42s cubic-bezier(0.22,1,0.36,1) both; }
+        .anim-fade  { animation: fadeIn  0.32s ease both; }
+
+        /* ── MAP ────────────────────────────── */
         #interactiveMap { width: 100%; height: 100%; }
         .leaflet-popup-content p { margin: 0 !important; }
         .leaflet-popup-content h4 { margin: 0 0 8px 0 !important; }
 
-        /* ── ANIMATIONS ── */
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; } to { opacity: 1; }
-        }
-        .anim-slide { animation: slideUp 0.5s ease both; }
-        .anim-fade  { animation: fadeIn  0.4s ease both; }
-
-        /* ── AI MODAL SPECIAL ── */
-        .ai-modal-icon {
-            width: 52px; height: 52px; border-radius: 16px;
-            background: linear-gradient(135deg, var(--amber), #d04a15);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 6px 16px rgba(232,83,26,0.35);
-        }
-
-        /* ── GRIP HANDLE ── */
-        .grip-handle {
-            color: var(--ink-40);
-            cursor: grab;
-            padding: 0 4px;
-            display: flex; align-items: center;
-            transition: color 0.15s;
-        }
-        .grip-handle:active { cursor: grabbing; }
-        .grip-handle:hover { color: var(--amber); }
-
-        /* ── PERSONAL NOTE INPUT ── */
-        .note-input {
-            width: 100%;
-            background: #fafaf8;
-            border: 1.5px solid var(--cream-dark);
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 12px; font-weight: 500;
-            color: var(--ink);
-            outline: none;
-            transition: border-color 0.15s ease;
-            font-family: var(--font-body);
-        }
-        .note-input:focus { border-color: var(--amber); background: #fff; }
-        .note-input::placeholder { color: var(--ink-40); }
-
-        /* ── HERO CITY ── */
-        .hero-city {
-            font-family: var(--font-display);
-            font-size: clamp(4.5rem, 14vw, 9rem);
-            font-weight: 900;
-            font-style: italic;
-            letter-spacing: -0.04em;
-            line-height: 0.95;
-            color: #fff;
-            text-shadow: 0 4px 40px rgba(20,17,15,0.4);
-        }
-        .hero-date {
-            display: inline-block;
-            background: rgba(247,244,238,0.15);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(247,244,238,0.3);
-            border-radius: var(--radius-pill);
-            padding: 10px 28px;
-            font-size: 11px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase;
-            color: #fff;
-            margin-top: 20px;
-        }
-
-        /* ── SECTION DIVIDER ── */
-        .divider {
-            display: flex; align-items: center; gap: 16px;
-            opacity: 0.2;
-        }
-        .divider::before, .divider::after {
-            content: ''; flex: 1; height: 1px;
-            background: var(--ink);
-        }
-        .divider span {
-            font-size: 9px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase;
-            white-space: nowrap; color: var(--ink);
-        }
-
-        /* ── SELECT OVERRIDE ── */
-        select.field { -webkit-appearance: none; appearance: none; cursor: pointer; }
-
-        /* ── NUMBER INPUT SPIN ── */
+        /* ── MISC ───────────────────────────── */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .badge-visited { background: rgba(60,74,53,0.12); color: #2e3929; }
+        .badge-custom  { background: #f0eeff; color: #4c1d95; }
 
-        /* ── VISITED / FAV BADGES ── */
-        .badge-visited { background: #d1fae5; color: #065f46; }
-        .badge-custom  { background: #ede9fe; color: #5b21b6; }
+        /* Category tags — warm tones */
+        .bg-amber-50  { background: #fdf5e8 !important; }
+        .text-amber-700 { color: #7a5a20 !important; }
+        .border-amber-200 { border-color: #e8d5a0 !important; }
+        .bg-rose-50   { background: #fdf0f0 !important; }
+        .text-rose-700 { color: #7a2020 !important; }
+        .border-rose-200 { border-color: #e8b0b0 !important; }
+        .bg-indigo-50 { background: #f0f0fd !important; }
+        .text-indigo-700 { color: #30307a !important; }
+        .border-indigo-200 { border-color: #b0b0e8 !important; }
+        .bg-fuchsia-50 { background: #fdf0fd !important; }
+        .text-fuchsia-700 { color: #7a207a !important; }
+        .border-fuchsia-200 { border-color: #e8b0e8 !important; }
+        .bg-sky-50    { background: #f0f8fd !important; }
+        .text-sky-700 { color: #20507a !important; }
+        .border-sky-200 { border-color: #a0d0e8 !important; }
+        .bg-stone-50  { background: #f5f2ee !important; }
+        .text-stone-600 { color: #5a4a38 !important; }
+        .border-stone-200 { border-color: #d8c8b8 !important; }
 
-        /* ── AI TRANSLATOR ── */
-        .ai-translator-card {
-            background: linear-gradient(135deg, #fff8f4, #fff);
-            border: 1.5px solid #fbd5c5;
-            border-radius: var(--radius-card);
-            padding: 28px;
-            position: relative;
-            overflow: hidden;
-        }
-        .ai-translator-card::after {
-            content: '';
-            position: absolute; bottom: -30px; right: -30px;
-            width: 120px; height: 120px;
-            background: radial-gradient(circle, rgba(232,83,26,0.08), transparent 70%);
-        }
+        /* Emerald visited */
+        .bg-emerald-500, .visited-active { background: var(--olive) !important; }
     </style>
 </head>
 
@@ -874,7 +679,7 @@
 
     <!-- ENV WARNING BANNER -->
     <div id="envBanner" class="hidden fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 z-[300] w-[calc(100%-2rem)] max-w-lg">
-        <div class="bg-amber-950 border border-amber-700 text-amber-200 rounded-2xl px-5 py-4 shadow-2xl text-sm">
+        <div class="bg-amber-950 border border-amber-700 text-amber-200 rounded-[12px] px-5 py-4 shadow-none text-sm">
             <div class="flex items-start gap-3">
                 <span class="text-xl flex-shrink-0">⚠️</span>
                 <div>
@@ -886,7 +691,7 @@
                         <strong>② 上線後：</strong>部署到 Vercel 即可正常運作
                     </p>
                 </div>
-                <button onclick="document.getElementById('envBanner').classList.add('hidden')" class="text-amber-500 hover:text-white flex-shrink-0 ml-1">✕</button>
+                <button onclick="document.getElementById('envBanner').classList.add('hidden')" class="text-[#1a1f17] hover:text-white flex-shrink-0 ml-1">✕</button>
             </div>
         </div>
     </div>
@@ -899,7 +704,7 @@
         <div class="modal-bg" id="aiModalBg" onclick="closeAiModal()"></div>
         <div class="modal-sheet" id="aiModalContent">
             <div class="modal-handle md:hidden"></div>
-            <button onclick="closeAiModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[var(--cream)] text-[var(--ink-40)] hover:bg-[var(--cream-dark)] transition-colors">
+            <button onclick="closeAiModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-white text-[#1c1612]/30 hover:bg-[var(--cream)] transition-colors">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
             <div class="flex items-center gap-4 mb-7 pr-10">
@@ -911,7 +716,75 @@
                     <p class="eyebrow mt-1">Powered by Gemini ✦</p>
                 </div>
             </div>
-            <div id="aiModalBody" class="text-sm text-[var(--ink-80)] leading-relaxed min-h-[120px]"></div>
+            <div id="aiModalBody" class="text-sm text-[#1c1612]/60 leading-relaxed min-h-[120px]"></div>
+        </div>
+    </div>
+
+    <!-- SMART SCHEDULE MODAL -->
+    <div id="smartModal" class="modal-wrap" role="dialog" aria-modal="true">
+        <div class="modal-bg" id="smartModalBg" onclick="closeSmartModal()"></div>
+        <div class="modal-sheet" id="smartModalContent" style="max-width:600px">
+            <div class="modal-handle md:hidden"></div>
+            <button onclick="closeSmartModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-white text-[#1c1612]/40 hover:bg-[#f5f0e8] transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Step 1: Config -->
+            <div id="smartStep1">
+                <p class="eyebrow mb-2 text-[#1a1f17]">Auto Planner</p>
+                <h3 class="display-title text-2xl text-[#1c1612] mb-6">智慧排程</h3>
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <p class="eyebrow text-[9px] mb-2">排程方式</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer hover:bg-white transition-colors">
+                                <input type="radio" name="schedMode" value="area" checked class="accent-[#3c4a35]">
+                                <div><p class="text-sm font-bold">依區域</p><p class="text-[10px] text-[#1c1612]/40">同區景點排同天</p></div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer hover:bg-white transition-colors">
+                                <input type="radio" name="schedMode" value="even" class="accent-[#3c4a35]">
+                                <div><p class="text-sm font-bold">平均分配</p><p class="text-[10px] text-[#1c1612]/40">每天景點數均等</p></div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer hover:bg-white transition-colors">
+                                <input type="radio" name="schedMode" value="category" class="accent-[#3c4a35]">
+                                <div><p class="text-sm font-bold">依類別</p><p class="text-[10px] text-[#1c1612]/40">餐廳/景點分開</p></div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer hover:bg-white transition-colors">
+                                <input type="radio" name="schedMode" value="random" class="accent-[#3c4a35]">
+                                <div><p class="text-sm font-bold">隨機分配</p><p class="text-[10px] text-[#1c1612]/40">讓 AI 決定</p></div>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="eyebrow text-[9px] mb-2">每天最多景點數</p>
+                        <div class="flex gap-2">
+                            <button onclick="setMaxItems(3)"  id="maxBtn3"  class="flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all border-[#1c1612] bg-[#1c1612] text-white">3</button>
+                            <button onclick="setMaxItems(5)"  id="maxBtn5"  class="flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all border-[#1c1612]/10 text-[#1c1612]/40">5</button>
+                            <button onclick="setMaxItems(8)"  id="maxBtn8"  class="flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all border-[#1c1612]/10 text-[#1c1612]/40">8</button>
+                            <button onclick="setMaxItems(99)" id="maxBtnAll" class="flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all border-[#1c1612]/10 text-[#1c1612]/40">不限</button>
+                        </div>
+                    </div>
+                    <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer">
+                        <input type="checkbox" id="clearExisting" class="accent-[#3c4a35] w-4 h-4">
+                        <div><p class="text-sm font-bold">清除現有自訂行程後重新排</p><p class="text-[10px] text-[#1c1612]/40">只清除自訂新增的景點，原始表格資料不受影響</p></div>
+                    </label>
+                </div>
+
+                <div id="smartPreview" class="mb-5 p-4 bg-white rounded-[12px] text-sm text-[#1c1612]/60 hidden">
+                    <p class="font-bold text-[#1c1612] mb-1">預覽</p>
+                    <div id="smartPreviewContent"></div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="previewSchedule()" class="flex-1 py-3 border border-[#1c1612]/10 rounded-[12px] text-sm font-bold text-[#1c1612]/60 hover:bg-white transition-colors">
+                        預覽結果
+                    </button>
+                    <button onclick="applySchedule()" class="flex-[2] py-3 bg-[#1c1612] text-white rounded-[12px] text-sm font-bold hover:bg-[#2c241c] active:scale-95 transition-all">
+                        套用排程 →
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -920,12 +793,12 @@
         <div class="modal-bg" id="addToDayModalBg" onclick="closeAddToDayModal()"></div>
         <div class="modal-sheet" id="addToDayModalContent">
             <div class="modal-handle md:hidden"></div>
-            <button onclick="closeAddToDayModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[var(--cream)] text-[var(--ink-40)] hover:bg-[var(--cream-dark)] transition-colors">
+            <button onclick="closeAddToDayModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-white text-[#1c1612]/30 hover:bg-[var(--cream)] transition-colors">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
             <div class="mb-5 pr-10">
-                <p class="eyebrow mb-1.5 text-[var(--amber)]">Add to Plan</p>
-                <h3 class="display-title text-2xl text-[var(--ink)] leading-tight truncate" id="addToDayItemName">Item Name</h3>
+                <p class="eyebrow mb-1.5 text-[#1a1f17]">Add to Plan</p>
+                <h3 class="display-title text-2xl text-[#1c1612] leading-tight truncate" id="addToDayItemName">Item Name</h3>
             </div>
             <div id="addToDayList" class="space-y-2.5 max-h-[50dvh] overflow-y-auto hide-scrollbar"></div>
         </div>
@@ -950,17 +823,15 @@
 
             <div class="flex items-center gap-2.5">
                 <div class="weather-badge">
-                    <span id="headerTemp" class="text-xs font-bold text-[var(--ink)]">--°C</span>
-                    <span class="w-px h-3 bg-[var(--ink-10)]"></span>
+                    <span id="headerTemp" class="text-xs font-bold text-[#1c1612]">--°C</span>
+                    <span class="w-px h-3 bg-[var(--ink-08)]"></span>
                     <span class="eyebrow text-[9px]">HAN</span>
                 </div>
-                <button onclick="refreshData()" title="同步最新表格資料"
-                    class="w-10 h-10 flex items-center justify-center bg-[var(--card-bg)] rounded-full border border-[var(--ink-10)] text-[var(--ink-40)] hover:text-[var(--amber)] hover:border-[var(--amber-glow)] transition-all active:scale-95">
-                    <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
-                </button>
-                <button onclick="runDiagnose()" title="診斷 Google Sheet 連線"
-                    class="flex w-10 h-10 items-center justify-center bg-[var(--card-bg)] rounded-full border border-[var(--ink-10)] text-[var(--ink-40)] hover:text-[var(--amber)] hover:border-[var(--amber-glow)] transition-all active:scale-95 text-lg">
-                    🔍
+                <button onclick="refreshData()" title="從 Google Sheet 同步最新資料"
+                    id="refreshBtn"
+                    class="flex items-center gap-2 px-4 py-2 border border-[#1a1f17] text-[#1a1f17] hover:bg-[#1a1f17] hover:text-white transition-all active:opacity-70 group">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180 duration-500" id="refreshIcon"></i>
+                    <span class="label-sm text-[9px] hidden sm:inline">同步資料</span>
                 </button>
             </div>
         </div>
@@ -970,28 +841,28 @@
     <main class="max-w-6xl mx-auto px-4 md:px-8">
 
         <!-- HOME -->
-        <section id="home" class="tab-content space-y-5 md:space-y-7 pt-5 md:pt-8 pb-4">
+        <section id="home" class="tab-content space-y-4 md:space-y-6 pt-5 md:pt-8 pb-8">
             <!-- HERO -->
-            <div class="hero-wrap relative overflow-hidden rounded-[28px] md:rounded-[40px] h-[480px] md:h-[560px] bg-neutral-300">
+            <div class="hero-wrap relative overflow-hidden rounded-[12px] md:rounded-[40px] h-[480px] md:h-[560px] bg-neutral-300">
                 <div class="hero-photo"></div>
                 <div class="hero-mask"></div>
                 <div class="hero-grain"></div>
-                <div class="relative z-10 h-full flex flex-col justify-end p-7 md:p-12 pb-9 md:pb-14">
-                    <p class="eyebrow text-white/60 mb-4 tracking-[0.4em]">Volume 01</p>
+                <div class="relative z-10 h-full flex flex-col justify-end p-8 md:p-14 pb-10 md:pb-16">
+                    <p class="hero-vol">Vol. 01 — North Vietnam</p>
                     <h2 class="hero-city">Hà Nội</h2>
-                    <p class="hero-date">2026.04.17 — 04.22</p>
+                    <p class="hero-date">17 — 22 April 2026</p>
                 </div>
             </div>
 
             <!-- STAT ROW -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-px border border-[rgba(26,31,23,0.08)]" style="background:rgba(8,8,8,0.12)">
                 <div class="stat-card flex flex-col justify-center">
                     <p class="eyebrow text-[9px] mb-2">當地時間</p>
-                    <p id="localTime" class="display-title text-3xl md:text-4xl text-[var(--ink)]">--:--</p>
+                    <p id="localTime" class="display-title text-3xl md:text-4xl text-[#1c1612]">--:--</p>
                 </div>
                 <div class="stat-card flex flex-col justify-center">
                     <p class="eyebrow text-[9px] mb-2">當前匯率</p>
-                    <p id="rateText" class="display-title text-2xl md:text-3xl text-[var(--amber)]">--</p>
+                    <p id="rateText" class="display-title text-2xl md:text-3xl text-[#1a1f17]">--</p>
                 </div>
                 <div class="col-span-2 stat-card">
                     <div class="flex justify-between items-center mb-4">
@@ -1003,11 +874,11 @@
             </div>
 
             <!-- CURRENCY CONVERTER -->
-            <div class="stat-card p-7 md:p-10 relative overflow-hidden">
-                <div class="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-[var(--amber-glow)] pointer-events-none"></div>
+            <div class="stat-card p-8 md:p-10 relative overflow-hidden">
+                <div class="absolute -bottom-6 -right-6 w-32 h-32 rounded-[12px] bg-[#1a1f17]/15 pointer-events-none"></div>
                 <div class="flex justify-between items-center mb-8 relative z-10">
                     <p class="eyebrow text-[9px]">Currency Converter</p>
-                    <button onclick="clearConverter()" class="label-sm text-[10px] text-[var(--ink-40)] bg-[var(--cream)] hover:bg-[var(--cream-dark)] px-4 py-2 rounded-full transition-colors active:scale-95">RESET</button>
+                    <button onclick="clearConverter()" class="label-sm text-[10px] text-[#1c1612]/30 bg-white hover:bg-[var(--cream)] px-4 py-2 rounded-[12px] transition-colors active:scale-95">RESET</button>
                 </div>
                 <div class="flex flex-col md:flex-row gap-6 md:gap-10 items-stretch md:items-center relative z-10">
                     <div class="flex-1">
@@ -1015,8 +886,8 @@
                         <input id="vndInput" type="number" inputmode="decimal" placeholder="0" oninput="calcToTwd()" class="converter-input"/>
                     </div>
                     <div class="flex items-center justify-center">
-                        <div class="hidden md:block w-px h-14 bg-[var(--cream-dark)]"></div>
-                        <div class="md:hidden h-px w-full bg-[var(--cream-dark)]"></div>
+                        <div class="hidden md:block w-px h-14 bg-[var(--cream)]"></div>
+                        <div class="md:hidden h-px w-full bg-[var(--cream)]"></div>
                     </div>
                     <div class="flex-1">
                         <p class="eyebrow text-[9px] mb-3 opacity-50">TWD (NT$)</p>
@@ -1027,13 +898,21 @@
         </section>
 
         <!-- ITINERARY -->
-        <section id="itinerary" class="tab-content hidden pb-10">
-            <div class="sticky top-[65px] md:top-[69px] z-40 bg-[var(--cream)]/95 backdrop-blur-md pt-4 pb-5 -mx-4 px-4 md:-mx-8 md:px-8">
-                <div id="dayButtons" class="flex flex-nowrap md:flex-wrap overflow-x-auto gap-2 hide-scrollbar"></div>
+        <section id="itinerary" class="tab-content hidden pb-10 pt-0">
+            <div class="sticky top-[65px] md:top-[69px] z-40 bg-[#3c4a35]/95 backdrop-blur-md pt-4 pb-4 -mx-4 px-4 md:-mx-8 md:px-8">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <div id="dayButtons" class="flex flex-nowrap overflow-x-auto gap-2 hide-scrollbar flex-1"></div>
+                    <button onclick="openSmartSchedule()"
+                        class="flex-shrink-0 flex items-center gap-2 bg-[#1c1612] text-white px-4 py-2.5 rounded-[12px] text-[10px] font-bold tracking-widest uppercase hover:bg-[#2c241c] active:scale-95 transition-all shadow-none whitespace-nowrap">
+                        <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">智慧排程</span>
+                        <span class="sm:hidden">排程</span>
+                    </button>
+                </div>
             </div>
             <div class="max-w-4xl mx-auto">
                 <div id="timeline" class="space-y-4 md:space-y-5">
-                    <div class="py-12 text-center text-[var(--ink-40)] font-medium text-sm">正在載入行程資料…</div>
+                    <div class="py-12 text-center text-[#1c1612]/30 font-medium text-sm">正在載入行程資料…</div>
                 </div>
             </div>
         </section>
@@ -1041,23 +920,23 @@
         <!-- EXPLORE -->
         <section id="explore" class="tab-content hidden pb-10">
 
-            <div id="debugPanel" class="mb-3 rounded-2xl overflow-hidden hidden">
+            <div id="debugPanel" class="mb-3 rounded-[12px] overflow-hidden hidden">
                 <div class="bg-[var(--ink)] text-white p-4">
                     <div class="flex justify-between items-center mb-3">
-                        <span class="font-black text-sm text-[var(--amber)]">🔍 Google Sheet 診斷</span>
+                        <span class="font-black text-sm text-[#1a1f17]">🔍 Google Sheet 診斷</span>
                         <button onclick="document.getElementById('debugPanel').classList.add('hidden')" class="text-white/50 hover:text-white text-xs">關閉 ✕</button>
                     </div>
                     <div id="debugOutput" class="space-y-1.5 font-mono text-xs max-h-72 overflow-y-auto"></div>
                 </div>
             </div>
-            <div class="flex flex-col sm:flex-row gap-3 sticky top-[65px] md:top-[69px] z-40 bg-[var(--cream)]/95 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-8 md:px-8 mb-3">
+            <div class="flex flex-col sm:flex-row gap-3 sticky top-[65px] md:top-[69px] z-40 bg-[#3c4a35]/95 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-8 md:px-8 mb-3">
                 <div class="relative flex-1">
                     <select id="categoryFilter" class="field pr-10 text-[11px] font-bold tracking-widest appearance-none cursor-pointer"></select>
-                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-40)] pointer-events-none"></i>
+                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1c1612]/30 pointer-events-none"></i>
                 </div>
                 <div class="relative flex-1">
                     <select id="areaFilter" class="field pr-10 text-[11px] font-bold tracking-widest appearance-none cursor-pointer"></select>
-                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-40)] pointer-events-none"></i>
+                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1c1612]/30 pointer-events-none"></i>
                 </div>
             </div>
             <div class="max-w-4xl mx-auto">
@@ -1068,13 +947,13 @@
         <!-- MAP -->
         <section id="mapTab" class="tab-content hidden py-6 md:pt-8 pb-10">
             <div class="mb-6">
-                <p class="eyebrow mb-3">All Locations Near You</p>
+                <p class="eyebrow mb-3" style="color:rgba(245,240,232,0.5)">All Locations Near You</p>
                 <h3 class="section-header">Discover Map</h3>
             </div>
-            <div class="h-[65dvh] min-h-[420px] w-full rounded-[24px] md:rounded-[32px] overflow-hidden relative" style="box-shadow:var(--card-shadow-hover);">
+            <div class="h-[65dvh] min-h-[420px] w-full rounded-[12px] md:rounded-[12px] overflow-hidden relative" style="box-shadow:none;">
                 <div id="interactiveMap" class="w-full h-full"></div>
-                <div id="mapLoading" class="absolute top-5 left-1/2 -translate-x-1/2 bg-[var(--ink)]/90 text-white px-5 py-3 rounded-full text-[11px] font-bold z-[1000] shadow-lg backdrop-blur-md flex items-center gap-2.5 transition-opacity duration-300 opacity-0 pointer-events-none">
-                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[var(--amber)]"></i>
+                <div id="mapLoading" class="absolute top-5 left-1/2 -translate-x-1/2 bg-[var(--ink)]/90 text-white px-5 py-3 rounded-[12px] text-[11px] font-bold z-[1000] shadow-none backdrop-blur-md flex items-center gap-2.5 transition-opacity duration-300 opacity-0 pointer-events-none">
+                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[#1a1f17]"></i>
                     正在繪製地標… (<span id="mapProgress">0</span>/<span id="mapTotal">0</span>)
                 </div>
             </div>
@@ -1082,7 +961,7 @@
 
         <!-- EXPENSES -->
         <section id="expenses" class="tab-content hidden py-6 md:pt-8 pb-10">
-            <div class="mb-7">
+            <div class="mb-8 pt-8 border-t border-[rgba(26,31,23,0.08)]">
                 <p class="eyebrow mb-3">Shared Expenses & Settlement</p>
                 <h3 class="section-header">Ledger</h3>
             </div>
@@ -1102,7 +981,7 @@
                                     <option value="娛樂">🎭 娛樂</option>
                                     <option value="其他">📦 其他</option>
                                 </select>
-                                <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-40)] pointer-events-none"></i>
+                                <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1c1612]/30 pointer-events-none"></i>
                             </div>
                             <div class="flex gap-3">
                                 <select id="expCurrency" class="field w-auto px-4 appearance-none cursor-pointer">
@@ -1129,18 +1008,18 @@
                     <div class="flex justify-between items-center mb-6">
                         <div>
                             <p class="eyebrow text-[9px] mb-1">Spending by Category</p>
-                            <h4 class="display-title text-2xl text-[var(--ink)]">Category Breakdown</h4>
+                            <h4 class="display-title text-2xl text-[#1c1612]">Category Breakdown</h4>
                         </div>
                         <div class="flex gap-2">
-                            <button id="chartTypePie"  onclick="setChartType('pie')"  class="label-sm text-[9px] px-3 py-2 rounded-full bg-[var(--ink)] text-white transition-all">圓餅</button>
-                            <button id="chartTypeBar"  onclick="setChartType('bar')"  class="label-sm text-[9px] px-3 py-2 rounded-full bg-[var(--cream)] text-[var(--ink-40)] transition-all">長條</button>
+                            <button id="chartTypePie"  onclick="setChartType('pie')"  class="label-sm text-[9px] px-3 py-2 rounded-[12px] bg-[var(--ink)] text-white transition-all">圓餅</button>
+                            <button id="chartTypeBar"  onclick="setChartType('bar')"  class="label-sm text-[9px] px-3 py-2 rounded-[12px] bg-white text-[#1c1612]/30 transition-all">長條</button>
                         </div>
                     </div>
                     <div class="flex flex-col md:flex-row gap-8 items-center">
                         <div class="relative flex-shrink-0" style="width:220px;height:220px;">
                             <canvas id="expenseChartCanvas" width="220" height="220"></canvas>
                             <div id="chartCenterLabel" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <p class="display-title text-xl text-[var(--ink)]" id="chartTotalVND">--</p>
+                                <p class="display-title text-xl text-[#1c1612]" id="chartTotalVND">--</p>
                                 <p class="eyebrow text-[8px] opacity-40">Total VND</p>
                             </div>
                         </div>
@@ -1152,7 +1031,7 @@
 
         <!-- PHRASES -->
         <section id="phrases" class="tab-content hidden py-6 md:pt-8 pb-10">
-            <div class="mb-7">
+            <div class="mb-8 pt-8 border-t border-[rgba(26,31,23,0.08)]">
                 <p class="eyebrow mb-3">Essential Phrases & AI Translator</p>
                 <h3 class="section-header">Holiday in Hanoi</h3>
             </div>
@@ -1160,27 +1039,36 @@
             <!-- AI TRANSLATOR -->
             <div class="ai-translator-card mb-7 relative z-10">
                 <div class="flex items-center gap-2.5 mb-4">
-                    <i data-lucide="sparkles" class="w-4 h-4 text-[var(--amber)]"></i>
-                    <p class="label-sm text-[var(--amber)] text-[10px]">AI Custom Translator</p>
+                    <i data-lucide="sparkles" class="w-4 h-4 text-[#1a1f17]"></i>
+                    <p class="label-sm text-[#1a1f17] text-[10px]">AI Custom Translator</p>
                 </div>
                 <div class="flex gap-3">
                     <input type="text" id="aiPhraseInput" placeholder="想用越文說什麼？讓 AI 幫你翻譯…"
                         class="field flex-1 text-sm"/>
-                    <button onclick="generateCustomPhrase()" class="btn-amber w-13 h-13 rounded-xl px-4 flex-shrink-0 flex items-center justify-center">
+                    <button onclick="generateCustomPhrase()" class="btn-amber w-13 h-13 rounded-[12px] px-4 flex-shrink-0 flex items-center justify-center">
                         <i data-lucide="arrow-right" class="w-5 h-5"></i>
                     </button>
                 </div>
-                <div id="aiPhraseResult" class="hidden mt-5 pt-5 border-t border-[var(--ink-10)]"></div>
+                <div id="aiPhraseResult" class="hidden mt-5 pt-5 border-t border-[var(--ink-08)]"></div>
             </div>
 
             <!-- PHRASE CATEGORIES -->
-            <div class="sticky top-[65px] md:top-[69px] z-40 bg-[var(--cream)]/95 backdrop-blur-md py-4 mb-5 -mx-4 px-4 md:-mx-8 md:px-8">
+            <div class="sticky top-[65px] md:top-[69px] z-40 bg-[#3c4a35]/95 backdrop-blur-md py-4 mb-5 -mx-4 px-4 md:-mx-8 md:px-8">
                 <div id="phraseCategoryButtons" class="flex flex-nowrap md:flex-wrap overflow-x-auto gap-2 hide-scrollbar pb-1 md:pb-0"></div>
             </div>
 
             <div id="phrasesList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 pb-8"></div>
         </section>
     </main>
+
+    <!-- FLOATING SYNC BUTTON (shows on itinerary & explore) -->
+    <div id="fabSync" class="hidden fixed bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom)+16px)] right-4 z-40 md:hidden">
+        <button onclick="refreshData()"
+            class="flex items-center gap-2 bg-[#1a1f17] text-white px-4 py-3 border border-[#1a1f17] active:opacity-70 transition-all shadow-lg">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="fabRefreshIcon"></i>
+            <span class="label-sm text-[9px] text-white">同步</span>
+        </button>
+    </div>
 
     <!-- MOBILE NAV -->
     <nav class="mobile-nav md:hidden" aria-label="Main navigation">
@@ -1274,8 +1162,8 @@
             const title = item.title || item.name || '未知景點';
             const type = item.type || item.category || '景點';
             document.getElementById('aiModalBody').innerHTML = `
-                <div class="flex flex-col items-center justify-center py-10 text-[var(--ink-40)]">
-                    <i data-lucide="sparkles" class="w-10 h-10 mb-3 animate-pulse text-[var(--amber)]"></i>
+                <div class="flex flex-col items-center justify-center py-10 text-[#1c1612]/30">
+                    <i data-lucide="sparkles" class="w-10 h-10 mb-3 animate-pulse text-[#1a1f17]"></i>
                     <p class="label-sm text-[10px] animate-pulse">Thinking…</p>
                 </div>`;
             openAiModal(); safeCreateIcons();
@@ -1284,17 +1172,17 @@
                 const response = await callGemini(prompt, false);
                 const cleanHTML = response.replace(/```html/g, '').replace(/```/g, '');
                 document.getElementById('aiModalBody').innerHTML = `
-                    <div class="mb-5 pb-5 border-b border-[var(--ink-10)]">
+                    <div class="mb-5 pb-5 border-b border-[var(--ink-08)]">
                         <p class="eyebrow text-[9px] mb-2 opacity-50">Target Location</p>
-                        <h4 class="display-title text-xl text-[var(--ink)]">${title}</h4>
+                        <h4 class="display-title text-xl text-[#1c1612]">${title}</h4>
                     </div>
-                    <div class="text-[14px] leading-relaxed text-[var(--ink-80)]">${cleanHTML}</div>`;
+                    <div class="text-[14px] leading-relaxed text-[#1c1612]/60">${cleanHTML}</div>`;
             } catch (error) {
                 document.getElementById('aiModalBody').innerHTML = `
-                    <div class="text-center text-red-400 py-6">
+                    <div class="text-center text-[#1a1f17]/50 py-6">
                         <i data-lucide="wifi-off" class="w-8 h-8 mx-auto mb-3 opacity-50"></i>
                         <p class="font-bold">無法取得 AI 建議</p>
-                        <p class="text-xs mt-1 text-[var(--ink-40)]">請檢查網路連線或稍後再試。</p>
+                        <p class="text-xs mt-1 text-[#1c1612]/30">請檢查網路連線或稍後再試。</p>
                     </div>`;
                 safeCreateIcons();
             }
@@ -1311,9 +1199,9 @@
                 if (days.length === 0) { showToast("尚未載入任何行程天數。"); return; }
                 document.getElementById('addToDayList').innerHTML = days.map(day => `
                     <button onclick="confirmAddToDay('${day}')"
-                        class="w-full text-left px-5 py-4 bg-[var(--cream)] hover:bg-[var(--cream-dark)] border border-[var(--ink-10)] rounded-[14px] font-bold text-[var(--ink)] text-sm active:scale-95 transition-all flex justify-between items-center group">
+                        class="w-full text-left px-5 py-4 bg-white hover:bg-[var(--cream)] border border-[var(--ink-08)] rounded-[12px] font-bold text-[#1c1612] text-sm active:scale-95 transition-all flex justify-between items-center group">
                         ${day}
-                        <i data-lucide="plus-circle" class="w-5 h-5 text-[var(--ink-40)] group-hover:text-[var(--amber)] transition-colors"></i>
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-[#1c1612]/30 group-hover:text-[#1a1f17] transition-colors"></i>
                     </button>`).join("");
                 safeCreateIcons();
                 const modal = document.getElementById('addToDayModal');
@@ -1422,7 +1310,7 @@
                     <div class="text-xl">${getWeatherEmoji(codes ? codes[i] : 1)}</div>
                     <div class="flex flex-col items-center">
                         <span class="text-xs font-black">${temps ? temps[i][0] : (30+Math.floor(Math.random()*4))}°</span>
-                        <span class="text-[9px] font-bold text-[var(--ink-40)]">${temps ? temps[i][1] : (22+Math.floor(Math.random()*3))}°</span>
+                        <span class="text-[9px] font-bold text-[#1c1612]/30">${temps ? temps[i][1] : (22+Math.floor(Math.random()*3))}°</span>
                     </div>
                 </div>`;
             }).join('');
@@ -1553,13 +1441,42 @@
         function clearConverter() { document.getElementById("vndInput").value = ""; document.getElementById("twdInput").value = ""; }
 
         window.refreshData = async function() {
-            showToast("正在同步最新資料…");
-            const icon = document.getElementById("refreshIcon");
-            if (icon) icon.classList.add("animate-spin");
-            await Promise.all([loadItinerary(), loadExplore()]);
-            if (window.myMap && document.getElementById('mapTab') && !document.getElementById('mapTab').classList.contains('hidden')) initOrUpdateMap();
-            if (icon) icon.classList.remove("animate-spin");
-            showToast("資料已更新！✦");
+            const btn  = document.getElementById('refreshBtn');
+            const icon = document.getElementById('refreshIcon');
+
+            // Visual: loading state
+            if (btn)  btn.disabled = true;
+            if (icon) icon.classList.add('animate-spin');
+            showToast("正在同步 Google Sheets…");
+
+            const start = Date.now();
+            try {
+                await Promise.all([loadItinerary(), loadExplore()]);
+                if (window.myMap &&
+                    document.getElementById('mapTab') &&
+                    !document.getElementById('mapTab').classList.contains('hidden')) {
+                    window.isMapLoading = false;
+                    initOrUpdateMap();
+                }
+                const ms = Date.now() - start;
+                // Update last-synced timestamp in button
+                const now = new Date();
+                const hhmm = now.toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit' });
+                showToast(`✓ 已同步（${hhmm}）`);
+                // Show timestamp in button for a few seconds
+                if (btn) {
+                    const label = btn.querySelector('span');
+                    if (label) {
+                        label.textContent = `已同步 ${hhmm}`;
+                        setTimeout(() => { if(label) label.textContent = '同步資料'; }, 4000);
+                    }
+                }
+            } catch(e) {
+                showToast("同步失敗，請檢查網路連線");
+            } finally {
+                if (icon) icon.classList.remove('animate-spin');
+                if (btn)  btn.disabled = false;
+            }
         };
 
         // JSONP fetch - works with file://, localhost, and deployed servers
@@ -1592,7 +1509,7 @@
 
         function getCategoryStyle(type) {
             const t = (type || "").toLowerCase();
-            if (t.includes('咖啡') || t.includes('cafe') || t.includes('甜點')) return 'bg-amber-50 text-amber-700 border-amber-200';
+            if (t.includes('咖啡') || t.includes('cafe') || t.includes('甜點')) return 'bg-[#f5f0e8] text-amber-700 border-[rgba(26,31,23,0.08)]';
             if (t.includes('餐廳') || t.includes('美食') || t.includes('food')) return 'bg-rose-50 text-rose-700 border-rose-200';
             if (t.includes('住宿') || t.includes('hotel') || t.includes('stay')) return 'bg-indigo-50 text-indigo-700 border-indigo-200';
             if (t.includes('購物') || t.includes('market') || t.includes('shopping')) return 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200';
@@ -1647,7 +1564,7 @@
                 }
 
                 if (!rows || rows.length === 0) {
-                    document.getElementById("timeline").innerHTML = `<div class="py-12 text-center text-[var(--ink-40)] text-sm">找不到行程資料<br><span class="text-xs opacity-60">請確認 Google Sheet 已公開且 sheet 名稱正確</span></div>`;
+                    document.getElementById("timeline").innerHTML = `<div class="py-12 text-center text-[#1c1612]/30 text-sm">找不到行程資料<br><span class="text-xs opacity-60">請確認 Google Sheet 已公開且 sheet 名稱正確</span></div>`;
                     return;
                 }
 
@@ -1746,10 +1663,10 @@
                 });
                 console.log("📅 Days loaded:", days, "Total items:", days.map(d => rawData[d].items.length));
                 if (days.length > 0) { renderDay(days[0]); }
-                else { document.getElementById("timeline").innerHTML = `<div class="py-12 text-center text-[var(--ink-40)] text-sm">表格內無有效行程資料</div>`; }
+                else { document.getElementById("timeline").innerHTML = `<div class="py-12 text-center text-[#1c1612]/30 text-sm">表格內無有效行程資料</div>`; }
             } catch(e) {
                 console.error("loadItinerary error:", e);
-                document.getElementById("timeline").innerHTML = `<div class="py-12 text-center text-red-400 text-sm font-bold">讀取錯誤：${e.message}<br><span class="text-xs font-normal opacity-70">請確認表格已公開「任何人可以檢視」</span></div>`;
+                document.getElementById("timeline").innerHTML = `<div class="py-12 text-center text-[#1a1f17]/50 text-sm font-bold">讀取錯誤：${e.message}<br><span class="text-xs font-normal opacity-70">請確認表格已公開「任何人可以檢視」</span></div>`;
             }
         }
 
@@ -1785,27 +1702,27 @@
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                         <div class="absolute bottom-5 md:bottom-8 left-5 md:left-8 right-5 md:right-8 text-white">
                             <div class="flex items-center gap-2 mb-2">
-                                <span class="w-1.5 h-1.5 rounded-full bg-[var(--amber)] shadow-[0_0_8px_var(--amber)]"></span>
+                                <span class="w-1.5 h-1.5 rounded-[12px] bg-[#1a1f17] "></span>
                                 <span class="eyebrow text-white/60 text-[9px]">STAY // ACCOMMODATION</span>
                             </div>
                             <h4 class="display-title text-3xl md:text-5xl leading-tight">${safeTitle}</h4>
                         </div>
                     </div>
                     <div class="p-5 md:p-8 flex flex-col md:flex-row md:justify-between md:items-end gap-5">
-                        <div class="space-y-3 text-sm text-[var(--ink-80)] md:max-w-lg">
-                            ${acc.address ? `<div class="flex items-start gap-3"><i data-lucide="map-pin" class="w-4 h-4 mt-0.5 text-[var(--amber)] flex-shrink-0"></i><span class="leading-relaxed">${acc.address}</span></div>` : ''}
-                            ${acc.openTime ? `<div class="flex items-center gap-3"><i data-lucide="clock" class="w-4 h-4 text-[var(--amber)] flex-shrink-0"></i><span>${acc.openTime}</span></div>` : ''}
-                            ${acc.rating ? `<div class="flex items-center gap-3"><i data-lucide="star" class="w-4 h-4 text-amber-500 flex-shrink-0 fill-current"></i><span>${acc.rating}</span></div>` : ''}
-                            ${acc.phone ? `<div class="flex items-center gap-3"><i data-lucide="phone" class="w-4 h-4 text-[var(--amber)] flex-shrink-0"></i><span>${acc.phone}</span></div>` : ''}
+                        <div class="space-y-3 text-sm text-[#1c1612]/60 md:max-w-lg">
+                            ${acc.address ? `<div class="flex items-start gap-3"><i data-lucide="map-pin" class="w-4 h-4 mt-0.5 text-[#1a1f17] flex-shrink-0"></i><span class="leading-relaxed">${acc.address}</span></div>` : ''}
+                            ${acc.openTime ? `<div class="flex items-center gap-3"><i data-lucide="clock" class="w-4 h-4 text-[#1a1f17] flex-shrink-0"></i><span>${acc.openTime}</span></div>` : ''}
+                            ${acc.rating ? `<div class="flex items-center gap-3"><i data-lucide="star" class="w-4 h-4 text-[#1a1f17] flex-shrink-0 fill-current"></i><span>${acc.rating}</span></div>` : ''}
+                            ${acc.phone ? `<div class="flex items-center gap-3"><i data-lucide="phone" class="w-4 h-4 text-[#1a1f17] flex-shrink-0"></i><span>${acc.phone}</span></div>` : ''}
                         </div>
                         <div class="flex gap-2.5 w-full md:w-auto">
                             <button onclick="getAiTips('${b64Acc}')" class="btn-amber flex-[1.5] flex items-center justify-center gap-2 text-[10px]">
                                 <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>AI Tips
                             </button>
-                            <a href="${acc.map}" target="_blank" class="flex-1 flex items-center justify-center gap-2 bg-[var(--cream)] hover:bg-[var(--cream-dark)] border border-[var(--ink-10)] rounded-[var(--radius-sm)] text-[10px] font-black tracking-widest uppercase text-[var(--ink)] transition-colors py-3.5 px-4">
+                            <a href="${acc.map}" target="_blank" class="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-[var(--cream)] border border-[var(--ink-08)] rounded-[0px] text-[10px] font-black tracking-widest uppercase text-[#1c1612] transition-colors py-3.5 px-4">
                                 <i data-lucide="navigation" class="w-3.5 h-3.5"></i>Map
                             </a>
-                            <button onclick="toggleFavFromItineraryB64('${b64Acc}')" class="w-12 h-12 flex items-center justify-center bg-[var(--cream)] hover:bg-rose-50 hover:text-rose-500 border border-[var(--ink-10)] rounded-[var(--radius-sm)] text-[var(--ink-40)] transition-all flex-shrink-0">
+                            <button onclick="toggleFavFromItineraryB64('${b64Acc}')" class="w-12 h-12 flex items-center justify-center bg-white hover:bg-rose-50 hover:text-rose-500 border border-[var(--ink-08)] rounded-[0px] text-[#1c1612]/30 transition-all flex-shrink-0">
                                 <i data-lucide="heart" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -1815,7 +1732,7 @@
             }
 
             if (allItems.length === 0 && !acc) {
-                html += `<div class="py-14 text-center text-[var(--ink-40)] text-sm">這天尚未安排行程</div>`;
+                html += `<div class="py-14 text-center text-[#1c1612]/30 text-sm">這天尚未安排行程</div>`;
             }
 
             html += allItems.map((item, idx) => {
@@ -1841,7 +1758,7 @@
                             <i data-lucide="grip-vertical" class="w-4 h-4 pointer-events-none"></i>
                         </div>
                         <!-- IMAGE -->
-                        <div class="w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden flex-shrink-0 bg-[var(--cream)] mt-0.5">
+                        <div class="w-20 h-20 md:w-28 md:h-28 rounded-[12px] overflow-hidden flex-shrink-0 bg-white mt-0.5">
                             <img src="${item.image || getDefaultImage(item.type)}" alt="${safeTitle.replace(/"/g,'&quot;')}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='${getDefaultImage(item.type)}';">
                         </div>
                         <!-- CONTENT -->
@@ -1849,20 +1766,20 @@
                             <!-- TAGS -->
                             <div class="flex flex-wrap items-center gap-1.5">
                                 <span class="tag ${getCategoryStyle(item.type)}">${item.type || '探索'}</span>
-                                <span class="tag border border-[var(--ink-10)] text-[var(--ink-40)]">${item.area || 'Other'}</span>
+                                <span class="tag border border-[var(--ink-08)] text-[#1c1612]/30">${item.area || 'Other'}</span>
                                 ${isCustomItem ? `<span class="tag badge-custom">自訂</span>` : ''}
                             </div>
                             <!-- TITLE + META -->
                             <div class="flex flex-col xl:flex-row justify-between items-start gap-2">
-                                <h4 class="display-title text-xl md:text-2xl text-[var(--ink)] leading-tight flex-1">${safeTitle}</h4>
+                                <h4 class="display-title text-xl md:text-2xl text-[#1c1612] leading-tight flex-1">${safeTitle}</h4>
                                 ${(item.openTime || item.rating) ? `
-                                <div class="text-[11px] text-[var(--ink-80)] bg-[var(--cream)] rounded-xl px-3 py-2 border border-[var(--ink-10)] w-full xl:w-auto flex-shrink-0">
-                                    ${item.openTime ? `<div class="flex justify-between gap-4 mb-1"><span class="font-bold text-[var(--ink-40)] whitespace-nowrap">營業時間</span><span class="font-bold text-right">${item.openTime}</span></div>` : ''}
-                                    ${item.rating ? `<div class="flex justify-between gap-4"><span class="font-bold text-[var(--ink-40)] whitespace-nowrap">Google評分</span><span class="font-bold text-amber-500 flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-current"></i>${item.rating}</span></div>` : ''}
+                                <div class="text-[11px] text-[#1c1612]/60 bg-white rounded-[12px] px-3 py-2 border border-[var(--ink-08)] w-full xl:w-auto flex-shrink-0">
+                                    ${item.openTime ? `<div class="flex justify-between gap-4 mb-1"><span class="font-bold text-[#1c1612]/30 whitespace-nowrap">營業時間</span><span class="font-bold text-right">${item.openTime}</span></div>` : ''}
+                                    ${item.rating ? `<div class="flex justify-between gap-4"><span class="font-bold text-[#1c1612]/30 whitespace-nowrap">Google評分</span><span class="font-bold text-[#1a1f17] flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-current"></i>${item.rating}</span></div>` : ''}
                                 </div>` : ''}
                             </div>
                             <!-- NOTE -->
-                            ${safeNote ? `<p class="text-xs text-[var(--ink-40)] leading-relaxed"><span class="font-bold text-[var(--ink-40)] mr-1">備註:</span>${safeNote}</p>` : ''}
+                            ${safeNote ? `<p class="text-xs text-[#1c1612]/30 leading-relaxed"><span class="font-bold text-[#1c1612]/30 mr-1">備註:</span>${safeNote}</p>` : ''}
                             <!-- PERSONAL NOTE -->
                             <input type="text" placeholder="加入個人備註…" value="${personalNoteVal.replace(/"/g,'&quot;')}"
                                    data-key="${safeTitle.replace(/"/g,'&quot;')}"
@@ -1882,7 +1799,7 @@
                         </button>
                         ${isCustomItem ? `
                         <div class="card-action-sep"></div>
-                        <button data-key="${safeTitle.replace(/"/g,'&quot;')}" onclick="removeCustomItemFromDay('${day}',this.dataset.key)" class="card-action-btn text-red-400 hover:bg-red-50">
+                        <button data-key="${safeTitle.replace(/"/g,'&quot;')}" onclick="removeCustomItemFromDay('${day}',this.dataset.key)" class="card-action-btn text-[#1a1f17]/50 hover:bg-[#f5f0e8]">
                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>` : ''}
                     </div>
@@ -1901,7 +1818,7 @@
             setTimeout(() => e.target.classList.add('opacity-40'), 0);
         };
         window.handleDragOver = function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
-        window.handleDragEnter = function(e) { e.preventDefault(); e.currentTarget.style.outline = '2px dashed var(--amber)'; };
+        window.handleDragEnter = function(e) { e.preventDefault(); e.currentTarget.style.outline = '2px dashed var(--ink)'; };
         window.handleDragLeave = function(e) { e.currentTarget.style.outline = ''; };
         window.handleDrop = function(e, targetIdx, day) {
             e.preventDefault();
@@ -1949,7 +1866,7 @@
                 }
                 if (!rows || rows.length === 0) {
                     console.warn("⚠️ Explore sheet not found. Tried:", exploreNames.join(", "));
-                    document.getElementById("exploreList").innerHTML = `<div class="py-12 text-center text-[var(--ink-40)] text-sm">找不到探索資料<br><span class="text-xs opacity-60">請確認 visit List 分頁已存在且公開</span></div>`;
+                    document.getElementById("exploreList").innerHTML = `<div class="py-12 text-center text-[#1c1612]/30 text-sm">找不到探索資料<br><span class="text-xs opacity-60">請確認 visit List 分頁已存在且公開</span></div>`;
                     return;
                 }
                 window.travelApp.exploreData = [];
@@ -2041,23 +1958,23 @@
             return `
             <div class="card overflow-hidden anim-slide mb-4 md:mb-5" style="animation-delay:${(idx%10)*70}ms">
                 <div class="flex p-4 md:p-5 gap-3 md:gap-5 items-stretch">
-                    <div class="w-20 h-20 md:w-32 md:h-32 rounded-2xl overflow-hidden flex-shrink-0 bg-[var(--cream)] mt-0.5">
+                    <div class="w-20 h-20 md:w-32 md:h-32 rounded-[12px] overflow-hidden flex-shrink-0 bg-white mt-0.5">
                         <img src="${item.image || getDefaultImage(item.category || item.type)}" alt="${safeTitle.replace(/"/g,'&quot;')}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='${getDefaultImage(item.category || item.type)}';">
                     </div>
                     <div class="flex-1 min-w-0 flex flex-col justify-between gap-2">
                         <div class="flex flex-wrap items-center gap-1.5">
                             <span class="tag ${getCategoryStyle(item.category || item.type)}">${item.category || item.type || '探索'}</span>
-                            <span class="tag border border-[var(--ink-10)] text-[var(--ink-40)]">${item.area || 'Other'}</span>
+                            <span class="tag border border-[var(--ink-08)] text-[#1c1612]/30">${item.area || 'Other'}</span>
                         </div>
                         <div class="flex flex-col xl:flex-row justify-between items-start gap-2">
-                            <h4 class="display-title text-xl md:text-2xl text-[var(--ink)] leading-tight flex-1">${safeTitle}</h4>
+                            <h4 class="display-title text-xl md:text-2xl text-[#1c1612] leading-tight flex-1">${safeTitle}</h4>
                             ${(item.openTime || item.rating) ? `
-                            <div class="text-[11px] text-[var(--ink-80)] bg-[var(--cream)] rounded-xl px-3 py-2 border border-[var(--ink-10)] w-full xl:w-auto flex-shrink-0">
-                                ${item.openTime ? `<div class="flex justify-between gap-4 mb-1"><span class="font-bold text-[var(--ink-40)] whitespace-nowrap">營業時間</span><span class="font-bold text-right">${item.openTime}</span></div>` : ''}
-                                ${item.rating ? `<div class="flex justify-between gap-4"><span class="font-bold text-[var(--ink-40)] whitespace-nowrap">Google評分</span><span class="font-bold text-amber-500 flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-current"></i>${item.rating}</span></div>` : ''}
+                            <div class="text-[11px] text-[#1c1612]/60 bg-white rounded-[12px] px-3 py-2 border border-[var(--ink-08)] w-full xl:w-auto flex-shrink-0">
+                                ${item.openTime ? `<div class="flex justify-between gap-4 mb-1"><span class="font-bold text-[#1c1612]/30 whitespace-nowrap">營業時間</span><span class="font-bold text-right">${item.openTime}</span></div>` : ''}
+                                ${item.rating ? `<div class="flex justify-between gap-4"><span class="font-bold text-[#1c1612]/30 whitespace-nowrap">Google評分</span><span class="font-bold text-[#1a1f17] flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-current"></i>${item.rating}</span></div>` : ''}
                             </div>` : ''}
                         </div>
-                        ${safeNote ? `<p class="text-xs text-[var(--ink-40)] leading-relaxed"><span class="font-bold mr-1">備註:</span>${safeNote}</p>` : ''}
+                        ${safeNote ? `<p class="text-xs text-[#1c1612]/30 leading-relaxed"><span class="font-bold mr-1">備註:</span>${safeNote}</p>` : ''}
                         <input type="text" placeholder="加入個人備註…" value="${personalNoteVal.replace(/"/g,'&quot;')}"
                                data-key="${safeTitle.replace(/"/g,'&quot;')}"
                                onchange="savePersonalNote(this.dataset.key,this.value)"
@@ -2179,15 +2096,15 @@
                     </button>
                     ${window.isSettlementVisible ? `
                     <div class="mt-6 pt-6 border-t border-white/10 space-y-4 anim-fade">
-                        <p class="eyebrow text-[9px] text-[var(--amber)]">How to Settle Up (TWD)</p>
+                        <p class="eyebrow text-[9px] text-[#1a1f17]">How to Settle Up (TWD)</p>
                         ${settlements.length > 0 ? settlements.map(s => `
-                            <div class="flex items-center justify-between bg-white/5 px-4 py-3.5 rounded-xl">
+                            <div class="flex items-center justify-between bg-white/5 px-4 py-3.5 rounded-[12px]">
                                 <span class="text-sm font-bold text-white">${s.from} <span class="text-white/40 mx-1">→</span> ${s.to}</span>
                                 <div class="text-right">
-                                    <div class="font-black text-lg text-[var(--amber)]">NT$ ${Math.round(s.amount * rate).toLocaleString()}</div>
+                                    <div class="font-black text-lg text-[#1a1f17]">NT$ ${Math.round(s.amount * rate).toLocaleString()}</div>
                                     <div class="text-[10px] text-white/30 mt-0.5">${Math.round(s.amount).toLocaleString()} VND</div>
                                 </div>
-                            </div>`).join('') : '<p class="text-xs text-white/40 text-center py-4 bg-white/5 rounded-xl">帳目平衡，無須分帳 🎉</p>'}
+                            </div>`).join('') : '<p class="text-xs text-white/40 text-center py-4 bg-white/5 rounded-[12px]">帳目平衡，無須分帳 🎉</p>'}
                         <div class="pt-5 border-t border-white/10">
                             <p class="eyebrow text-[9px] text-white/30 mb-4">Individual Paid · Avg NT$ ${Math.round(perPerson * rate).toLocaleString()}</p>
                             ${people.map(p => `
@@ -2211,22 +2128,204 @@
                             <span class="text-base leading-none">${emoji}</span>
                             <span class="eyebrow text-[8px] opacity-50">${ex.payer} · ${ex.category||'其他'}</span>
                         </div>
-                        <h4 class="display-title text-lg text-[var(--ink)] truncate">${ex.item}</h4>
+                        <h4 class="display-title text-lg text-[#1c1612] truncate">${ex.item}</h4>
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">
                         <div class="text-right">
-                            <div class="font-black text-sm text-[var(--ink)]">${Math.round(Number(ex.amount)).toLocaleString()} <span class="text-[9px] font-bold text-[var(--ink-40)]">VND</span></div>
-                            <div class="text-[11px] font-bold text-[var(--ink-40)] mt-0.5">≈ NT$ ${Math.round(Number(ex.amount) * rate).toLocaleString()}</div>
+                            <div class="font-black text-sm text-[#1c1612]">${Math.round(Number(ex.amount)).toLocaleString()} <span class="text-[9px] font-bold text-[#1c1612]/30">VND</span></div>
+                            <div class="text-[11px] font-bold text-[#1c1612]/30 mt-0.5">≈ NT$ ${Math.round(Number(ex.amount) * rate).toLocaleString()}</div>
                         </div>
-                        <button onclick="deleteExpense('${ex.id}')" class="w-10 h-10 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-400 rounded-xl active:scale-95 transition-colors flex-shrink-0">
+                        <button onclick="deleteExpense('${ex.id}')" class="w-10 h-10 flex items-center justify-center bg-[#f5f0e8] hover:bg-[#f0f0f0] text-[#1a1f17]/50 rounded-[12px] active:scale-95 transition-colors flex-shrink-0">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </div>`;
-            }).join('') || `<div class="py-14 text-center text-[var(--ink-40)]"><i data-lucide="receipt" class="w-10 h-10 mx-auto mb-3 opacity-30"></i><p class="eyebrow text-[10px]">No Records</p></div>`;
+            }).join('') || `<div class="py-14 text-center text-[#1c1612]/30"><i data-lucide="receipt" class="w-10 h-10 mx-auto mb-3 opacity-30"></i><p class="eyebrow text-[10px]">No Records</p></div>`;
             safeCreateIcons();
             // render chart
             renderExpenseChart(exps, rate);
+        };
+
+
+        /* ── SMART SCHEDULE ── */
+        let _smartMaxItems = 3;
+
+        window.setMaxItems = function(n) {
+            _smartMaxItems = n;
+            ['3','5','8','All'].forEach(v => {
+                const id = 'maxBtn' + (v === 'All' ? 'All' : v);
+                const el = document.getElementById(id);
+                if (!el) return;
+                const match = (v === 'All' && n === 99) || String(n) === v;
+                el.className = `flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all ${match
+                    ? 'border-[#1c1612] bg-[#1c1612] text-white'
+                    : 'border-[#1c1612]/10 text-[#1c1612]/40 hover:border-[#1c1612]/30'}`;
+            });
+        };
+
+        window.openSmartSchedule = function() {
+            if (!window.travelApp.exploreData || window.travelApp.exploreData.length === 0) {
+                showToast("請先前往「探索」頁面確認資料已載入");
+                return;
+            }
+            const modal = document.getElementById('smartModal');
+            modal.classList.add('open');
+            setTimeout(() => {
+                document.getElementById('smartModalBg').classList.add('visible');
+                document.getElementById('smartModalContent').classList.add('visible');
+            }, 10);
+            document.getElementById('smartPreview').classList.add('hidden');
+        };
+
+        window.closeSmartModal = function() {
+            document.getElementById('smartModalBg').classList.remove('visible');
+            document.getElementById('smartModalContent').classList.remove('visible');
+            setTimeout(() => document.getElementById('smartModal').classList.remove('open'), 350);
+        };
+
+        function buildSchedule() {
+            const mode = document.querySelector('input[name="schedMode"]:checked')?.value || 'area';
+            const maxPerDay = _smartMaxItems;
+            const days = Object.keys(window.travelApp.itineraryData).sort((a,b) => {
+                const [am,ad] = a.split('/').map(Number);
+                const [bm,bd] = b.split('/').map(Number);
+                return (am*100+(ad||0)) - (bm*100+(bd||0));
+            });
+            if (days.length === 0) return null;
+
+            // Get all explore items, exclude those already in sheet itinerary
+            const sheetTitles = new Set();
+            days.forEach(d => {
+                (window.travelApp.itineraryData[d]?.items || []).forEach(i => sheetTitles.add(i.title));
+                if (window.travelApp.itineraryData[d]?.accommodation) {
+                    sheetTitles.add(window.travelApp.itineraryData[d].accommodation.title);
+                }
+            });
+
+            let items = window.travelApp.exploreData.filter(i => !sheetTitles.has(i.name || i.title));
+
+            const plan = {}; // { dayKey: [items] }
+            days.forEach(d => plan[d] = []);
+
+            if (mode === 'area') {
+                // Group by area, assign each area group to a day
+                const areaGroups = {};
+                items.forEach(item => {
+                    const area = item.area || 'Other';
+                    if (!areaGroups[area]) areaGroups[area] = [];
+                    areaGroups[area].push(item);
+                });
+                const areas = Object.keys(areaGroups);
+                let dayIdx = 0;
+                areas.forEach(area => {
+                    const group = areaGroups[area];
+                    group.forEach((item, i) => {
+                        if (i >= maxPerDay) return; // limit per area per day
+                        const day = days[dayIdx % days.length];
+                        if (plan[day].length < maxPerDay) plan[day].push(item);
+                    });
+                    dayIdx++;
+                });
+
+            } else if (mode === 'category') {
+                // Sort by category, then distribute
+                const catOrder = ['景點','文化','咖啡','餐廳','美食','購物','夜市','其他'];
+                items.sort((a,b) => {
+                    const ia = catOrder.findIndex(c => (a.category||'').includes(c));
+                    const ib = catOrder.findIndex(c => (b.category||'').includes(c));
+                    return (ia===-1?99:ia) - (ib===-1?99:ib);
+                });
+                let dayIdx = 0;
+                items.forEach(item => {
+                    let placed = false;
+                    for (let i = 0; i < days.length; i++) {
+                        const d = days[(dayIdx + i) % days.length];
+                        if (plan[d].length < maxPerDay) { plan[d].push(item); placed = true; dayIdx = (dayIdx+i) % days.length; break; }
+                    }
+                });
+
+            } else if (mode === 'random') {
+                // Shuffle then even distribute
+                items = items.slice().sort(() => Math.random() - 0.5);
+                items.forEach((item, i) => {
+                    const day = days[i % days.length];
+                    if (plan[day].length < maxPerDay) plan[day].push(item);
+                });
+
+            } else { // even
+                items.forEach((item, i) => {
+                    const day = days[i % days.length];
+                    if (plan[day].length < maxPerDay) plan[day].push(item);
+                });
+            }
+
+            return plan;
+        }
+
+        window.previewSchedule = function() {
+            const plan = buildSchedule();
+            if (!plan) { showToast("找不到可排程的景點"); return; }
+            const preview = document.getElementById('smartPreview');
+            const content = document.getElementById('smartPreviewContent');
+            let total = 0;
+            content.innerHTML = Object.entries(plan).map(([day, items]) => {
+                total += items.length;
+                if (items.length === 0) return `<div class="mb-1 text-[#1c1612]/30">${day}: 無景點</div>`;
+                return `<div class="mb-1.5"><span class="font-bold text-[#1c1612]">${day}</span>: ${items.map(i => i.name||i.title).join('、')}</div>`;
+            }).join('');
+            content.innerHTML += `<div class="mt-2 pt-2 border-t border-[#1c1612]/10 text-[10px] font-bold text-[#1a1f17]">共 ${total} 個景點</div>`;
+            preview.classList.remove('hidden');
+        };
+
+        window.applySchedule = function() {
+            const plan = buildSchedule();
+            if (!plan) { showToast("找不到可排程的景點"); return; }
+
+            const clearExisting = document.getElementById('clearExisting')?.checked;
+            if (!window.travelApp.customItems) window.travelApp.customItems = {};
+
+            Object.entries(plan).forEach(([day, exploreItems]) => {
+                if (clearExisting) window.travelApp.customItems[day] = [];
+                if (!window.travelApp.customItems[day]) window.travelApp.customItems[day] = [];
+
+                const existingTitles = new Set([
+                    ...(window.travelApp.itineraryData[day]?.items||[]).map(i=>i.title),
+                    ...(window.travelApp.customItems[day]||[]).map(i=>i.title),
+                ]);
+
+                exploreItems.forEach(item => {
+                    const title = item.name || item.title;
+                    if (!existingTitles.has(title)) {
+                        window.travelApp.customItems[day].push({
+                            time: "Anytime",
+                            type: item.category || "探索",
+                            area: item.area || "",
+                            title: title,
+                            note: item.note || "",
+                            address: item.address || "",
+                            phone: "",
+                            image: item.image || "",
+                            openTime: item.openTime || "",
+                            rating: item.rating || "",
+                            map: item.map || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(title + " Vietnam")}`
+                        });
+                        existingTitles.add(title);
+                    }
+                });
+            });
+
+            window.saveCustomItemsToCloud(window.travelApp.customItems);
+            closeSmartModal();
+
+            const total = Object.values(plan).reduce((s,items) => s+items.length, 0);
+            showToast(`✨ 已排入 ${total} 個景點！`);
+
+            // Navigate to itinerary and re-render
+            showTab('itinerary');
+            setTimeout(() => {
+                const days = Object.keys(window.travelApp.itineraryData).sort();
+                if (days.length) renderDay(days[0]);
+            }, 100);
         };
 
         /* ── MAP ── */
@@ -2273,7 +2372,7 @@
                 document.getElementById('mapProgress').innerText = loaded;
                 if (coords) {
                     const isVisited = window.travelApp.visited.some(v => (v.name || v.title) === safeTitle);
-                    const markerColor = isVisited ? '#10b981' : '#e8531a';
+                    const markerColor = isVisited ? '#1a5c38' : '#1a1f17';
                     const customIcon = L.divIcon({
                         className: '',
                         html: `<div style="background:${markerColor};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);"></div>`,
@@ -2282,7 +2381,7 @@
                     const popupContent = `<div style="font-family:'DM Sans',sans-serif;padding:4px;">
                         <p style="font-size:9px;font-weight:800;color:#a3a3a3;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${item.category||'探索'}</p>
                         <h4 style="font-size:14px;font-weight:900;color:#14110f;margin-bottom:8px;line-height:1.2;">${safeTitle}</h4>
-                        <a href="${item.map}" target="_blank" style="font-size:10px;font-weight:800;color:#e8531a;text-decoration:none;">在 Google Maps 開啟 →</a>
+                        <a href="${item.map}" target="_blank" style="font-size:10px;font-weight:700;color:#1a1f17;font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;text-decoration:underline;text-decoration-color:rgba(60,74,53,0.4);">在 Google Maps 開啟 →</a>
                     </div>`;
                     markersLayer.addLayer(L.marker([coords.lat, coords.lng], {icon: customIcon}).bindPopup(popupContent));
                     bounds.push([coords.lat, coords.lng]);
@@ -2341,11 +2440,11 @@
             document.getElementById("phrasesList").innerHTML = filtered.map((item, idx) => `
                 <div class="card p-4 md:p-5 flex justify-between items-center anim-slide" style="animation-delay:${(idx%10)*25}ms">
                     <div class="flex-1 pr-3">
-                        <h4 class="text-base md:text-lg font-black text-[var(--ink)] leading-tight">${item.vi}</h4>
-                        <p class="text-xs md:text-[13px] font-medium text-[var(--ink-40)] mt-1">${item.zh}</p>
+                        <h4 class="text-base md:text-lg font-black text-[#1c1612] leading-tight">${item.vi}</h4>
+                        <p class="text-xs md:text-[13px] font-medium text-[#1c1612]/30 mt-1">${item.zh}</p>
                     </div>
                     <button data-text="${item.vi.replace(/"/g,'&quot;')}" onclick="speakVietnamese(this.dataset.text)"
-                        class="w-11 h-11 flex items-center justify-center bg-[var(--cream)] hover:bg-[var(--amber-glow)] text-[var(--amber)] rounded-full flex-shrink-0 transition-colors active:scale-95 border border-[var(--ink-10)]">
+                        class="w-11 h-11 flex items-center justify-center bg-white hover:bg-[#1a1f17]/15 text-[#1a1f17] rounded-[12px] flex-shrink-0 transition-colors active:scale-95 border border-[var(--ink-08)]">
                         <i data-lucide="volume-2" class="w-5 h-5"></i>
                     </button>
                 </div>`).join("");
@@ -2370,7 +2469,7 @@
             if (!input) return;
             const resultEl = document.getElementById('aiPhraseResult');
             resultEl.classList.remove('hidden');
-            resultEl.innerHTML = `<div class="flex items-center gap-2 text-[var(--ink-40)]"><i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[var(--amber)]"></i><span class="text-sm font-medium">翻譯中…</span></div>`;
+            resultEl.innerHTML = `<div class="flex items-center gap-2 text-[#1c1612]/30"><i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[#1a1f17]"></i><span class="text-sm font-medium">翻譯中…</span></div>`;
             safeCreateIcons();
             const prompt = `請將以下中文或英文內容翻譯成越南文，並提供繁體中文音譯說明，幫助讀者發音。輸入：「${input}」。請以 JSON 格式回答，包含 "vi"（越南文）和 "zh"（中文說明，包含音近說明）兩個欄位。`;
             try {
@@ -2379,19 +2478,19 @@
                 resultEl.innerHTML = `
                     <div class="space-y-3">
                         <div>
-                            <p class="eyebrow text-[9px] mb-1 text-[var(--amber)]">越南文</p>
-                            <p class="text-xl font-black text-[var(--ink)]">${parsed.vi || '–'}</p>
+                            <p class="eyebrow text-[9px] mb-1 text-[#1a1f17]">越南文</p>
+                            <p class="text-xl font-black text-[#1c1612]">${parsed.vi || '–'}</p>
                         </div>
                         <div>
                             <p class="eyebrow text-[9px] mb-1">發音說明</p>
-                            <p class="text-sm text-[var(--ink-80)]">${parsed.zh || '–'}</p>
+                            <p class="text-sm text-[#1c1612]/60">${parsed.zh || '–'}</p>
                         </div>
-                        <button onclick="speakVietnamese('${(parsed.vi||'').replace(/'/g,"\\'")}')" class="flex items-center gap-2 bg-[var(--cream)] hover:bg-[var(--cream-dark)] text-[var(--amber)] px-4 py-2.5 rounded-full text-xs font-bold transition-colors">
+                        <button onclick="speakVietnamese('${(parsed.vi||'').replace(/'/g,"\\'")}')" class="flex items-center gap-2 bg-white hover:bg-[var(--cream)] text-[#1a1f17] px-4 py-2.5 rounded-[12px] text-xs font-bold transition-colors">
                             <i data-lucide="volume-2" class="w-4 h-4"></i> 朗讀越南文
                         </button>
                     </div>`;
             } catch(e) {
-                resultEl.innerHTML = `<p class="text-sm text-red-400 font-bold">翻譯失敗，請稍後再試。</p>`;
+                resultEl.innerHTML = `<p class="text-sm text-[#1a1f17]/50 font-bold">翻譯失敗，請稍後再試。</p>`;
             }
             safeCreateIcons();
         }
@@ -2424,6 +2523,12 @@
                 initOrUpdateMap();
             }
             safeCreateIcons();
+
+            // Show FAB sync button on itinerary and explore tabs (mobile only)
+            const fab = document.getElementById('fabSync');
+            if (fab) {
+                fab.classList.toggle('hidden', id !== 'itinerary' && id !== 'explore');
+            }
         }
     </script>
 </body>
