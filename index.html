@@ -723,71 +723,118 @@
     <!-- SMART SCHEDULE MODAL -->
     <div id="smartModal" class="modal-wrap" role="dialog" aria-modal="true">
         <div class="modal-bg" id="smartModalBg" onclick="closeSmartModal()"></div>
-        <div class="modal-sheet" id="smartModalContent" style="max-width:600px">
+        <div class="modal-sheet" id="smartModalContent" style="max-width:660px; max-height:92dvh; overflow-y:auto;">
             <div class="modal-handle md:hidden"></div>
-            <button onclick="closeSmartModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-white text-[#1c1612]/40 hover:bg-[#f5f0e8] transition-colors">
+            <button onclick="closeSmartModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-[#f5f0e8] text-[#1a1f17]/40 hover:bg-[#ede6d8] transition-colors z-10">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
 
-            <!-- Step 1: Config -->
-            <div id="smartStep1">
-                <p class="eyebrow mb-2 text-[#1a1f17]">Auto Planner</p>
-                <h3 class="display-title text-2xl text-[#1c1612] mb-6">智慧排程</h3>
+            <!-- STEP 1: Settings -->
+            <div id="aiPlanStep1">
+                <p class="eyebrow mb-2" style="color:#3c4a35">AI Day Planner ✦</p>
+                <h3 class="display-title text-3xl text-[#1a1f17] mb-2">智慧排行程</h3>
+                <p class="text-sm text-[#1a1f17]/50 mb-6 leading-relaxed">讓 AI 根據你的清單，安排從早到晚的完整一日行程，包含用餐、咖啡、景點與停留時間。</p>
 
-                <div class="space-y-4 mb-6">
+                <div class="space-y-5 mb-7">
+                    <!-- Days -->
                     <div>
-                        <p class="eyebrow text-[9px] mb-2">排程方式</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer hover:bg-white transition-colors">
-                                <input type="radio" name="schedMode" value="area" checked class="accent-[#3c4a35]">
-                                <div><p class="text-sm font-bold">依區域</p><p class="text-[10px] text-[#1c1612]/40">同區景點排同天</p></div>
+                        <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">要安排哪幾天？</p>
+                        <div id="dayCheckboxes" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <!-- Start time -->
+                    <div>
+                        <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">每天幾點出發？</p>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="setStartTime('08:00')" data-time="08:00" class="time-btn px-5 py-2 rounded-[100px] text-sm font-bold bg-[#1a1f17] text-[#f5f0e8] transition-all">08:00</button>
+                            <button onclick="setStartTime('09:00')" data-time="09:00" class="time-btn px-5 py-2 rounded-[100px] text-sm font-bold bg-[#f5f0e8] text-[#1a1f17]/50 transition-all">09:00</button>
+                            <button onclick="setStartTime('10:00')" data-time="10:00" class="time-btn px-5 py-2 rounded-[100px] text-sm font-bold bg-[#f5f0e8] text-[#1a1f17]/50 transition-all">10:00</button>
+                            <button onclick="setStartTime('11:00')" data-time="11:00" class="time-btn px-5 py-2 rounded-[100px] text-sm font-bold bg-[#f5f0e8] text-[#1a1f17]/50 transition-all">11:00</button>
+                        </div>
+                    </div>
+                    <!-- Style -->
+                    <div>
+                        <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">旅遊步調</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="style-card flex flex-col items-center gap-1 p-3 rounded-[14px] bg-[#f5f0e8] cursor-pointer transition-all" onclick="selectStyle(this,'relaxed')">
+                                <input type="radio" name="travelStyle" value="relaxed" class="sr-only">
+                                <span class="text-xl">🌿</span>
+                                <span class="text-[11px] font-bold text-[#1a1f17]">悠閒</span>
+                                <span class="text-[9px] text-[#1a1f17]/40">3-4 個地點</span>
                             </label>
-                            <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer hover:bg-white transition-colors">
-                                <input type="radio" name="schedMode" value="even" class="accent-[#3c4a35]">
-                                <div><p class="text-sm font-bold">平均分配</p><p class="text-[10px] text-[#1c1612]/40">每天景點數均等</p></div>
+                            <label class="style-card flex flex-col items-center gap-1 p-3 rounded-[14px] bg-[#1a1f17] cursor-pointer transition-all" onclick="selectStyle(this,'balanced')">
+                                <input type="radio" name="travelStyle" value="balanced" checked class="sr-only">
+                                <span class="text-xl">⚖️</span>
+                                <span class="text-[11px] font-bold text-[#f5f0e8]">均衡</span>
+                                <span class="text-[9px] text-[#f5f0e8]/50">5-6 個地點</span>
                             </label>
-                            <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer hover:bg-white transition-colors">
-                                <input type="radio" name="schedMode" value="category" class="accent-[#3c4a35]">
-                                <div><p class="text-sm font-bold">依類別</p><p class="text-[10px] text-[#1c1612]/40">餐廳/景點分開</p></div>
-                            </label>
-                            <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer hover:bg-white transition-colors">
-                                <input type="radio" name="schedMode" value="random" class="accent-[#3c4a35]">
-                                <div><p class="text-sm font-bold">隨機分配</p><p class="text-[10px] text-[#1c1612]/40">讓 AI 決定</p></div>
+                            <label class="style-card flex flex-col items-center gap-1 p-3 rounded-[14px] bg-[#f5f0e8] cursor-pointer transition-all" onclick="selectStyle(this,'packed')">
+                                <input type="radio" name="travelStyle" value="packed" class="sr-only">
+                                <span class="text-xl">🚀</span>
+                                <span class="text-[11px] font-bold text-[#1a1f17]">充實</span>
+                                <span class="text-[9px] text-[#1a1f17]/40">7-8 個地點</span>
                             </label>
                         </div>
                     </div>
+                    <!-- Preferences -->
                     <div>
-                        <p class="eyebrow text-[9px] mb-2">每天最多景點數</p>
-                        <div class="flex gap-2">
-                            <button onclick="setMaxItems(3)"  id="maxBtn3"  class="flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all border-[#1c1612] bg-[#1c1612] text-white">3</button>
-                            <button onclick="setMaxItems(5)"  id="maxBtn5"  class="flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all border-[#1c1612]/10 text-[#1c1612]/40">5</button>
-                            <button onclick="setMaxItems(8)"  id="maxBtn8"  class="flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all border-[#1c1612]/10 text-[#1c1612]/40">8</button>
-                            <button onclick="setMaxItems(99)" id="maxBtnAll" class="flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all border-[#1c1612]/10 text-[#1c1612]/40">不限</button>
+                        <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">特別偏好（可複選）</p>
+                        <div class="flex flex-wrap gap-2" id="prefButtons">
+                            <button onclick="togglePref(this,'coffee')"  data-pref="coffee"    class="pref-btn px-3 py-1.5 rounded-[100px] text-[11px] font-bold bg-[#f5f0e8] text-[#1a1f17]/60 transition-all">☕ 咖啡優先</button>
+                            <button onclick="togglePref(this,'food')"    data-pref="food"      class="pref-btn active px-3 py-1.5 rounded-[100px] text-[11px] font-bold bg-[#1a1f17] text-[#f5f0e8] transition-all">🍜 在地美食</button>
+                            <button onclick="togglePref(this,'culture')" data-pref="culture"   class="pref-btn px-3 py-1.5 rounded-[100px] text-[11px] font-bold bg-[#f5f0e8] text-[#1a1f17]/60 transition-all">🏛 文化景點</button>
+                            <button onclick="togglePref(this,'market')"  data-pref="market"    class="pref-btn px-3 py-1.5 rounded-[100px] text-[11px] font-bold bg-[#f5f0e8] text-[#1a1f17]/60 transition-all">🛒 市集購物</button>
+                            <button onclick="togglePref(this,'night')"   data-pref="night"     class="pref-btn px-3 py-1.5 rounded-[100px] text-[11px] font-bold bg-[#f5f0e8] text-[#1a1f17]/60 transition-all">🍺 夜生活</button>
                         </div>
                     </div>
-                    <label class="flex items-center gap-3 p-3 rounded-[12px] border border-[#1c1612]/10 cursor-pointer">
-                        <input type="checkbox" id="clearExisting" class="accent-[#3c4a35] w-4 h-4">
-                        <div><p class="text-sm font-bold">清除現有自訂行程後重新排</p><p class="text-[10px] text-[#1c1612]/40">只清除自訂新增的景點，原始表格資料不受影響</p></div>
+                    <!-- Clear -->
+                    <label class="flex items-center gap-3 p-4 rounded-[14px] bg-[#f5f0e8] cursor-pointer">
+                        <input type="checkbox" id="aiClearExisting" class="accent-[#3c4a35] w-4 h-4">
+                        <div>
+                            <p class="text-sm font-bold text-[#1a1f17]">先清除現有自訂景點</p>
+                            <p class="text-[10px] text-[#1a1f17]/40 mt-0.5">只清除手動加入的，原始表格資料不受影響</p>
+                        </div>
                     </label>
                 </div>
 
-                <div id="smartPreview" class="mb-5 p-4 bg-white rounded-[12px] text-sm text-[#1c1612]/60 hidden">
-                    <p class="font-bold text-[#1c1612] mb-1">預覽</p>
-                    <div id="smartPreviewContent"></div>
-                </div>
+                <button onclick="runAiPlanner()" class="w-full py-4 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] font-bold text-sm flex items-center justify-center gap-2.5 hover:bg-[#2e3929] transition-all active:scale-95">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    讓 AI 規劃行程
+                </button>
+            </div>
 
-                <div class="flex gap-3">
-                    <button onclick="previewSchedule()" class="flex-1 py-3 border border-[#1c1612]/10 rounded-[12px] text-sm font-bold text-[#1c1612]/60 hover:bg-white transition-colors">
-                        預覽結果
+            <!-- STEP 2: Loading -->
+            <div id="aiPlanStep2" class="hidden py-10 text-center">
+                <div class="w-16 h-16 rounded-full bg-[#f5f0e8] flex items-center justify-center mx-auto mb-5">
+                    <i data-lucide="sparkles" class="w-7 h-7 text-[#3c4a35] animate-pulse"></i>
+                </div>
+                <h3 class="display-title text-2xl text-[#1a1f17] mb-2">AI 規劃中…</h3>
+                <p id="aiPlanStatus" class="text-sm text-[#1a1f17]/50 mb-6">正在分析你的清單，安排最佳行程</p>
+                <div class="space-y-2 text-left max-w-sm mx-auto text-xs text-[#1a1f17]/40" id="aiPlanLog"></div>
+            </div>
+
+            <!-- STEP 3: Result -->
+            <div id="aiPlanStep3" class="hidden">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <p class="eyebrow mb-1" style="color:#3c4a35">AI 規劃結果</p>
+                        <h3 class="display-title text-2xl text-[#1a1f17]">行程預覽</h3>
+                    </div>
+                    <button onclick="resetAiPlanner()" class="text-xs font-bold text-[#1a1f17]/40 hover:text-[#1a1f17] flex items-center gap-1.5 transition-colors">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 重新規劃
                     </button>
-                    <button onclick="applySchedule()" class="flex-[2] py-3 bg-[#1c1612] text-white rounded-[12px] text-sm font-bold hover:bg-[#2c241c] active:scale-95 transition-all">
-                        套用排程 →
+                </div>
+                <div id="aiPlanResult" class="space-y-5 mb-6 max-h-[50vh] overflow-y-auto pr-1 hide-scrollbar"></div>
+                <div class="flex gap-3 pt-3 border-t border-[#1a1f17]/08">
+                    <button onclick="resetAiPlanner()" class="flex-1 py-3.5 bg-[#f5f0e8] text-[#1a1f17] rounded-[100px] text-sm font-bold hover:bg-[#ede6d8] transition-colors">
+                        重新規劃
+                    </button>
+                    <button onclick="applyAiPlan()" class="flex-[2] py-3.5 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] text-sm font-bold hover:bg-[#2e3929] transition-all flex items-center justify-center gap-2 active:scale-97">
+                        <i data-lucide="check" class="w-4 h-4"></i> 套用此行程
                     </button>
                 </div>
             </div>
         </div>
     </div>
-
     <!-- ADD TO DAY MODAL -->
     <div id="addToDayModal" class="modal-wrap" role="dialog" aria-modal="true">
         <div class="modal-bg" id="addToDayModalBg" onclick="closeAddToDayModal()"></div>
@@ -1098,7 +1145,7 @@
 
         const SHEET_ID = "1KG_JFf39AKOdfytnUFBYsQDFDRBhuaHDKpkRSfrCRjE";
         let currentDay = "";
-        const apiKey = "";
+        const apiKey = "AIzaSyD9KTNOJ44GFXY5sP8l_Q6YKNqKGVA-u6g";
 
         // 安全讀取匯率 - 不依賴 travelApp 初始化時機
         const DEFAULT_RATE = 0.00131; // 1 VND = 0.00131 TWD (台銀參考值)
@@ -1140,6 +1187,24 @@
                     delay *= 2;
                 }
             }
+        }
+
+        // ── Claude API (Anthropic) — for smart itinerary planning ─────────
+        async function callClaude(systemPrompt, userPrompt) {
+            const response = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "claude-sonnet-4-20250514",
+                    max_tokens: 4096,
+                    system: systemPrompt,
+                    messages: [{ role: "user", content: userPrompt }]
+                })
+            });
+            if (!response.ok) throw new Error(`Claude API error: ${response.status}`);
+            const data = await response.json();
+            const text = data.content.map(b => b.text || '').join('');
+            return text;
         }
 
         /* ── AI MODAL ── */
@@ -2147,34 +2212,90 @@
         };
 
 
-        /* ── SMART SCHEDULE ── */
-        let _smartMaxItems = 3;
+        /* ── AI DAY PLANNER ── */
+        let _aiStartTime = '08:00';
+        let _aiPlanData  = null;   // stores parsed plan from Gemini
 
-        window.setMaxItems = function(n) {
-            _smartMaxItems = n;
-            ['3','5','8','All'].forEach(v => {
-                const id = 'maxBtn' + (v === 'All' ? 'All' : v);
-                const el = document.getElementById(id);
-                if (!el) return;
-                const match = (v === 'All' && n === 99) || String(n) === v;
-                el.className = `flex-1 py-2.5 rounded-[12px] border text-sm font-bold transition-all ${match
-                    ? 'border-[#1c1612] bg-[#1c1612] text-white'
-                    : 'border-[#1c1612]/10 text-[#1c1612]/40 hover:border-[#1c1612]/30'}`;
+        // ── UI helpers ───────────────────────────────────────────────────
+        window.setStartTime = function(t) {
+            _aiStartTime = t;
+            document.querySelectorAll('.time-btn').forEach(b => {
+                const active = b.dataset.time === t;
+                b.className = `time-btn px-5 py-2 rounded-[100px] text-sm font-bold transition-all ${
+                    active ? 'bg-[#1a1f17] text-[#f5f0e8]' : 'bg-[#f5f0e8] text-[#1a1f17]/50'}`;
             });
         };
 
+        window.selectStyle = function(el, val) {
+            document.querySelectorAll('.style-card').forEach(c => {
+                c.className = 'style-card flex flex-col items-center gap-1 p-3 rounded-[14px] bg-[#f5f0e8] cursor-pointer transition-all';
+                c.querySelectorAll('span:not(:first-child)').forEach(s => {
+                    s.className = s.className.replace('text-[#f5f0e8]','text-[#1a1f17]').replace('text-[#f5f0e8]/50','text-[#1a1f17]/40');
+                });
+            });
+            el.className = 'style-card flex flex-col items-center gap-1 p-3 rounded-[14px] bg-[#1a1f17] cursor-pointer transition-all';
+            el.querySelectorAll('span').forEach((s,i) => {
+                if (i===1) s.className = 'text-[11px] font-bold text-[#f5f0e8]';
+                if (i===2) s.className = 'text-[9px] text-[#f5f0e8]/50';
+            });
+            el.querySelector('input').checked = true;
+        };
+
+        window.togglePref = function(btn, pref) {
+            const active = btn.classList.contains('active');
+            if (active) {
+                btn.classList.remove('active');
+                btn.className = btn.className.replace('bg-[#1a1f17] text-[#f5f0e8]', 'bg-[#f5f0e8] text-[#1a1f17]/60');
+            } else {
+                btn.classList.add('active');
+                btn.className = btn.className.replace('bg-[#f5f0e8] text-[#1a1f17]/60', 'bg-[#1a1f17] text-[#f5f0e8]');
+            }
+        };
+
+        function getSelectedPrefs() {
+            return [...document.querySelectorAll('.pref-btn.active')].map(b => b.dataset.pref);
+        }
+        function getSelectedDays() {
+            return [...document.querySelectorAll('.day-cb:checked')].map(cb => cb.value);
+        }
+
+        // ── Open / Close ─────────────────────────────────────────────────
         window.openSmartSchedule = function() {
             if (!window.travelApp.exploreData || window.travelApp.exploreData.length === 0) {
-                showToast("請先前往「探索」頁面確認資料已載入");
+                showToast('請先到「探索」頁確認景點資料已載入');
                 return;
             }
+            // Populate day checkboxes
+            const days = Object.keys(window.travelApp.itineraryData).sort((a,b)=>{
+                const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+                return (am*100+(ad||0))-(bm*100+(bd||0));
+            });
+            const box = document.getElementById('dayCheckboxes');
+            if (box) {
+                box.innerHTML = days.map((d,i) => `
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all bg-[#1a1f17] text-[#f5f0e8]">
+                        <input type="checkbox" value="${d}" class="day-cb sr-only" checked>
+                        <span class="text-[11px] font-bold">${d}</span>
+                    </label>`).join('');
+                // Toggle style on click
+                box.querySelectorAll('label').forEach(lbl => {
+                    lbl.addEventListener('click', () => {
+                        setTimeout(() => {
+                            const checked = lbl.querySelector('input').checked;
+                            lbl.className = `flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all ${
+                                checked ? 'bg-[#1a1f17] text-[#f5f0e8]' : 'bg-[#f5f0e8] text-[#1a1f17]/50'}`;
+                        },0);
+                    });
+                });
+            }
+            showStep('aiPlanStep1');
             const modal = document.getElementById('smartModal');
             modal.classList.add('open');
             setTimeout(() => {
                 document.getElementById('smartModalBg').classList.add('visible');
                 document.getElementById('smartModalContent').classList.add('visible');
             }, 10);
-            document.getElementById('smartPreview').classList.add('hidden');
+            safeCreateIcons();
         };
 
         window.closeSmartModal = function() {
@@ -2183,150 +2304,346 @@
             setTimeout(() => document.getElementById('smartModal').classList.remove('open'), 350);
         };
 
-        function buildSchedule() {
-            const mode = document.querySelector('input[name="schedMode"]:checked')?.value || 'area';
-            const maxPerDay = _smartMaxItems;
-            const days = Object.keys(window.travelApp.itineraryData).sort((a,b) => {
-                const [am,ad] = a.split('/').map(Number);
-                const [bm,bd] = b.split('/').map(Number);
-                return (am*100+(ad||0)) - (bm*100+(bd||0));
-            });
-            if (days.length === 0) return null;
+        window.resetAiPlanner = function() {
+            _aiPlanData = null;
+            showStep('aiPlanStep1');
+        };
 
-            // Get all explore items, exclude those already in sheet itinerary
-            const sheetTitles = new Set();
-            days.forEach(d => {
-                (window.travelApp.itineraryData[d]?.items || []).forEach(i => sheetTitles.add(i.title));
-                if (window.travelApp.itineraryData[d]?.accommodation) {
-                    sheetTitles.add(window.travelApp.itineraryData[d].accommodation.title);
+        function showStep(id) {
+            ['aiPlanStep1','aiPlanStep2','aiPlanStep3'].forEach(s => {
+                const el = document.getElementById(s);
+                if (el) el.classList.toggle('hidden', s !== id);
+            });
+            safeCreateIcons();
+        }
+
+        function addLog(msg) {
+            const log = document.getElementById('aiPlanLog');
+            if (!log) return;
+            const d = document.createElement('div');
+            d.className = 'flex items-center gap-2';
+            d.innerHTML = `<span class="text-[#3c4a35]">✓</span> ${msg}`;
+            log.appendChild(d);
+        }
+
+        // ── Main AI planner (Claude-powered) ────────────────────────────
+        window.runAiPlanner = async function() {
+            const selectedDays = getSelectedDays();
+            if (selectedDays.length === 0) { showToast('請選擇至少一天'); return; }
+
+            const style = document.querySelector('input[name="travelStyle"]:checked')?.value || 'balanced';
+            const prefs = getSelectedPrefs();
+            const items = window.travelApp.exploreData;
+
+            if (!items || items.length === 0) { showToast('清單資料尚未載入，請先到探索頁'); return; }
+
+            showStep('aiPlanStep2');
+            document.getElementById('aiPlanLog').innerHTML = '';
+            document.getElementById('aiPlanStatus').textContent = '正在整理景點清單…';
+            addLog(`清單共 ${items.length} 個地點`);
+            addLog(`安排 ${selectedDays.length} 天：${selectedDays.join('、')}`);
+
+            const styleLabel = { relaxed:'悠閒', balanced:'均衡', packed:'充實' };
+            addLog(`步調：${styleLabel[style]}`);
+            if (prefs.length) addLog(`偏好：${prefs.join('、')}`);
+
+            // Build detailed place list
+            const placesList = items.map((it, i) => {
+                const name = it.name || it.title;
+                const cat  = it.category || '景點';
+                const area = it.area || '河內';
+                const rating = it.rating ? `★${it.rating}` : '';
+                const note = it.note || '';
+                const openTime = it.openTime || '';
+                return `${i+1}. 【${name}】類別:${cat} | 地區:${area} | 評分:${rating} | 營業時間:${openTime} | 備註:${note}`;
+            }).join('
+');
+
+            const styleGuide = {
+                relaxed: '悠閒步調：每天3-4個地點，每個景點停留充裕，中間有充分休息，下午安排輕鬆咖啡時光',
+                balanced: '均衡步調：每天5-6個地點，搭配早餐→上午景點→午餐→咖啡→下午景點→晚餐的節奏',
+                packed: '充實步調：每天6-8個地點，充分利用每個時段，晚上也安排夜市或酒吧'
+            };
+
+            const prefGuide = prefs.length ? `
+特別偏好（請優先安排）：
+${prefs.includes('coffee') ? '- ☕ 咖啡優先：每天至少安排2間特色咖啡廳' : ''}
+${prefs.includes('food') ? '- 🍜 在地美食：三餐盡量選清單中評分最高的在地餐廳' : ''}
+${prefs.includes('culture') ? '- 🏛 文化景點：優先安排歷史/文化類景點，尤其上午精神好的時段' : ''}
+${prefs.includes('market') ? '- 🛒 市集購物：安排夜市或市場，適合傍晚到夜間' : ''}
+${prefs.includes('night') ? '- 🍺 夜生活：晚上9點後安排酒吧或夜間景點' : ''}` : '';
+
+            // Check which days have existing sheet itinerary items
+            const sheetContext = selectedDays.map(d => {
+                const dayData = window.travelApp.itineraryData[d];
+                const accName = dayData?.accommodation?.title || '';
+                const sheetItems = (dayData?.items || []).map(i => i.title).join('、');
+                return `${d}：${accName ? '住宿:'+accName : '無住宿資訊'} | 表格已排:${sheetItems || '無'}`;
+            }).join('
+');
+
+            const systemPrompt = `你是一位對河內瞭如指掌的資深旅遊規劃師，同時也是美食達人和咖啡愛好者。
+你擅長安排人性化的旅遊行程，深知旅人在不同時段的需求：
+- 早上：需要先用早餐補充能量，才有精力探索景點
+- 上午：精力充沛，適合參觀需要走路的景點或文化體驗
+- 中午：用餐時間，選擇能代表當地特色的餐廳
+- 午後：容易疲累，先找間好咖啡廳坐下來休息充電
+- 下午：再出發探索附近景點
+- 傍晚/晚上：輕鬆的晚餐，或去夜市感受夜生活
+
+你規劃行程時會考慮：
+1. 地理位置的連貫性（同一天盡量在同一區域移動）
+2. 類型的合理搭配（不會連續安排三個景點，要穿插飲食）
+3. 每個地點的特性（例如：早上去人少的景點、咖啡廳適合下午去拍照）
+4. 實際的交通時間（兩個地點之間留15-30分鐘交通時間）
+
+回覆必須是有效的 JSON 格式，不要有任何前言或解釋。`;
+
+            const userPrompt = `請根據以下資訊，為我安排詳細的河內旅遊行程。
+
+═══ 可選景點清單（只能使用這些地點）═══
+${placesList}
+
+═══ 行程設定 ═══
+需安排日期：${selectedDays.join('、')}
+每天出發時間：${_aiStartTime}
+旅遊步調：${styleGuide[style]}
+${prefGuide}
+
+═══ 現有行程參考 ═══
+${sheetContext}
+
+═══ 規劃要求 ═══
+1. 每天第一站必須是早餐（從清單中找咖啡廳/餐廳/小吃類，標記 type:"早餐"）
+2. 上午安排1-2個景點（標記 type:"景點"）
+3. 午餐從清單中選適合的餐廳（標記 type:"午餐"）
+4. 下午先安排咖啡廳休息（標記 type:"咖啡"），再去景點
+5. 晚餐選清單中評分高的餐廳（標記 type:"晚餐"）
+6. 如有夜間景點可加（標記 type:"夜間"）
+7. 地點名稱必須與清單中完全一致（連標點符號都一樣）
+8. 如果某天清單中找不到合適的餐廳，可以標記 name 為「當地自行尋找」
+9. duration_min 要符合實際（早餐60-90分、景點90-180分、咖啡45-60分、午晚餐60-90分）
+10. tip 欄位寫一句有溫度的說明，例如「趁早上涼爽，在人少時感受這裡的寧靜」
+
+請回傳 JSON 格式：
+{
+  "days": [
+    {
+      "date": "4/17",
+      "theme": "這天的主題標題（有創意、有畫面感，例：在舊城的巷弄裡迷路）",
+      "area_focus": "今天主要活動的區域（例：河內舊城區）",
+      "schedule": [
+        {
+          "time": "08:00",
+          "duration_min": 75,
+          "name": "完全符合清單的地點名稱",
+          "type": "早餐",
+          "tip": "一句有溫度的說明"
+        }
+      ]
+    }
+  ]
+}`;
+
+            document.getElementById('aiPlanStatus').textContent = 'Claude AI 正在規劃你的行程…';
+            addLog('送出規劃請求給 Claude…');
+
+            try {
+                const raw = await callClaude(systemPrompt, userPrompt);
+                addLog('Claude 回覆成功，正在解析…');
+
+                const cleaned = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+                const jStart = cleaned.indexOf('{');
+                const jEnd   = cleaned.lastIndexOf('}');
+                if (jStart === -1) throw new Error('回覆格式錯誤，找不到 JSON');
+                const data = JSON.parse(cleaned.slice(jStart, jEnd+1));
+
+                if (!data.days || data.days.length === 0) throw new Error('沒有產生任何行程');
+
+                _aiPlanData = data;
+                const totalSpots = data.days.reduce((s,d) => s + (d.schedule?.length||0), 0);
+                addLog(`規劃完成：${data.days.length} 天，共 ${totalSpots} 個地點`);
+                document.getElementById('aiPlanStatus').textContent = '✦ 行程規劃完成！';
+
+                setTimeout(() => {
+                    renderAiPlanPreview(data);
+                    showStep('aiPlanStep3');
+                }, 500);
+
+            } catch(e) {
+                console.error('AI Planner error:', e);
+                document.getElementById('aiPlanStatus').textContent = '規劃失敗，請稍後再試';
+                addLog('⚠ 錯誤：' + (e.message || String(e)));
+                addLog('提示：請確認已連線至網路，並上傳到 Vercel 再試');
+            }
+        };
+
+        // ── Render AI plan preview ────────────────────────────────────────
+        function renderAiPlanPreview(data) {
+            const container = document.getElementById('aiPlanResult');
+            if (!container || !data.days) return;
+
+            const typeConfig = {
+                '早餐': { icon:'🌅', bg:'#fff8ee', color:'#8b5e00', label:'早餐' },
+                '午餐': { icon:'🍜', bg:'#fff0f0', color:'#8b0000', label:'午餐' },
+                '晚餐': { icon:'🌙', bg:'#f0f0ff', color:'#00008b', label:'晚餐' },
+                '咖啡': { icon:'☕', bg:'#f5efe8', color:'#5c3a1e', label:'咖啡' },
+                '景點': { icon:'📍', bg:'#eef5ee', color:'#1a3c1a', label:'景點' },
+                '夜間': { icon:'✨', bg:'#1a1f17', color:'#f5f0e8', label:'夜間' },
+            };
+
+            container.innerHTML = data.days.map(day => {
+                const spots = day.schedule || [];
+                const totalMins = spots.reduce((s,i) => s + (i.duration_min||0), 0);
+                const hrs = Math.floor(totalMins/60), mins = totalMins%60;
+                return `
+                <div class="rounded-[20px] overflow-hidden shadow-sm mb-1" style="background:#faf7f2">
+                    <!-- Day header -->
+                    <div class="px-5 py-4" style="background:#1a1f17">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[9px] font-bold tracking-[0.2em] uppercase" style="color:rgba(245,240,232,0.5);font-family:var(--font-mono)">${day.date}</span>
+                                    ${day.area_focus ? `<span class="text-[9px] px-2 py-0.5 rounded-full" style="background:rgba(245,240,232,0.1);color:rgba(245,240,232,0.5);font-family:var(--font-mono)">${day.area_focus}</span>` : ''}
+                                </div>
+                                <p class="text-base font-bold leading-snug" style="color:#f5f0e8;font-family:var(--font-display);font-style:italic">${day.theme || ''}</p>
+                            </div>
+                            <div class="text-right flex-shrink-0 ml-3">
+                                <p class="text-[10px]" style="color:rgba(245,240,232,0.4)">${spots.length} 個地點</p>
+                                <p class="text-[10px]" style="color:rgba(245,240,232,0.4)">${hrs>0?hrs+'小時':''}${mins>0?mins+'分':''}行程</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="px-4 py-4 space-y-0">
+                        ${spots.map((item, idx) => {
+                            const cfg = typeConfig[item.type] || typeConfig['景點'];
+                            const isLast = idx === spots.length - 1;
+                            return `
+                            <div class="flex gap-3 items-stretch">
+                                <!-- Time + line -->
+                                <div class="flex flex-col items-center w-12 flex-shrink-0">
+                                    <span class="text-[10px] font-bold leading-none mt-1 whitespace-nowrap" style="color:rgba(26,31,23,0.4);font-family:var(--font-mono)">${item.time}</span>
+                                    ${!isLast ? `<div class="flex-1 w-px mt-2" style="background:rgba(26,31,23,0.1);min-height:16px"></div>` : ''}
+                                </div>
+                                <!-- Card -->
+                                <div class="flex-1 min-w-0 mb-2.5">
+                                    <div class="rounded-[14px] overflow-hidden" style="background:white;box-shadow:0 1px 8px rgba(26,31,23,0.06)">
+                                        <div class="flex items-stretch">
+                                            <!-- Type indicator bar -->
+                                            <div class="w-1 flex-shrink-0 rounded-l-[14px]" style="background:${cfg.color}"></div>
+                                            <div class="flex-1 px-3.5 py-3">
+                                                <!-- Type + duration -->
+                                                <div class="flex items-center gap-1.5 mb-1.5">
+                                                    <span class="text-base leading-none">${cfg.icon}</span>
+                                                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" style="background:${cfg.bg};color:${cfg.color}">${item.type}</span>
+                                                    <span class="text-[9px] ml-auto" style="color:rgba(26,31,23,0.3);font-family:var(--font-mono)">⏱ ${item.duration_min}min</span>
+                                                </div>
+                                                <!-- Place name -->
+                                                <p class="text-sm font-bold leading-tight mb-1" style="color:#1a1f17">${item.name}</p>
+                                                <!-- Tip -->
+                                                ${item.tip ? `<p class="text-[11px] leading-relaxed" style="color:rgba(26,31,23,0.45)">${item.tip}</p>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // ── Apply plan to itinerary ───────────────────────────────────────
+        window.applyAiPlan = function() {
+            if (!_aiPlanData || !_aiPlanData.days) { showToast('沒有可套用的行程'); return; }
+
+            const clearExisting = document.getElementById('aiClearExisting')?.checked;
+            if (!window.travelApp.customItems) window.travelApp.customItems = {};
+
+            // Build a lookup map for explore items
+            const lookup = {};
+            window.travelApp.exploreData.forEach(it => {
+                lookup[it.name || it.title] = it;
+                // Also try partial match
+            });
+
+            let total = 0;
+            _aiPlanData.days.forEach(day => {
+                const dayKey = day.date;
+                if (!window.travelApp.itineraryData[dayKey]) return; // skip unknown days
+
+                if (clearExisting) window.travelApp.customItems[dayKey] = [];
+                if (!window.travelApp.customItems[dayKey]) window.travelApp.customItems[dayKey] = [];
+
+                const existingTitles = new Set([
+                    ...(window.travelApp.itineraryData[dayKey]?.items||[]).map(i=>i.title),
+                    ...(window.travelApp.customItems[dayKey]||[]).map(i=>i.title),
+                ]);
+
+                (day.schedule || []).forEach(slot => {
+                    const name = slot.name;
+                    if (existingTitles.has(name)) return;
+
+                    // Find match in explore data (exact or close)
+                    let src = lookup[name];
+                    if (!src) {
+                        src = window.travelApp.exploreData.find(it =>
+                            (it.name||it.title).includes(name) || name.includes(it.name||it.title)
+                        );
+                    }
+
+                    window.travelApp.customItems[dayKey].push({
+                        time: slot.time || 'Anytime',
+                        type: slot.type || src?.category || '探索',
+                        area: src?.area || '',
+                        title: name,
+                        note: slot.tip || src?.note || '',
+                        address: src?.address || '',
+                        phone: src?.phone || '',
+                        image: src?.image || '',
+                        openTime: src?.openTime || `建議停留 ${slot.duration_min||60} 分鐘`,
+                        rating: src?.rating || '',
+                        map: src?.map || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' Hanoi Vietnam')}`
+                    });
+                    existingTitles.add(name);
+                    total++;
+                });
+            });
+
+            // Save custom day order based on AI schedule
+            if (!window.travelApp.dayOrders) window.travelApp.dayOrders = {};
+            _aiPlanData.days.forEach(day => {
+                const dayKey = day.date;
+                if (window.travelApp.customItems[dayKey]) {
+                    window.travelApp.dayOrders[dayKey] = window.travelApp.customItems[dayKey].map(i => i.title);
                 }
             });
 
-            let items = window.travelApp.exploreData.filter(i => !sheetTitles.has(i.name || i.title));
-
-            const plan = {}; // { dayKey: [items] }
-            days.forEach(d => plan[d] = []);
-
-            if (mode === 'area') {
-                // Group by area, assign each area group to a day
-                const areaGroups = {};
-                items.forEach(item => {
-                    const area = item.area || 'Other';
-                    if (!areaGroups[area]) areaGroups[area] = [];
-                    areaGroups[area].push(item);
-                });
-                const areas = Object.keys(areaGroups);
-                let dayIdx = 0;
-                areas.forEach(area => {
-                    const group = areaGroups[area];
-                    group.forEach((item, i) => {
-                        if (i >= maxPerDay) return; // limit per area per day
-                        const day = days[dayIdx % days.length];
-                        if (plan[day].length < maxPerDay) plan[day].push(item);
-                    });
-                    dayIdx++;
-                });
-
-            } else if (mode === 'category') {
-                // Sort by category, then distribute
-                const catOrder = ['景點','文化','咖啡','餐廳','美食','購物','夜市','其他'];
-                items.sort((a,b) => {
-                    const ia = catOrder.findIndex(c => (a.category||'').includes(c));
-                    const ib = catOrder.findIndex(c => (b.category||'').includes(c));
-                    return (ia===-1?99:ia) - (ib===-1?99:ib);
-                });
-                let dayIdx = 0;
-                items.forEach(item => {
-                    let placed = false;
-                    for (let i = 0; i < days.length; i++) {
-                        const d = days[(dayIdx + i) % days.length];
-                        if (plan[d].length < maxPerDay) { plan[d].push(item); placed = true; dayIdx = (dayIdx+i) % days.length; break; }
-                    }
-                });
-
-            } else if (mode === 'random') {
-                // Shuffle then even distribute
-                items = items.slice().sort(() => Math.random() - 0.5);
-                items.forEach((item, i) => {
-                    const day = days[i % days.length];
-                    if (plan[day].length < maxPerDay) plan[day].push(item);
-                });
-
-            } else { // even
-                items.forEach((item, i) => {
-                    const day = days[i % days.length];
-                    if (plan[day].length < maxPerDay) plan[day].push(item);
-                });
-            }
-
-            return plan;
-        }
-
-        window.previewSchedule = function() {
-            const plan = buildSchedule();
-            if (!plan) { showToast("找不到可排程的景點"); return; }
-            const preview = document.getElementById('smartPreview');
-            const content = document.getElementById('smartPreviewContent');
-            let total = 0;
-            content.innerHTML = Object.entries(plan).map(([day, items]) => {
-                total += items.length;
-                if (items.length === 0) return `<div class="mb-1 text-[#1c1612]/30">${day}: 無景點</div>`;
-                return `<div class="mb-1.5"><span class="font-bold text-[#1c1612]">${day}</span>: ${items.map(i => i.name||i.title).join('、')}</div>`;
-            }).join('');
-            content.innerHTML += `<div class="mt-2 pt-2 border-t border-[#1c1612]/10 text-[10px] font-bold text-[#1a1f17]">共 ${total} 個景點</div>`;
-            preview.classList.remove('hidden');
-        };
-
-        window.applySchedule = function() {
-            const plan = buildSchedule();
-            if (!plan) { showToast("找不到可排程的景點"); return; }
-
-            const clearExisting = document.getElementById('clearExisting')?.checked;
-            if (!window.travelApp.customItems) window.travelApp.customItems = {};
-
-            Object.entries(plan).forEach(([day, exploreItems]) => {
-                if (clearExisting) window.travelApp.customItems[day] = [];
-                if (!window.travelApp.customItems[day]) window.travelApp.customItems[day] = [];
-
-                const existingTitles = new Set([
-                    ...(window.travelApp.itineraryData[day]?.items||[]).map(i=>i.title),
-                    ...(window.travelApp.customItems[day]||[]).map(i=>i.title),
-                ]);
-
-                exploreItems.forEach(item => {
-                    const title = item.name || item.title;
-                    if (!existingTitles.has(title)) {
-                        window.travelApp.customItems[day].push({
-                            time: "Anytime",
-                            type: item.category || "探索",
-                            area: item.area || "",
-                            title: title,
-                            note: item.note || "",
-                            address: item.address || "",
-                            phone: "",
-                            image: item.image || "",
-                            openTime: item.openTime || "",
-                            rating: item.rating || "",
-                            map: item.map || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(title + " Vietnam")}`
-                        });
-                        existingTitles.add(title);
-                    }
-                });
-            });
-
             window.saveCustomItemsToCloud(window.travelApp.customItems);
+            window.saveOrdersToCloud(window.travelApp.dayOrders);
             closeSmartModal();
+            showToast(`✨ 已套用 AI 行程，共 ${total} 個地點！`);
 
-            const total = Object.values(plan).reduce((s,items) => s+items.length, 0);
-            showToast(`✨ 已排入 ${total} 個景點！`);
-
-            // Navigate to itinerary and re-render
             showTab('itinerary');
             setTimeout(() => {
-                const days = Object.keys(window.travelApp.itineraryData).sort();
-                if (days.length) renderDay(days[0]);
-            }, 100);
+                const firstDay = _aiPlanData.days[0]?.date;
+                if (firstDay && window.travelApp.itineraryData[firstDay]) {
+                    renderDay(firstDay);
+                } else {
+                    const days = Object.keys(window.travelApp.itineraryData).sort();
+                    if (days.length) renderDay(days[0]);
+                }
+            }, 150);
         };
+
+        // Keep backward compat stubs
+        window.previewSchedule = function() { openSmartSchedule(); };
+        window.applySchedule   = function() { runAiPlanner(); };
+        window.buildSchedule   = function() { return null; };
+        let _smartMaxItems = 5;
+        window.setMaxItems = function() {};
 
         /* ── MAP ── */
         let myMap = null, markersLayer = null;
