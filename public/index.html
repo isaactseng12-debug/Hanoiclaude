@@ -156,16 +156,42 @@
         };
 
         window.saveOrdersToCloud = async (newOrders) => {
+            // Always save to localStorage as backup
+            try { localStorage.setItem('hanoi_dayOrders', JSON.stringify(newOrders)); } catch(e) {}
+            
             if (!window.travelApp.user || !db) return;
             const uid = window.travelApp.user.uid;
             try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'dayOrders'), { items: newOrders }); } catch (e) {}
         };
 
         window.saveCustomItemsToCloud = async (newCustomItems) => {
+            // Always save to localStorage as backup
+            try { localStorage.setItem('hanoi_customItems', JSON.stringify(newCustomItems)); } catch(e) {}
+            
             if (!window.travelApp.user || !db) return;
             const uid = window.travelApp.user.uid;
             try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'customItems'), { items: newCustomItems }); } catch (e) {}
         };
+
+        // Load from localStorage on startup (fallback when Firebase not available)
+        window.loadLocalStorage = function() {
+            try {
+                const savedOrders = localStorage.getItem('hanoi_dayOrders');
+                if (savedOrders) {
+                    window.travelApp.dayOrders = JSON.parse(savedOrders);
+                }
+                const savedCustomItems = localStorage.getItem('hanoi_customItems');
+                if (savedCustomItems) {
+                    window.travelApp.customItems = JSON.parse(savedCustomItems);
+                }
+                // Re-render current day if on itinerary tab
+                if (typeof renderDay === 'function' && typeof currentDay !== 'undefined' && currentDay) {
+                    renderDay(currentDay);
+                }
+            } catch(e) { console.log('localStorage load error', e); }
+        };
+        // Auto-load on startup (with delay to ensure DOM is ready)
+        setTimeout(() => window.loadLocalStorage(), 500);
     </script>
 
     <style>
@@ -1733,6 +1759,10 @@
                 });
 
                 window.travelApp.itineraryData = rawData;
+                
+                // Load saved custom items and orders from localStorage
+                window.loadLocalStorage();
+                
                 const days = Object.keys(rawData).sort((a, b) => {
                     // Sort by month/day numerically
                     const [am, ad] = a.split('/').map(Number);
