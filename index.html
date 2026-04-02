@@ -677,24 +677,7 @@
 
 <body>
 
-    <!-- ENV WARNING BANNER -->
-    <div id="envBanner" class="hidden fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 z-[300] w-[calc(100%-2rem)] max-w-lg">
-        <div class="bg-amber-950 border border-amber-700 text-amber-200 rounded-[12px] px-5 py-4 shadow-none text-sm">
-            <div class="flex items-start gap-3">
-                <span class="text-xl flex-shrink-0">⚠️</span>
-                <div>
-                    <p class="font-black mb-1">Google Sheets 需要伺服器環境</p>
-                    <p class="text-xs text-amber-400 leading-relaxed">
-                        目前用 <code id="envProto" class="bg-amber-900 px-1 rounded"></code> 開啟，無法讀取外部資料。<br>
-                        請改用以下方式：<br>
-                        <strong>① 本地測試：</strong>在 HTML 檔所在資料夾執行 <code class="bg-amber-900 px-1 rounded">python3 -m http.server 8080</code>，再開 <code class="bg-amber-900 px-1 rounded">localhost:8080</code><br>
-                        <strong>② 上線後：</strong>部署到 Vercel 即可正常運作
-                    </p>
-                </div>
-                <button onclick="document.getElementById('envBanner').classList.add('hidden')" class="text-[#1a1f17] hover:text-white flex-shrink-0 ml-1">✕</button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- TOAST -->
     <div id="custom-toast" class="toast" role="status" aria-live="polite">提示訊息</div>
@@ -1147,6 +1130,34 @@
         let currentDay = "";
         const apiKey = "AIzaSyD9KTNOJ44GFXY5sP8l_Q6YKNqKGVA-u6g";
 
+        // ── travelApp fallback: init immediately so main script never crashes ──
+        // The type="module" Firebase script may run after this script; this
+        // ensures window.travelApp always exists when our functions execute.
+        if (!window.travelApp) {
+            window.travelApp = {
+                db:null, auth:null, user:null,
+                favorites:[], visited:[], expenses:[],
+                personalNotes:{}, dayOrders:{}, customItems:{},
+                exchangeRate: 0.00131,
+                itineraryData:{}, exploreData:[],
+                appId: 'vietnam-adventure-hanoi'
+            };
+        }
+
+        // ── CRITICAL: Initialise travelApp immediately so main script never
+        //   crashes waiting for the type="module" Firebase script to run.
+        //   The module script will overwrite these values once it loads.
+        if (!window.travelApp) {
+            window.travelApp = {
+                db: null, auth: null, user: null,
+                favorites: [], visited: [], expenses: [],
+                personalNotes: {}, dayOrders: {}, customItems: {},
+                exchangeRate: 0.00131,
+                itineraryData: {}, exploreData: [],
+                appId: 'vietnam-adventure-hanoi'
+            };
+        }
+
         // 安全讀取匯率 - 不依賴 travelApp 初始化時機
         const DEFAULT_RATE = 0.00131; // 1 VND = 0.00131 TWD (台銀參考值)
         window._exchangeRate = DEFAULT_RATE; // 全域備用，永遠有值
@@ -1167,7 +1178,7 @@
 
         /* ── GEMINI ── */
         async function callGemini(prompt, isJson = false) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7 } };
             if (isJson) {
                 payload.generationConfig.responseMimeType = "application/json";
@@ -1335,26 +1346,25 @@
         }
 
         function initApp() {
-            // Check environment - warn if file:// or srcdoc (no fetch possible)
-            const proto = window.location.protocol;
-            if (proto === 'file:' || proto === 'about:') {
-                const banner = document.getElementById('envBanner');
-                const protoEl = document.getElementById('envProto');
-                if (banner) banner.classList.remove('hidden');
-                if (protoEl) protoEl.textContent = proto === 'about:' ? 'Claude 預覽' : 'file://';
-            }
             safeCreateIcons();
             initWeather(); initCurrency(); initTime();
             loadItinerary(); loadExplore();
         }
 
-        // Support both environments: standard browser and Claude artifacts
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
-            // DOMContentLoaded already fired
-            setTimeout(initApp, 50);
+        // Robust init: wait for DOM + give Firebase module time to set travelApp
+        function tryInitApp(attempts) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => tryInitApp(0));
+                return;
+            }
+            // Give the type="module" Firebase script a moment (max 10 attempts × 100ms)
+            if (attempts < 10 && (!window.travelApp || !window.travelApp.appId)) {
+                setTimeout(() => tryInitApp(attempts + 1), 100);
+                return;
+            }
+            initApp();
         }
+        tryInitApp(0);
         window.addEventListener('load', safeCreateIcons);
 
         function initTime() {
