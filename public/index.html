@@ -42,7 +42,8 @@
             expenses: [], 
             personalNotes: {}, 
             dayOrders: {},     
-            customItems: {},   
+            customItems: {},
+            flights: { arrival: {}, departure: {} },
             exchangeRate: 0.0013,
             itineraryData: {},
             exploreData: [],
@@ -150,6 +151,9 @@
         };
 
         window.savePersonalNotesToCloud = async (newNotes) => {
+            // Always save to localStorage as backup
+            try { localStorage.setItem('hanoi_personalNotes', JSON.stringify(newNotes)); } catch(e) {}
+            
             if (!window.travelApp.user || !db) return;
             const uid = window.travelApp.user.uid;
             try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'personalNotes'), { items: newNotes }); } catch (e) {}
@@ -184,12 +188,27 @@
                 if (savedCustomItems) {
                     window.travelApp.customItems = JSON.parse(savedCustomItems);
                 }
+                const savedNotes = localStorage.getItem('hanoi_personalNotes');
+                if (savedNotes) {
+                    window.travelApp.personalNotes = JSON.parse(savedNotes);
+                }
+                const savedFlights = localStorage.getItem('hanoi_flights');
+                if (savedFlights) {
+                    window.travelApp.flights = JSON.parse(savedFlights);
+                }
                 // Re-render current day if on itinerary tab
                 if (typeof renderDay === 'function' && typeof currentDay !== 'undefined' && currentDay) {
                     renderDay(currentDay);
                 }
             } catch(e) { console.log('localStorage load error', e); }
         };
+        
+        // Save flights to localStorage
+        window.saveFlights = function(flights) {
+            window.travelApp.flights = flights;
+            try { localStorage.setItem('hanoi_flights', JSON.stringify(flights)); } catch(e) {}
+        };
+        
         // Auto-load on startup (with delay to ensure DOM is ready)
         setTimeout(() => window.loadLocalStorage(), 500);
     </script>
@@ -803,6 +822,47 @@
                             <p class="text-[10px] text-[#1a1f17]/40 mt-0.5">只清除手動加入的，原始表格資料不受影響</p>
                         </div>
                     </label>
+                    <!-- Flight Info -->
+                    <div class="p-4 rounded-[14px] bg-white border border-[var(--ink-08)]">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="label-sm text-[9px]" style="color:#3c4a35">✈️ 航班資訊 <span class="text-[#1a1f17]/30">（選填）</span></p>
+                            <button onclick="toggleFlightSection()" class="text-[10px] text-[#3c4a35] font-bold">展開/收合</button>
+                        </div>
+                        <div id="flightInputSection" class="hidden space-y-3">
+                            <!-- Arrival Flight -->
+                            <div class="p-3 rounded-[12px] bg-[#f5f0e8]">
+                                <p class="text-xs font-bold text-[#1a1f17] mb-2">🛬 抵達航班</p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" id="arrivalFlightNo" placeholder="航班號碼 (如 VN-123)" 
+                                           class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
+                                    <input type="text" id="arrivalDate" placeholder="抵達日期 (如 4/17)" 
+                                           class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
+                                    <input type="text" id="arrivalTime" placeholder="抵達時間 (如 14:30)" 
+                                           class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
+                                    <input type="text" id="arrivalAirport" placeholder="機場 (如 河內內排)" 
+                                           class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
+                                </div>
+                            </div>
+                            <!-- Departure Flight -->
+                            <div class="p-3 rounded-[12px] bg-[#f5f0e8]">
+                                <p class="text-xs font-bold text-[#1a1f17] mb-2">🛫 離開航班</p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" id="departureFlightNo" placeholder="航班號碼 (如 VN-456)" 
+                                           class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
+                                    <input type="text" id="departureDate" placeholder="離開日期 (如 4/22)" 
+                                           class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
+                                    <input type="text" id="departureTime" placeholder="起飛時間 (如 10:00)" 
+                                           class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
+                                    <input type="text" id="departureAirport" placeholder="機場 (如 河內內排)" 
+                                           class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
+                                </div>
+                            </div>
+                            <button onclick="saveFlightInfo()" class="w-full py-2 bg-[#3c4a35] text-white rounded-[8px] text-xs font-bold">
+                                儲存航班資訊
+                            </button>
+                        </div>
+                        <p id="flightSummary" class="text-[10px] text-[#1a1f17]/50 mt-2"></p>
+                    </div>
                     <!-- Region per Day -->
                     <div id="regionPerDaySection" class="hidden">
                         <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">每日指定地區 <span class="text-[#1a1f17]/30">（可複選）</span></p>
@@ -2356,6 +2416,111 @@
             return prefs;
         };
 
+        // Flight info functions
+        window.toggleFlightSection = function() {
+            const section = document.getElementById('flightInputSection');
+            section.classList.toggle('hidden');
+        };
+
+        window.saveFlightInfo = function() {
+            const flights = {
+                arrival: {
+                    flightNo: document.getElementById('arrivalFlightNo')?.value || '',
+                    date: document.getElementById('arrivalDate')?.value || '',
+                    time: document.getElementById('arrivalTime')?.value || '',
+                    airport: document.getElementById('arrivalAirport')?.value || ''
+                },
+                departure: {
+                    flightNo: document.getElementById('departureFlightNo')?.value || '',
+                    date: document.getElementById('departureDate')?.value || '',
+                    time: document.getElementById('departureTime')?.value || '',
+                    airport: document.getElementById('departureAirport')?.value || ''
+                }
+            };
+            window.saveFlights(flights);
+            updateFlightSummary();
+            showToast('✈️ 航班資訊已儲存');
+        };
+
+        window.loadFlightInputs = function() {
+            const flights = window.travelApp.flights || { arrival: {}, departure: {} };
+            if (document.getElementById('arrivalFlightNo')) {
+                document.getElementById('arrivalFlightNo').value = flights.arrival?.flightNo || '';
+                document.getElementById('arrivalDate').value = flights.arrival?.date || '';
+                document.getElementById('arrivalTime').value = flights.arrival?.time || '';
+                document.getElementById('arrivalAirport').value = flights.arrival?.airport || '';
+                document.getElementById('departureFlightNo').value = flights.departure?.flightNo || '';
+                document.getElementById('departureDate').value = flights.departure?.date || '';
+                document.getElementById('departureTime').value = flights.departure?.time || '';
+                document.getElementById('departureAirport').value = flights.departure?.airport || '';
+            }
+            updateFlightSummary();
+        };
+
+        window.updateFlightSummary = function() {
+            const flights = window.travelApp.flights || { arrival: {}, departure: {} };
+            const summary = document.getElementById('flightSummary');
+            if (!summary) return;
+            
+            let text = '';
+            if (flights.arrival?.date && flights.arrival?.time) {
+                text += `🛬 ${flights.arrival.date} ${flights.arrival.time} 抵達`;
+            }
+            if (flights.departure?.date && flights.departure?.time) {
+                if (text) text += ' ｜ ';
+                text += `🛫 ${flights.departure.date} ${flights.departure.time} 離開`;
+            }
+            summary.textContent = text || '尚未設定航班資訊';
+        };
+
+        window.getFlightGuide = function() {
+            const flights = window.travelApp.flights || { arrival: {}, departure: {} };
+            let guide = '';
+            
+            if (flights.arrival?.date && flights.arrival?.time) {
+                guide += `
+═══ 抵達航班資訊 ═══
+日期：${flights.arrival.date}
+航班：${flights.arrival.flightNo || '未提供'}
+抵達時間：${flights.arrival.time}
+機場：${flights.arrival.airport || '河內內排機場'}
+
+⚠️ ${flights.arrival.date} 這天的行程注意事項：
+- 抵達後需要約 1-1.5 小時通關、領行李、搭車到市區
+- 預計 ${flights.arrival.time} 抵達機場，最早可開始行程的時間約為抵達後 2 小時
+- 第一站建議安排在機場到住宿的路線上，或是住宿附近
+- 考慮旅客可能疲憊，這天不要安排太緊湊的行程
+`;
+            }
+            
+            if (flights.departure?.date && flights.departure?.time) {
+                guide += `
+═══ 離開航班資訊 ═══
+日期：${flights.departure.date}
+航班：${flights.departure.flightNo || '未提供'}
+起飛時間：${flights.departure.time}
+機場：${flights.departure.airport || '河內內排機場'}
+
+⚠️ ${flights.departure.date} 這天的行程注意事項：
+- 國際航班建議提前 3 小時到機場（從市區到機場約需 40-60 分鐘）
+- 起飛時間 ${flights.departure.time}，最晚需要在 ${calculateLatestDeparture(flights.departure.time)} 前離開市區
+- 這天的行程應該在中午或下午前結束
+- 建議上午安排輕鬆的行程或購買伴手禮
+- 最後一站建議安排在前往機場的路線上
+`;
+            }
+            
+            return guide;
+        };
+
+        function calculateLatestDeparture(flightTime) {
+            if (!flightTime) return '';
+            const [h, m] = flightTime.split(':').map(Number);
+            let newH = h - 4; // 3 hours early + 1 hour travel
+            if (newH < 0) newH += 24;
+            return `${String(newH).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        }
+
         window.openSmartSchedule = function() {
             if (!window.travelApp.exploreData || window.travelApp.exploreData.length === 0) {
                 showToast('請先到「探索」頁確認景點資料已載入');
@@ -2392,6 +2557,9 @@
 
             // Initialize region pickers
             setTimeout(() => window.updateRegionPickers(), 50);
+
+            // Load saved flight info
+            setTimeout(() => window.loadFlightInputs(), 60);
 
             showStep('aiPlanStep1');
             const modal = document.getElementById('smartModal');
@@ -2563,12 +2731,19 @@ ${regionEntries.map(([day, regions]) => {
 
 回覆必須是有效的 JSON 格式，不要有任何前言或解釋。`;
 
+            // Get flight info guide
+            const flightGuide = window.getFlightGuide ? window.getFlightGuide() : '';
+            if (flightGuide) {
+                addLog('已納入航班資訊考量');
+            }
+
             const userPrompt = `請根據以下資訊，為我安排詳細的河內旅遊行程。
 
 ═══ 可選景點清單（只能使用這些地點）═══
 ${placesList}
 ${excludeGuide}
 ${regionGuide}
+${flightGuide}
 
 ═══ 行程設定 ═══
 需安排日期：${selectedDays.join('、')}
@@ -2580,7 +2755,7 @@ ${prefGuide}
 ${sheetContext}
 
 ═══ 規劃要求 ═══
-1. 每天第一站必須是早餐（從清單中找咖啡廳/餐廳/小吃類，標記 type:"早餐"）
+1. 每天第一站必須是早餐（從清單中找咖啡廳/餐廳/小吃類，標記 type:"早餐"），但如果是飛機抵達日且抵達時間較晚，第一站可以是午餐或下午茶
 2. 上午安排1-2個景點（標記 type:"景點"）
 3. 午餐從清單中選適合的餐廳（標記 type:"午餐"）
 4. 下午先安排咖啡廳休息（標記 type:"咖啡"），再去景點
@@ -2591,6 +2766,7 @@ ${sheetContext}
 9. duration_min 要符合實際（早餐60-90分、景點90-180分、咖啡45-60分、午晚餐60-90分）
 10. tip 欄位寫一句有溫度的說明，例如「趁早上涼爽，在人少時感受這裡的寧靜」
 11. 【重要】絕對不要選擇「已安排的地點」中列出的任何地點，必須選擇其他新的地點
+12. 如果有航班資訊，請特別注意抵達日和離開日的時間安排，在 tip 中提醒旅客注意時間
 
 請回傳 JSON 格式：
 {
