@@ -19,7 +19,7 @@ export default async function handler(request) {
     return new Response(JSON.stringify({ 
       status: 'ok',
       apiKeyConfigured: hasKey,
-      hint: hasKey ? 'Ready! Use POST to plan.' : '⚠️ Add ANTHROPIC_API_KEY in Vercel Settings'
+      hint: hasKey ? 'Ready! Use POST to plan.' : 'Add ANTHROPIC_API_KEY in Vercel Settings'
     }), { status: 200, headers });
   }
 
@@ -28,7 +28,8 @@ export default async function handler(request) {
   }
 
   try {
-    const { systemPrompt, userPrompt } = await request.json();
+    const body = await request.json();
+    const { systemPrompt, userPrompt } = body;
     const apiKey = process.env.ANTHROPIC_API_KEY;
     
     if (!apiKey) {
@@ -52,50 +53,4 @@ export default async function handler(request) {
 
     if (!response.ok) {
       const err = await response.text();
-      return new Response(JSON.stringify({ error: `Claude error: ${response.status}`, details: err }), { status: response.status, headers });
-    }
-
-    const data = await response.json();
-    const text = data.content.map(b => b.text || '').join('');
-    return new Response(JSON.stringify({ text }), { status: 200, headers });
-
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers });
-  }
-}
-```
-
-5. 點 **Commit changes** → **Commit changes**
-
----
-
-### Step 2：建立 `public` 資料夾並移動 `index.html`
-
-1. 點擊 **Add file** → **Create new file**
-2. 檔名輸入：`public/index.html`
-3. 先貼一個佔位內容：`<!-- placeholder -->`
-4. **Commit changes**
-
-5. 現在點進 `public/index.html`
-6. 點 ✏️ 編輯
-7. 把你**原本根目錄的 `index.html` 內容**全部複製貼上（替換佔位內容）
-8. **Commit changes**
-
----
-
-### Step 3：刪除根目錄的舊檔案
-
-刪除這些不需要的檔案：
-- `index.html`（根目錄的）
-- `plan.js`（根目錄的）
-- `vietnam-hanoi.zip`
-
-方法：點進每個檔案 → 右上角 **⋯** → **Delete file** → **Commit changes**
-
----
-
-### Step 4：等待 Vercel 自動重新部署
-
-完成後等 30 秒，然後測試：
-```
-https://hanoiclaude.vercel.app/api/plan
+      return new Response(JSON.stringify({ error: 'Claude error
