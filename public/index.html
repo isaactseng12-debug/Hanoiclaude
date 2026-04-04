@@ -44,8 +44,7 @@
         expenses: [], 
         personalNotes: {}, 
         dayOrders: {},     
-        customItems: {},
-        flights: { arrival: {}, departure: {} },
+        customItems: {},   
         exchangeRate: 0.0013,
         itineraryData: {},
         exploreData: [],
@@ -153,66 +152,22 @@
     };
 
     window.savePersonalNotesToCloud = async (newNotes) => {
-        // Always save to localStorage as backup
-        try { localStorage.setItem('hanoi_personalNotes', JSON.stringify(newNotes)); } catch(e) {}
-        
         if (!window.travelApp.user || !db) return;
         const uid = window.travelApp.user.uid;
         try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'personalNotes'), { items: newNotes }); } catch (e) {}
     };
 
     window.saveOrdersToCloud = async (newOrders) => {
-        // Always save to localStorage as backup
-        try { localStorage.setItem('hanoi_dayOrders', JSON.stringify(newOrders)); } catch(e) {}
-        
         if (!window.travelApp.user || !db) return;
         const uid = window.travelApp.user.uid;
         try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'dayOrders'), { items: newOrders }); } catch (e) {}
     };
 
     window.saveCustomItemsToCloud = async (newCustomItems) => {
-        // Always save to localStorage as backup
-        try { localStorage.setItem('hanoi_customItems', JSON.stringify(newCustomItems)); } catch(e) {}
-        
         if (!window.travelApp.user || !db) return;
         const uid = window.travelApp.user.uid;
         try { await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'settings', 'customItems'), { items: newCustomItems }); } catch (e) {}
     };
-
-    // Load from localStorage on startup (fallback when Firebase not available)
-    window.loadLocalStorage = function() {
-        try {
-            const savedOrders = localStorage.getItem('hanoi_dayOrders');
-            if (savedOrders) {
-                window.travelApp.dayOrders = JSON.parse(savedOrders);
-            }
-            const savedCustomItems = localStorage.getItem('hanoi_customItems');
-            if (savedCustomItems) {
-                window.travelApp.customItems = JSON.parse(savedCustomItems);
-            }
-            const savedNotes = localStorage.getItem('hanoi_personalNotes');
-            if (savedNotes) {
-                window.travelApp.personalNotes = JSON.parse(savedNotes);
-            }
-            const savedFlights = localStorage.getItem('hanoi_flights');
-            if (savedFlights) {
-                window.travelApp.flights = JSON.parse(savedFlights);
-            }
-            // Re-render current day if on itinerary tab
-            if (typeof renderDay === 'function' && typeof currentDay !== 'undefined' && currentDay) {
-                renderDay(currentDay);
-            }
-        } catch(e) { console.log('localStorage load error', e); }
-    };
-    
-    // Save flights to localStorage
-    window.saveFlights = function(flights) {
-        window.travelApp.flights = flights;
-        try { localStorage.setItem('hanoi_flights', JSON.stringify(flights)); } catch(e) {}
-    };
-    
-    // Auto-load on startup (with delay to ensure DOM is ready)
-    setTimeout(() => window.loadLocalStorage(), 500);
 </script>
 
 <style>
@@ -825,53 +780,6 @@
                         <p class="text-[10px] text-[#1a1f17]/40 mt-0.5">只清除手動加入的，原始表格資料不受影響</p>
                     </div>
                 </label>
-                <!-- Flight Info -->
-                <div class="p-4 rounded-[14px] bg-white border border-[var(--ink-08)]">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="label-sm text-[9px]" style="color:#3c4a35">✈️ 航班資訊 <span class="text-[#1a1f17]/30">（選填）</span></p>
-                        <button onclick="toggleFlightSection()" class="text-[10px] text-[#3c4a35] font-bold">展開/收合</button>
-                    </div>
-                    <div id="flightInputSection" class="hidden space-y-3">
-                        <!-- Arrival Flight -->
-                        <div class="p-3 rounded-[12px] bg-[#f5f0e8]">
-                            <p class="text-xs font-bold text-[#1a1f17] mb-2">🛬 抵達航班</p>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="arrivalFlightNo" placeholder="航班號碼 (如 VN-123)" 
-                                       class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
-                                <input type="text" id="arrivalDate" placeholder="抵達日期 (如 4/17)" 
-                                       class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
-                                <input type="text" id="arrivalTime" placeholder="抵達時間 (如 14:30)" 
-                                       class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
-                                <input type="text" id="arrivalAirport" placeholder="機場 (如 河內內排)" 
-                                       class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
-                            </div>
-                        </div>
-                        <!-- Departure Flight -->
-                        <div class="p-3 rounded-[12px] bg-[#f5f0e8]">
-                            <p class="text-xs font-bold text-[#1a1f17] mb-2">🛫 離開航班</p>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="departureFlightNo" placeholder="航班號碼 (如 VN-456)" 
-                                       class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
-                                <input type="text" id="departureDate" placeholder="離開日期 (如 4/22)" 
-                                       class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
-                                <input type="text" id="departureTime" placeholder="起飛時間 (如 10:00)" 
-                                       class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
-                                <input type="text" id="departureAirport" placeholder="機場 (如 河內內排)" 
-                                       class="text-xs px-3 py-2 rounded-[8px] border border-[var(--ink-08)] bg-white">
-                            </div>
-                        </div>
-                        <button onclick="saveFlightInfo()" class="w-full py-2 bg-[#3c4a35] text-white rounded-[8px] text-xs font-bold">
-                            儲存航班資訊
-                        </button>
-                    </div>
-                    <p id="flightSummary" class="text-[10px] text-[#1a1f17]/50 mt-2"></p>
-                </div>
-                <!-- Region per Day -->
-                <div id="regionPerDaySection" class="hidden">
-                    <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">每日指定地區 <span class="text-[#1a1f17]/30">（可複選）</span></p>
-                    <p class="text-[10px] text-[#1a1f17]/40 mb-3">指定當天優先安排的區域，若該區選項不足會自動推薦鄰近區域</p>
-                    <div id="regionDayPickers" class="space-y-3"></div>
-                </div>
             </div>
 
             <button onclick="runAiPlanner()" class="w-full py-4 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] font-bold text-sm flex items-center justify-center gap-2.5 hover:bg-[#2e3929] transition-all active:scale-95">
@@ -926,102 +834,6 @@
             <h3 class="display-title text-2xl text-[#1c1612] leading-tight truncate" id="addToDayItemName">Item Name</h3>
         </div>
         <div id="addToDayList" class="space-y-2.5 max-h-[50dvh] overflow-y-auto hide-scrollbar"></div>
-    </div>
-</div>
-
-<!-- OPTIMIZE CHECK MODAL -->
-<div id="optimizeModal" class="modal-wrap" role="dialog" aria-modal="true">
-    <div class="modal-bg" id="optimizeModalBg" onclick="closeOptimizeModal()"></div>
-    <div class="modal-sheet" id="optimizeModalContent" style="max-width:700px; max-height:92dvh; overflow-y:auto;">
-        <div class="modal-handle md:hidden"></div>
-        <button onclick="closeOptimizeModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-[#f5f0e8] text-[#1a1f17]/40 hover:bg-[#ede6d8] transition-colors z-10">
-            <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-
-        <!-- Step 1: Select Day -->
-        <div id="optimizeStep1">
-            <p class="eyebrow mb-2" style="color:#3c4a35">Itinerary Optimizer ✦</p>
-            <h3 class="display-title text-3xl text-[#1a1f17] mb-2">行程優化檢查</h3>
-            <p class="text-sm text-[#1a1f17]/50 mb-6 leading-relaxed">讓 AI 檢查你的行程安排，找出可能的問題並提供優化建議。</p>
-
-            <div class="space-y-4 mb-6">
-                <div>
-                    <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">選擇要檢查的日期</p>
-                    <div id="optimizeDayCheckboxes" class="flex flex-wrap gap-2"></div>
-                </div>
-                <div>
-                    <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">檢查項目</p>
-                    <div class="space-y-2">
-                        <label class="flex items-center gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer">
-                            <input type="checkbox" class="optimize-check accent-[#3c4a35] w-4 h-4" value="route" checked>
-                            <div>
-                                <p class="text-sm font-bold text-[#1a1f17]">🗺️ 路線合理性</p>
-                                <p class="text-[10px] text-[#1a1f17]/40">檢查是否有來回跑或不順路的安排</p>
-                            </div>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer">
-                            <input type="checkbox" class="optimize-check accent-[#3c4a35] w-4 h-4" value="time" checked>
-                            <div>
-                                <p class="text-sm font-bold text-[#1a1f17]">⏰ 時間安排</p>
-                                <p class="text-[10px] text-[#1a1f17]/40">檢查時間是否太趕或太鬆散</p>
-                            </div>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer">
-                            <input type="checkbox" class="optimize-check accent-[#3c4a35] w-4 h-4" value="meals" checked>
-                            <div>
-                                <p class="text-sm font-bold text-[#1a1f17]">🍜 用餐安排</p>
-                                <p class="text-[10px] text-[#1a1f17]/40">確保有安排正餐和休息時間</p>
-                            </div>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer">
-                            <input type="checkbox" class="optimize-check accent-[#3c4a35] w-4 h-4" value="hours" checked>
-                            <div>
-                                <p class="text-sm font-bold text-[#1a1f17]">🕐 營業時間</p>
-                                <p class="text-[10px] text-[#1a1f17]/40">確認景點在安排的時段有營業</p>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="runOptimizeCheck()" class="w-full py-4 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] font-bold text-sm flex items-center justify-center gap-2.5 hover:bg-[#2e3929] transition-all active:scale-95">
-                <i data-lucide="scan-search" class="w-4 h-4"></i>
-                開始檢查
-            </button>
-        </div>
-
-        <!-- Step 2: Loading -->
-        <div id="optimizeStep2" class="hidden py-10 text-center">
-            <div class="w-16 h-16 rounded-full bg-[#f5f0e8] flex items-center justify-center mx-auto mb-5">
-                <i data-lucide="scan-search" class="w-7 h-7 text-[#3c4a35] animate-pulse"></i>
-            </div>
-            <h3 class="display-title text-2xl text-[#1a1f17] mb-2">AI 檢查中…</h3>
-            <p id="optimizeStatus" class="text-sm text-[#1a1f17]/50 mb-6">正在分析你的行程安排</p>
-            <div class="space-y-2 text-left max-w-sm mx-auto text-xs text-[#1a1f17]/40" id="optimizeLog"></div>
-        </div>
-
-        <!-- Step 3: Results -->
-        <div id="optimizeStep3" class="hidden">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-12 h-12 rounded-full bg-[#f5f0e8] flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="clipboard-check" class="w-6 h-6 text-[#3c4a35]"></i>
-                </div>
-                <div>
-                    <h3 class="display-title text-2xl text-[#1a1f17]">優化建議</h3>
-                    <p class="text-xs text-[#1a1f17]/50" id="optimizeSummary">檢查完成</p>
-                </div>
-            </div>
-            <div id="optimizeResults" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto"></div>
-            <div class="flex gap-3">
-                <button onclick="resetOptimize()" class="flex-1 py-3.5 bg-[#f5f0e8] text-[#1a1f17] rounded-[100px] text-sm font-bold hover:bg-[#ede6d8] transition-all flex items-center justify-center gap-2">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    重新檢查
-                </button>
-                <button onclick="closeOptimizeModal()" class="flex-1 py-3.5 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] text-sm font-bold hover:bg-[#2e3929] transition-all">
-                    完成
-                </button>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -1123,19 +935,12 @@
         <div class="sticky top-[65px] md:top-[69px] z-40 bg-[#3c4a35]/95 backdrop-blur-md pt-4 pb-4 -mx-4 px-4 md:-mx-8 md:px-8">
             <div class="flex items-center justify-between gap-3 mb-3">
                 <div id="dayButtons" class="flex flex-nowrap overflow-x-auto gap-2 hide-scrollbar flex-1"></div>
-                <div class="flex gap-2 flex-shrink-0">
-                    <button onclick="openOptimizeCheck()"
-                        class="flex items-center gap-2 bg-white text-[#1a1f17] px-3 py-2.5 rounded-[12px] text-[10px] font-bold tracking-widest uppercase hover:bg-[#f5f0e8] active:scale-95 transition-all whitespace-nowrap">
-                        <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
-                        <span class="hidden sm:inline">優化</span>
-                    </button>
-                    <button onclick="openSmartSchedule()"
-                        class="flex items-center gap-2 bg-[#1c1612] text-white px-4 py-2.5 rounded-[12px] text-[10px] font-bold tracking-widest uppercase hover:bg-[#2c241c] active:scale-95 transition-all shadow-none whitespace-nowrap">
-                        <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
-                        <span class="hidden sm:inline">智慧排程</span>
-                        <span class="sm:hidden">排程</span>
-                    </button>
-                </div>
+                <button onclick="openSmartSchedule()"
+                    class="flex-shrink-0 flex items-center gap-2 bg-[#1c1612] text-white px-4 py-2.5 rounded-[12px] text-[10px] font-bold tracking-widest uppercase hover:bg-[#2c241c] active:scale-95 transition-all shadow-none whitespace-nowrap">
+                    <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                    <span class="hidden sm:inline">智慧排程</span>
+                    <span class="sm:hidden">排程</span>
+                </button>
             </div>
         </div>
         <div class="max-w-4xl mx-auto">
@@ -1925,10 +1730,6 @@
             });
 
             window.travelApp.itineraryData = rawData;
-            
-            // Load saved custom items and orders from localStorage
-            window.loadLocalStorage();
-            
             const days = Object.keys(rawData).sort((a, b) => {
                 // Sort by month/day numerically
                 const [am, ad] = a.split('/').map(Number);
@@ -2469,181 +2270,11 @@
     }
 
     // ── Open / Close ─────────────────────────────────────────────────
-    let _allAreas = []; // Store unique areas for region selection
-
-    window.updateRegionPickers = function() {
-        const selectedDays = getSelectedDays();
-        const section = document.getElementById('regionPerDaySection');
-        const container = document.getElementById('regionDayPickers');
-        
-        if (selectedDays.length === 0 || _allAreas.length === 0) {
-            if (section) section.classList.add('hidden');
-            return;
-        }
-        
-        if (section) section.classList.remove('hidden');
-        
-        // Generate multi-select buttons for each day
-        if (container) {
-            container.innerHTML = selectedDays.map(day => `
-                <div class="p-3 rounded-[12px] bg-white border border-[var(--ink-08)]">
-                    <p class="text-xs font-bold text-[#1a1f17] mb-2">${day}</p>
-                    <div class="flex flex-wrap gap-1.5" id="region-${day.replace('/', '-')}">
-                        ${_allAreas.map(a => `
-                            <button type="button" onclick="toggleRegion(this, '${day}', '${a}')" 
-                                data-day="${day}" data-region="${a}"
-                                class="region-btn px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#f5f0e8] text-[#1a1f17]/50 transition-all">
-                                ${a}
-                            </button>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
-        }
-    };
-
-    window.toggleRegion = function(btn, day, region) {
-        btn.classList.toggle('active');
-        if (btn.classList.contains('active')) {
-            btn.className = 'region-btn active px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#1a1f17] text-[#f5f0e8] transition-all';
-        } else {
-            btn.className = 'region-btn px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#f5f0e8] text-[#1a1f17]/50 transition-all';
-        }
-    };
-
-    window.getRegionPrefs = function() {
-        const prefs = {};
-        document.querySelectorAll('.region-btn.active').forEach(btn => {
-            const day = btn.dataset.day;
-            const region = btn.dataset.region;
-            if (!prefs[day]) prefs[day] = [];
-            prefs[day].push(region);
-        });
-        return prefs;
-    };
-
-    // Flight info functions
-    window.toggleFlightSection = function() {
-        const section = document.getElementById('flightInputSection');
-        section.classList.toggle('hidden');
-    };
-
-    window.saveFlightInfo = function() {
-        const flights = {
-            arrival: {
-                flightNo: document.getElementById('arrivalFlightNo')?.value || '',
-                date: document.getElementById('arrivalDate')?.value || '',
-                time: document.getElementById('arrivalTime')?.value || '',
-                airport: document.getElementById('arrivalAirport')?.value || ''
-            },
-            departure: {
-                flightNo: document.getElementById('departureFlightNo')?.value || '',
-                date: document.getElementById('departureDate')?.value || '',
-                time: document.getElementById('departureTime')?.value || '',
-                airport: document.getElementById('departureAirport')?.value || ''
-            }
-        };
-        window.saveFlights(flights);
-        updateFlightSummary();
-        showToast('✈️ 航班資訊已儲存');
-    };
-
-    window.loadFlightInputs = function() {
-        const flights = window.travelApp.flights || { arrival: {}, departure: {} };
-        if (document.getElementById('arrivalFlightNo')) {
-            document.getElementById('arrivalFlightNo').value = flights.arrival?.flightNo || '';
-            document.getElementById('arrivalDate').value = flights.arrival?.date || '';
-            document.getElementById('arrivalTime').value = flights.arrival?.time || '';
-            document.getElementById('arrivalAirport').value = flights.arrival?.airport || '';
-            document.getElementById('departureFlightNo').value = flights.departure?.flightNo || '';
-            document.getElementById('departureDate').value = flights.departure?.date || '';
-            document.getElementById('departureTime').value = flights.departure?.time || '';
-            document.getElementById('departureAirport').value = flights.departure?.airport || '';
-        }
-        updateFlightSummary();
-    };
-
-    window.updateFlightSummary = function() {
-        const flights = window.travelApp.flights || { arrival: {}, departure: {} };
-        const summary = document.getElementById('flightSummary');
-        if (!summary) return;
-        
-        let text = '';
-        if (flights.arrival?.date && flights.arrival?.time) {
-            text += `🛬 ${flights.arrival.date} ${flights.arrival.time} 抵達`;
-        }
-        if (flights.departure?.date && flights.departure?.time) {
-            if (text) text += ' ｜ ';
-            text += `🛫 ${flights.departure.date} ${flights.departure.time} 離開`;
-        }
-        summary.textContent = text || '尚未設定航班資訊';
-    };
-
-    window.getFlightGuide = function() {
-        const flights = window.travelApp.flights || { arrival: {}, departure: {} };
-        let guide = '';
-        
-        if (flights.arrival?.date && flights.arrival?.time) {
-            guide += `
-```
-
-═══ 抵達航班資訊 ═══
-日期：${flights.arrival.date}
-航班：${flights.arrival.flightNo || ‘未提供’}
-抵達時間：${flights.arrival.time}
-機場：${flights.arrival.airport || ‘河內內排機場’}
-
-⚠️ ${flights.arrival.date} 這天的行程注意事項：
-
-- 抵達後需要約 1-1.5 小時通關、領行李、搭車到市區
-- 預計 ${flights.arrival.time} 抵達機場，最早可開始行程的時間約為抵達後 2 小時
-- 第一站建議安排在機場到住宿的路線上，或是住宿附近
-- 考慮旅客可能疲憊，這天不要安排太緊湊的行程
-  `;
-  }
-  
-  ```
-        if (flights.departure?.date && flights.departure?.time) {
-            guide += `
-  ```
-
-═══ 離開航班資訊 ═══
-日期：${flights.departure.date}
-航班：${flights.departure.flightNo || ‘未提供’}
-起飛時間：${flights.departure.time}
-機場：${flights.departure.airport || ‘河內內排機場’}
-
-⚠️ ${flights.departure.date} 這天的行程注意事項：
-
-- 國際航班建議提前 3 小時到機場（從市區到機場約需 40-60 分鐘）
-- 起飛時間 ${flights.departure.time}，最晚需要在 ${calculateLatestDeparture(flights.departure.time)} 前離開市區
-- 這天的行程應該在中午或下午前結束
-- 建議上午安排輕鬆的行程或購買伴手禮
-- 最後一站建議安排在前往機場的路線上
-  `;
-  }
-  
-  ```
-        return guide;
-    };
-  
-    function calculateLatestDeparture(flightTime) {
-        if (!flightTime) return '';
-        const [h, m] = flightTime.split(':').map(Number);
-        let newH = h - 4; // 3 hours early + 1 hour travel
-        if (newH < 0) newH += 24;
-        return `${String(newH).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-    }
-  
     window.openSmartSchedule = function() {
         if (!window.travelApp.exploreData || window.travelApp.exploreData.length === 0) {
             showToast('請先到「探索」頁確認景點資料已載入');
             return;
         }
-  
-        // Extract unique areas from explore data
-        _allAreas = [...new Set(window.travelApp.exploreData.map(i => i.area).filter(Boolean))].sort();
-  
         // Populate day checkboxes
         const days = Object.keys(window.travelApp.itineraryData).sort((a,b)=>{
             const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
@@ -2656,25 +2287,17 @@
                     <input type="checkbox" value="${d}" class="day-cb sr-only" checked>
                     <span class="text-[11px] font-bold">${d}</span>
                 </label>`).join('');
-            // Toggle style on click + update region pickers
+            // Toggle style on click
             box.querySelectorAll('label').forEach(lbl => {
                 lbl.addEventListener('click', () => {
                     setTimeout(() => {
                         const checked = lbl.querySelector('input').checked;
                         lbl.className = `flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all ${
                             checked ? 'bg-[#1a1f17] text-[#f5f0e8]' : 'bg-[#f5f0e8] text-[#1a1f17]/50'}`;
-                        window.updateRegionPickers();
                     },0);
                 });
             });
         }
-  
-        // Initialize region pickers
-        setTimeout(() => window.updateRegionPickers(), 50);
-  
-        // Load saved flight info
-        setTimeout(() => window.loadFlightInputs(), 60);
-  
         showStep('aiPlanStep1');
         const modal = document.getElementById('smartModal');
         modal.classList.add('open');
@@ -2684,297 +2307,12 @@
         }, 10);
         safeCreateIcons();
     };
-  
+
     window.closeSmartModal = function() {
         document.getElementById('smartModalBg').classList.remove('visible');
         document.getElementById('smartModalContent').classList.remove('visible');
         setTimeout(() => document.getElementById('smartModal').classList.remove('open'), 350);
     };
-  
-    // ═══ OPTIMIZE CHECK FUNCTIONS ═══
-    window.openOptimizeCheck = function() {
-        const days = Object.keys(window.travelApp.itineraryData).sort((a,b)=>{
-            const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
-            return (am*100+(ad||0))-(bm*100+(bd||0));
-        });
-        
-        // Populate day checkboxes
-        const box = document.getElementById('optimizeDayCheckboxes');
-        if (box) {
-            box.innerHTML = days.map(d => `
-                <label class="flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all bg-[#1a1f17] text-[#f5f0e8]">
-                    <input type="checkbox" value="${d}" class="optimize-day-cb sr-only" checked>
-                    <span class="text-[11px] font-bold">${d}</span>
-                </label>`).join('');
-            box.querySelectorAll('label').forEach(lbl => {
-                lbl.addEventListener('click', () => {
-                    setTimeout(() => {
-                        const checked = lbl.querySelector('input').checked;
-                        lbl.className = `flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all ${
-                            checked ? 'bg-[#1a1f17] text-[#f5f0e8]' : 'bg-[#f5f0e8] text-[#1a1f17]/50'}`;
-                    },0);
-                });
-            });
-        }
-        
-        showOptimizeStep('optimizeStep1');
-        const modal = document.getElementById('optimizeModal');
-        modal.classList.add('open');
-        setTimeout(() => {
-            document.getElementById('optimizeModalBg').classList.add('visible');
-            document.getElementById('optimizeModalContent').classList.add('visible');
-        }, 10);
-        safeCreateIcons();
-    };
-  
-    window.closeOptimizeModal = function() {
-        document.getElementById('optimizeModalBg').classList.remove('visible');
-        document.getElementById('optimizeModalContent').classList.remove('visible');
-        setTimeout(() => document.getElementById('optimizeModal').classList.remove('open'), 350);
-    };
-  
-    window.resetOptimize = function() {
-        showOptimizeStep('optimizeStep1');
-    };
-  
-    function showOptimizeStep(id) {
-        ['optimizeStep1','optimizeStep2','optimizeStep3'].forEach(s => {
-            const el = document.getElementById(s);
-            if (el) el.classList.toggle('hidden', s !== id);
-        });
-        safeCreateIcons();
-    }
-  
-    function addOptimizeLog(msg) {
-        const log = document.getElementById('optimizeLog');
-        if (!log) return;
-        const d = document.createElement('div');
-        d.className = 'flex items-center gap-2';
-        d.innerHTML = `<span class="text-[#3c4a35]">✓</span><span>${msg}</span>`;
-        log.appendChild(d);
-    }
-  
-    window.runOptimizeCheck = async function() {
-        const selectedDays = [...document.querySelectorAll('.optimize-day-cb:checked')].map(cb => cb.value);
-        if (selectedDays.length === 0) { showToast('請選擇至少一天'); return; }
-  
-        const checkItems = [...document.querySelectorAll('.optimize-check:checked')].map(cb => cb.value);
-        if (checkItems.length === 0) { showToast('請選擇至少一項檢查項目'); return; }
-  
-        showOptimizeStep('optimizeStep2');
-        document.getElementById('optimizeLog').innerHTML = '';
-        document.getElementById('optimizeStatus').textContent = '正在收集行程資料…';
-        addOptimizeLog(`檢查 ${selectedDays.length} 天的行程`);
-        addOptimizeLog(`檢查項目：${checkItems.length} 項`);
-  
-        // Build current itinerary data for selected days
-        const itineraryForCheck = selectedDays.map(day => {
-            const dayData = window.travelApp.itineraryData[day] || { items: [] };
-            const customItems = window.travelApp.customItems?.[day] || [];
-            const allItems = [...dayData.items, ...customItems];
-            
-            return {
-                date: day,
-                accommodation: dayData.accommodation?.title || '',
-                items: allItems.map(item => ({
-                    time: item.time || 'Anytime',
-                    name: item.title || item.name,
-                    type: item.type || '景點',
-                    area: item.area || '',
-                    openTime: item.openTime || '',
-                    note: item.note || ''
-                }))
-            };
-        });
-  
-        const checkGuide = {
-            route: '路線合理性：檢查同一天內的地點是否地理位置連貫，有沒有來回跑的問題',
-            time: '時間安排：檢查每個地點之間的時間是否足夠，會不會太趕或太鬆散',
-            meals: '用餐安排：確認有安排早餐、午餐、晚餐，以及下午茶/咖啡休息時間',
-            hours: '營業時間：確認安排的到訪時間是否在景點的營業時間內'
-        };
-  
-        const selectedChecks = checkItems.map(c => checkGuide[c]).join('\n');
-  
-        // Get flight info
-        const flightGuide = window.getFlightGuide ? window.getFlightGuide() : '';
-  
-        const systemPrompt = `你是一位專業的旅遊行程優化顧問，專門幫助旅客檢查和改善他們的行程安排。
-  ```
-
-你非常注重實用性，會提供具體、可行的建議，而不是空泛的評論。
-
-檢查時你會注意：
-
-- 地理位置的合理性（使用你對河內地圖的了解）
-- 時間安排是否實際可行
-- 用餐和休息的平衡
-- 旅客的體力和精神狀態
-- 交通時間的估算
-
-回覆必須是有效的 JSON 格式。`;
-
-```
-        const userPrompt = `請檢查以下行程安排，提供優化建議：
-```
-
-═══ 行程資料 ═══
-${JSON.stringify(itineraryForCheck, null, 2)}
-${flightGuide}
-
-═══ 需要檢查的項目 ═══
-${selectedChecks}
-
-═══ 回覆格式 ═══
-請用以下 JSON 格式回覆：
-{
-“overall_score”: 85,
-“overall_comment”: “整體評價（一句話）”,
-“issues”: [
-{
-“day”: “4/17”,
-“severity”: “warning”,
-“category”: “route”,
-“title”: “問題標題”,
-“description”: “問題描述”,
-“suggestion”: “具體建議”,
-“affected_items”: [“地點名稱1”, “地點名稱2”]
-}
-],
-“highlights”: [
-{
-“day”: “4/17”,
-“title”: “做得好的地方”,
-“description”: “說明為什麼這個安排很好”
-}
-],
-“tips”: [
-“額外的實用小提示1”,
-“額外的實用小提示2”
-]
-}
-
-severity 可以是：
-
-- “critical”：嚴重問題，強烈建議修改
-- “warning”：注意事項，建議考慮修改
-- “info”：小提醒，可以參考
-
-category 可以是：route, time, meals, hours, general
-
-如果行程很完美，issues 可以是空陣列 []。
-請用繁體中文回覆。`;
-
-```
-        document.getElementById('optimizeStatus').textContent = 'Claude AI 正在分析行程…';
-        addOptimizeLog('送出檢查請求給 Claude…');
-
-        try {
-            const raw = await callClaude(systemPrompt, userPrompt);
-            addOptimizeLog('收到回覆，正在解析…');
-
-            const cleaned = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
-            const jStart = cleaned.indexOf('{');
-            const jEnd = cleaned.lastIndexOf('}');
-            if (jStart === -1) throw new Error('回覆格式錯誤');
-            const data = JSON.parse(cleaned.slice(jStart, jEnd+1));
-
-            renderOptimizeResults(data);
-            showOptimizeStep('optimizeStep3');
-
-        } catch(e) {
-            console.error('Optimize check error:', e);
-            document.getElementById('optimizeStatus').textContent = '檢查失敗，請稍後再試';
-            addOptimizeLog('⚠ 錯誤：' + (e.message || String(e)));
-        }
-    };
-
-    function renderOptimizeResults(data) {
-        const container = document.getElementById('optimizeResults');
-        const summary = document.getElementById('optimizeSummary');
-        
-        // Summary
-        const score = data.overall_score || 80;
-        const scoreColor = score >= 80 ? 'text-green-600' : score >= 60 ? 'text-amber-600' : 'text-red-600';
-        summary.innerHTML = `<span class="${scoreColor} font-bold">${score}分</span> · ${data.overall_comment || '檢查完成'}`;
-
-        let html = '';
-
-        // Issues
-        if (data.issues && data.issues.length > 0) {
-            html += `<div class="space-y-3">
-                <p class="label-sm text-[9px]" style="color:#dc2626">⚠️ 需要注意 (${data.issues.length})</p>`;
-            
-            data.issues.forEach(issue => {
-                const severityStyle = {
-                    critical: 'border-red-400 bg-red-50',
-                    warning: 'border-amber-400 bg-amber-50',
-                    info: 'border-blue-400 bg-blue-50'
-                };
-                const severityIcon = {
-                    critical: '🚨',
-                    warning: '⚠️',
-                    info: 'ℹ️'
-                };
-                html += `
-                    <div class="p-4 rounded-[12px] border-l-4 ${severityStyle[issue.severity] || severityStyle.info}">
-                        <div class="flex items-start gap-2 mb-2">
-                            <span>${severityIcon[issue.severity] || '📌'}</span>
-                            <div class="flex-1">
-                                <p class="text-sm font-bold text-[#1a1f17]">${issue.title}</p>
-                                <p class="text-[10px] text-[#1a1f17]/50">${issue.day}</p>
-                            </div>
-                        </div>
-                        <p class="text-xs text-[#1a1f17]/70 mb-2">${issue.description}</p>
-                        <div class="bg-white/60 rounded-[8px] p-2.5">
-                            <p class="text-[10px] font-bold text-[#3c4a35] mb-1">💡 建議</p>
-                            <p class="text-xs text-[#1a1f17]">${issue.suggestion}</p>
-                        </div>
-                    </div>`;
-            });
-            html += '</div>';
-        }
-
-        // Highlights
-        if (data.highlights && data.highlights.length > 0) {
-            html += `<div class="space-y-3 mt-4">
-                <p class="label-sm text-[9px]" style="color:#16a34a">✨ 做得好 (${data.highlights.length})</p>`;
-            
-            data.highlights.forEach(h => {
-                html += `
-                    <div class="p-3 rounded-[12px] bg-green-50 border border-green-200">
-                        <p class="text-sm font-bold text-green-700 mb-1">👍 ${h.title}</p>
-                        <p class="text-xs text-green-600">${h.description}</p>
-                    </div>`;
-            });
-            html += '</div>';
-        }
-
-        // Tips
-        if (data.tips && data.tips.length > 0) {
-            html += `<div class="mt-4 p-4 rounded-[12px] bg-[#f5f0e8]">
-                <p class="label-sm text-[9px] mb-2" style="color:#3c4a35">💡 額外建議</p>
-                <ul class="space-y-1.5">`;
-            data.tips.forEach(tip => {
-                html += `<li class="text-xs text-[#1a1f17]/70 flex items-start gap-2">
-                    <span class="text-[#3c4a35]">•</span>
-                    <span>${tip}</span>
-                </li>`;
-            });
-            html += '</ul></div>';
-        }
-
-        // Perfect score message
-        if ((!data.issues || data.issues.length === 0) && score >= 90) {
-            html += `<div class="text-center py-8">
-                <div class="text-4xl mb-3">🎉</div>
-                <p class="text-lg font-bold text-[#1a1f17] mb-2">完美的行程安排！</p>
-                <p class="text-sm text-[#1a1f17]/50">你的行程規劃得很好，祝旅途愉快！</p>
-            </div>`;
-        }
-
-        container.innerHTML = html || '<p class="text-center text-[#1a1f17]/50 py-8">沒有找到問題 ✓</p>';
-    }
 
     window.resetAiPlanner = function() {
         _aiPlanData = null;
@@ -3009,38 +2347,6 @@ category 可以是：route, time, meals, hours, general
 
         if (!items || items.length === 0) { showToast('清單資料尚未載入，請先到探索頁'); return; }
 
-        // Get already planned places from current itinerary (to avoid duplicates)
-        const alreadyPlanned = [];
-        Object.values(window.travelApp.dayOrders || {}).forEach(order => {
-            if (Array.isArray(order)) {
-                order.forEach(item => {
-                    if (item && item.name) alreadyPlanned.push(item.name);
-                    if (item && item.title) alreadyPlanned.push(item.title);
-                });
-            }
-        });
-        Object.values(window.travelApp.customItems || {}).forEach(dayItems => {
-            if (Array.isArray(dayItems)) {
-                dayItems.forEach(item => {
-                    if (item && item.name) alreadyPlanned.push(item.name);
-                    if (item && item.title) alreadyPlanned.push(item.title);
-                });
-            }
-        });
-        // Also check itineraryData for existing items
-        Object.values(window.travelApp.itineraryData || {}).forEach(dayData => {
-            if (dayData && Array.isArray(dayData.items)) {
-                dayData.items.forEach(item => {
-                    if (item && item.title) alreadyPlanned.push(item.title);
-                });
-            }
-        });
-        const uniqueAlreadyPlanned = [...new Set(alreadyPlanned)].filter(Boolean);
-
-        // Get region preferences (multi-select)
-        const regionPrefs = window.getRegionPrefs ? window.getRegionPrefs() : {};
-        const regionEntries = Object.entries(regionPrefs).filter(([d, regions]) => regions && regions.length > 0);
-
         showStep('aiPlanStep2');
         document.getElementById('aiPlanLog').innerHTML = '';
         document.getElementById('aiPlanStatus').textContent = '正在整理景點清單…';
@@ -3050,15 +2356,6 @@ category 可以是：route, time, meals, hours, general
         const styleLabel = { relaxed:'悠閒', balanced:'均衡', packed:'充實' };
         addLog(`步調：${styleLabel[style]}`);
         if (prefs.length) addLog(`偏好：${prefs.join('、')}`);
-        if (regionEntries.length) {
-            addLog(`地區指定：${regionEntries.map(([d,r]) => {
-                const regions = Array.isArray(r) ? r.join('+') : r;
-                return `${d}→${regions}`;
-            }).join('、')}`);
-        }
-        if (uniqueAlreadyPlanned.length) {
-            addLog(`排除已選：${uniqueAlreadyPlanned.length} 個地點`);
-        }
 
         // Build detailed place list
         const placesList = items.map((it, i) => {
@@ -3088,32 +2385,6 @@ ${prefs.includes(‘market’) ? ‘- 🛒 市集購物：安排夜市或市場�
 ${prefs.includes(‘night’) ? ‘- 🍺 夜生活：晚上9點後安排酒吧或夜間景點’ : ‘’}` : ‘’;
 
 ```
-        // Exclude guide for already planned places
-        const excludeGuide = uniqueAlreadyPlanned.length ? `
-```
-
-═══ 已安排的地點（請勿重複選擇）═══
-${uniqueAlreadyPlanned.join(’、’)}
-⚠️ 以上地點已在其他天安排過，請勿再次選擇，挑選其他沒去過的地點。` : ‘’;
-
-```
-        // Region guide with flexibility
-        const regionGuide = regionEntries.length ? `
-```
-
-═══ 每日優先地區（可彈性調整）═══
-${regionEntries.map(([day, regions]) => {
-const regionList = Array.isArray(regions) ? regions.join(’、’) : regions;
-return `${day}：優先安排「${regionList}」區域的景點`;
-}).join(’\n’)}
-
-⚠️ 彈性原則：
-
-- 如果指定區域內的選項不足或不適合，可以推薦鄰近區域的地點
-- 優先考慮地理位置的連貫性，不要為了符合區域而安排不順路的行程
-- 用餐和咖啡廳可以不受區域限制，選擇評分最高的即可` : ‘’;
-  
-  ```
         // Check which days have existing sheet itinerary items
         const sheetContext = selectedDays.map(d => {
             const dayData = window.travelApp.itineraryData[d];
@@ -3121,9 +2392,9 @@ return `${day}：優先安排「${regionList}」區域的景點`;
             const sheetItems = (dayData?.items || []).map(i => i.title).join('、');
             return `${d}：${accName ? '住宿:'+accName : '無住宿資訊'} | 表格已排:${sheetItems || '無'}`;
        }).join('\n');
-  
+
         const systemPrompt = `你是一位對河內瞭如指掌的資深旅遊規劃師，同時也是美食達人和咖啡愛好者。
-  ```
+```
 
 你擅長安排人性化的旅遊行程，深知旅人在不同時段的需求：
 
@@ -3140,25 +2411,15 @@ return `${day}：優先安排「${regionList}」區域的景點`;
 1. 類型的合理搭配（不會連續安排三個景點，要穿插飲食）
 1. 每個地點的特性（例如：早上去人少的景點、咖啡廳適合下午去拍照）
 1. 實際的交通時間（兩個地點之間留15-30分鐘交通時間）
-1. 避免重複：絕對不要選擇已經安排過的地點
 
 回覆必須是有效的 JSON 格式，不要有任何前言或解釋。`;
 
 ```
-        // Get flight info guide
-        const flightGuide = window.getFlightGuide ? window.getFlightGuide() : '';
-        if (flightGuide) {
-            addLog('已納入航班資訊考量');
-        }
-
         const userPrompt = `請根據以下資訊，為我安排詳細的河內旅遊行程。
 ```
 
 ═══ 可選景點清單（只能使用這些地點）═══
 ${placesList}
-${excludeGuide}
-${regionGuide}
-${flightGuide}
 
 ═══ 行程設定 ═══
 需安排日期：${selectedDays.join(’、’)}
@@ -3171,7 +2432,7 @@ ${sheetContext}
 
 ═══ 規劃要求 ═══
 
-1. 每天第一站必須是早餐（從清單中找咖啡廳/餐廳/小吃類，標記 type:“早餐”），但如果是飛機抵達日且抵達時間較晚，第一站可以是午餐或下午茶
+1. 每天第一站必須是早餐（從清單中找咖啡廳/餐廳/小吃類，標記 type:“早餐”）
 1. 上午安排1-2個景點（標記 type:“景點”）
 1. 午餐從清單中選適合的餐廳（標記 type:“午餐”）
 1. 下午先安排咖啡廳休息（標記 type:“咖啡”），再去景點
@@ -3181,8 +2442,6 @@ ${sheetContext}
 1. 如果某天清單中找不到合適的餐廳，可以標記 name 為「當地自行尋找」
 1. duration_min 要符合實際（早餐60-90分、景點90-180分、咖啡45-60分、午晚餐60-90分）
 1. tip 欄位寫一句有溫度的說明，例如「趁早上涼爽，在人少時感受這裡的寧靜」
-1. 【重要】絕對不要選擇「已安排的地點」中列出的任何地點，必須選擇其他新的地點
-1. 如果有航班資訊，請特別注意抵達日和離開日的時間安排，在 tip 中提醒旅客注意時間
 
 請回傳 JSON 格式：
 {
@@ -3608,7 +2867,6 @@ ${sheetContext}
         }
     }
 </script>
-```
 
 </body>
 </html>
