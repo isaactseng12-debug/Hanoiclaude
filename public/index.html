@@ -834,6 +834,102 @@
         </div>
     </div>
 
+    <!-- OPTIMIZE MODAL -->
+    <div id="optimizeModal" class="modal-wrap" role="dialog" aria-modal="true">
+        <div class="modal-bg" id="optimizeModalBg" onclick="closeOptimizeModal()"></div>
+        <div class="modal-sheet" id="optimizeModalContent" style="max-width:700px; max-height:92dvh; overflow-y:auto;">
+            <div class="modal-handle md:hidden"></div>
+            <button onclick="closeOptimizeModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-[#f5f0e8] text-[#1a1f17]/40 hover:bg-[#ede6d8] transition-colors z-10">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Step 1: Select Day -->
+            <div id="optimizeStep1">
+                <p class="eyebrow mb-2" style="color:#3c4a35">Itinerary Optimizer ✦</p>
+                <h3 class="display-title text-3xl text-[#1a1f17] mb-2">行程優化檢查</h3>
+                <p class="text-sm text-[#1a1f17]/50 mb-6 leading-relaxed">讓 AI 檢查你的行程安排，找出可能的問題並提供優化建議。</p>
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">選擇要檢查的日期</p>
+                        <div id="optimizeDayCheckboxes" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <div>
+                        <p class="label-sm text-[9px] mb-2.5" style="color:#3c4a35">檢查項目</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer">
+                                <input type="checkbox" class="optimize-check accent-[#3c4a35] w-4 h-4" value="route" checked>
+                                <div>
+                                    <p class="text-sm font-bold text-[#1a1f17]">🗺️ 路線合理性</p>
+                                    <p class="text-[10px] text-[#1a1f17]/40">檢查是否有來回跑或不順路的安排</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer">
+                                <input type="checkbox" class="optimize-check accent-[#3c4a35] w-4 h-4" value="time" checked>
+                                <div>
+                                    <p class="text-sm font-bold text-[#1a1f17]">⏰ 時間安排</p>
+                                    <p class="text-[10px] text-[#1a1f17]/40">檢查時間是否太趕或太鬆散</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer">
+                                <input type="checkbox" class="optimize-check accent-[#3c4a35] w-4 h-4" value="meals" checked>
+                                <div>
+                                    <p class="text-sm font-bold text-[#1a1f17]">🍜 用餐安排</p>
+                                    <p class="text-[10px] text-[#1a1f17]/40">確保有安排正餐和休息時間</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer">
+                                <input type="checkbox" class="optimize-check accent-[#3c4a35] w-4 h-4" value="hours" checked>
+                                <div>
+                                    <p class="text-sm font-bold text-[#1a1f17]">🕐 營業時間</p>
+                                    <p class="text-[10px] text-[#1a1f17]/40">確認景點在安排的時段有營業</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="runOptimizeCheck()" class="w-full py-4 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] font-bold text-sm flex items-center justify-center gap-2.5 hover:bg-[#2e3929] transition-all active:scale-95">
+                    <i data-lucide="scan-search" class="w-4 h-4"></i>
+                    開始檢查
+                </button>
+            </div>
+
+            <!-- Step 2: Loading -->
+            <div id="optimizeStep2" class="hidden py-10 text-center">
+                <div class="w-16 h-16 rounded-full bg-[#f5f0e8] flex items-center justify-center mx-auto mb-5">
+                    <i data-lucide="scan-search" class="w-7 h-7 text-[#3c4a35] animate-pulse"></i>
+                </div>
+                <h3 class="display-title text-2xl text-[#1a1f17] mb-2">AI 檢查中…</h3>
+                <p id="optimizeStatus" class="text-sm text-[#1a1f17]/50 mb-6">正在分析你的行程安排</p>
+                <div class="space-y-2 text-left max-w-sm mx-auto text-xs text-[#1a1f17]/40" id="optimizeLog"></div>
+            </div>
+
+            <!-- Step 3: Results -->
+            <div id="optimizeStep3" class="hidden">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-12 h-12 rounded-full bg-[#f5f0e8] flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="clipboard-check" class="w-6 h-6 text-[#3c4a35]"></i>
+                    </div>
+                    <div>
+                        <h3 class="display-title text-2xl text-[#1a1f17]">優化建議</h3>
+                        <p class="text-xs text-[#1a1f17]/50" id="optimizeSummary">檢查完成</p>
+                    </div>
+                </div>
+                <div id="optimizeResults" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto"></div>
+                <div class="flex gap-3">
+                    <button onclick="resetOptimize()" class="flex-1 py-3.5 bg-[#f5f0e8] text-[#1a1f17] rounded-[100px] text-sm font-bold hover:bg-[#ede6d8] transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        重新檢查
+                    </button>
+                    <button onclick="closeOptimizeModal()" class="flex-1 py-3.5 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] text-sm font-bold hover:bg-[#2e3929] transition-all">
+                        完成
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- HEADER -->
     <header class="site-header">
         <div class="max-w-6xl mx-auto px-4 md:px-8 py-3.5 flex justify-between items-center gap-4">
@@ -937,6 +1033,11 @@
                         <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
                         <span class="hidden sm:inline">智慧排程</span>
                         <span class="sm:hidden">排程</span>
+                    </button>
+                    <button onclick="openOptimizeCheck()"
+                        class="flex-shrink-0 flex items-center gap-2 bg-[#f5f0e8] text-[#1a1f17] px-4 py-2.5 rounded-[12px] text-[10px] font-bold tracking-widest uppercase hover:bg-[#ede6d8] active:scale-95 transition-all shadow-none whitespace-nowrap">
+                        <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">優化</span>
                     </button>
                 </div>
             </div>
@@ -2310,6 +2411,273 @@
             document.getElementById('smartModalContent').classList.remove('visible');
             setTimeout(() => document.getElementById('smartModal').classList.remove('open'), 350);
         };
+
+        // ── Optimize Check Functions ────────────────────────────
+        window.openOptimizeCheck = function() {
+            const days = Object.keys(window.travelApp.itineraryData).sort((a,b)=>{
+                const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+                return (am*100+(ad||0))-(bm*100+(bd||0));
+            });
+            
+            const box = document.getElementById('optimizeDayCheckboxes');
+            if (box) {
+                box.innerHTML = days.map(d => `
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all bg-[#1a1f17] text-[#f5f0e8]">
+                        <input type="checkbox" value="${d}" class="optimize-day-cb sr-only" checked>
+                        <span class="text-[11px] font-bold">${d}</span>
+                    </label>`).join('');
+                box.querySelectorAll('label').forEach(lbl => {
+                    lbl.addEventListener('click', () => {
+                        setTimeout(() => {
+                            const checked = lbl.querySelector('input').checked;
+                            lbl.className = `flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all ${
+                                checked ? 'bg-[#1a1f17] text-[#f5f0e8]' : 'bg-[#f5f0e8] text-[#1a1f17]/50'}`;
+                        },0);
+                    });
+                });
+            }
+            
+            showOptimizeStep('optimizeStep1');
+            const modal = document.getElementById('optimizeModal');
+            modal.classList.add('open');
+            setTimeout(() => {
+                document.getElementById('optimizeModalBg').classList.add('visible');
+                document.getElementById('optimizeModalContent').classList.add('visible');
+            }, 10);
+            safeCreateIcons();
+        };
+
+        window.closeOptimizeModal = function() {
+            document.getElementById('optimizeModalBg').classList.remove('visible');
+            document.getElementById('optimizeModalContent').classList.remove('visible');
+            setTimeout(() => document.getElementById('optimizeModal').classList.remove('open'), 350);
+        };
+
+        window.resetOptimize = function() {
+            showOptimizeStep('optimizeStep1');
+        };
+
+        function showOptimizeStep(id) {
+            ['optimizeStep1','optimizeStep2','optimizeStep3'].forEach(s => {
+                const el = document.getElementById(s);
+                if (el) el.classList.toggle('hidden', s !== id);
+            });
+            safeCreateIcons();
+        }
+
+        function addOptimizeLog(msg) {
+            const log = document.getElementById('optimizeLog');
+            if (!log) return;
+            const d = document.createElement('div');
+            d.className = 'flex items-center gap-2';
+            d.innerHTML = `<span class="text-[#3c4a35]">✓</span><span>${msg}</span>`;
+            log.appendChild(d);
+        }
+
+        window.runOptimizeCheck = async function() {
+            const selectedDays = [...document.querySelectorAll('.optimize-day-cb:checked')].map(cb => cb.value);
+            if (selectedDays.length === 0) { showToast('請選擇至少一天'); return; }
+
+            const checkItems = [...document.querySelectorAll('.optimize-check:checked')].map(cb => cb.value);
+            if (checkItems.length === 0) { showToast('請選擇至少一項檢查項目'); return; }
+
+            showOptimizeStep('optimizeStep2');
+            document.getElementById('optimizeLog').innerHTML = '';
+            document.getElementById('optimizeStatus').textContent = '正在收集行程資料…';
+            addOptimizeLog(`檢查 ${selectedDays.length} 天的行程`);
+            addOptimizeLog(`檢查項目：${checkItems.length} 項`);
+
+            const itineraryForCheck = selectedDays.map(day => {
+                const dayData = window.travelApp.itineraryData[day] || { items: [] };
+                const customItems = window.travelApp.customItems?.[day] || [];
+                const allItems = [...dayData.items, ...customItems];
+                
+                return {
+                    date: day,
+                    accommodation: dayData.accommodation?.title || '',
+                    items: allItems.map(item => ({
+                        time: item.time || 'Anytime',
+                        name: item.title || item.name,
+                        type: item.type || '景點',
+                        area: item.area || '',
+                        openTime: item.openTime || '',
+                        note: item.note || ''
+                    }))
+                };
+            });
+
+            const checkGuide = {
+                route: '路線合理性：檢查同一天內的地點是否地理位置連貫，有沒有來回跑的問題',
+                time: '時間安排：檢查每個地點之間的時間是否足夠，會不會太趕或太鬆散',
+                meals: '用餐安排：確認有安排早餐、午餐、晚餐，以及下午茶/咖啡休息時間',
+                hours: '營業時間：確認安排的到訪時間是否在景點的營業時間內'
+            };
+
+            const selectedChecks = checkItems.map(c => checkGuide[c]).join('\n');
+
+            const systemPrompt = `你是一位專業的旅遊行程優化顧問，專門幫助旅客檢查和改善他們的行程安排。
+你非常注重實用性，會提供具體、可行的建議，而不是空泛的評論。
+
+檢查時你會注意：
+- 地理位置的合理性（使用你對河內地圖的了解）
+- 時間安排是否實際可行
+- 用餐和休息的平衡
+- 旅客的體力和精神狀態
+- 交通時間的估算
+
+回覆必須是有效的 JSON 格式。`;
+
+            const userPrompt = `請檢查以下行程安排，提供優化建議：
+
+═══ 行程資料 ═══
+${JSON.stringify(itineraryForCheck, null, 2)}
+
+═══ 需要檢查的項目 ═══
+${selectedChecks}
+
+═══ 回覆格式 ═══
+請用以下 JSON 格式回覆：
+{
+  "overall_score": 85,
+  "overall_comment": "整體評價（一句話）",
+  "issues": [
+    {
+      "day": "4/17",
+      "severity": "warning",
+      "category": "route",
+      "title": "問題標題",
+      "description": "問題描述",
+      "suggestion": "具體建議",
+      "affected_items": ["地點名稱1", "地點名稱2"]
+    }
+  ],
+  "highlights": [
+    {
+      "day": "4/17",
+      "title": "做得好的地方",
+      "description": "說明為什麼這個安排很好"
+    }
+  ],
+  "tips": [
+    "額外的實用小提示1",
+    "額外的實用小提示2"
+  ]
+}
+
+severity 可以是：
+- "critical"：嚴重問題，強烈建議修改
+- "warning"：注意事項，建議考慮修改
+- "info"：小提醒，可以參考
+
+category 可以是：route, time, meals, hours, general
+
+如果行程很完美，issues 可以是空陣列 []。
+請用繁體中文回覆。`;
+
+            document.getElementById('optimizeStatus').textContent = 'Claude AI 正在分析行程…';
+            addOptimizeLog('送出檢查請求給 Claude…');
+
+            try {
+                const raw = await callClaude(systemPrompt, userPrompt);
+                addOptimizeLog('收到回覆，正在解析…');
+
+                const cleaned = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+                const jStart = cleaned.indexOf('{');
+                const jEnd = cleaned.lastIndexOf('}');
+                if (jStart === -1) throw new Error('回覆格式錯誤');
+                const data = JSON.parse(cleaned.slice(jStart, jEnd+1));
+
+                renderOptimizeResults(data);
+                showOptimizeStep('optimizeStep3');
+
+            } catch(e) {
+                console.error('Optimize check error:', e);
+                document.getElementById('optimizeStatus').textContent = '檢查失敗，請稍後再試';
+                addOptimizeLog('⚠ 錯誤：' + (e.message || String(e)));
+            }
+        };
+
+        function renderOptimizeResults(data) {
+            const container = document.getElementById('optimizeResults');
+            const summary = document.getElementById('optimizeSummary');
+            
+            const score = data.overall_score || 80;
+            const scoreColor = score >= 80 ? 'text-green-600' : score >= 60 ? 'text-amber-600' : 'text-red-600';
+            summary.innerHTML = `<span class="${scoreColor} font-bold">${score}分</span> · ${data.overall_comment || '檢查完成'}`;
+
+            let html = '';
+
+            if (data.issues && data.issues.length > 0) {
+                html += `<div class="space-y-3">
+                    <p class="label-sm text-[9px]" style="color:#dc2626">⚠️ 需要注意 (${data.issues.length})</p>`;
+                
+                data.issues.forEach(issue => {
+                    const severityStyle = {
+                        critical: 'border-red-400 bg-red-50',
+                        warning: 'border-amber-400 bg-amber-50',
+                        info: 'border-blue-400 bg-blue-50'
+                    };
+                    const severityIcon = {
+                        critical: '🚨',
+                        warning: '⚠️',
+                        info: 'ℹ️'
+                    };
+                    html += `
+                        <div class="p-4 rounded-[12px] border-l-4 ${severityStyle[issue.severity] || severityStyle.info}">
+                            <div class="flex items-start gap-2 mb-2">
+                                <span>${severityIcon[issue.severity] || '📌'}</span>
+                                <div class="flex-1">
+                                    <p class="text-sm font-bold text-[#1a1f17]">${issue.title}</p>
+                                    <p class="text-[10px] text-[#1a1f17]/50">${issue.day}</p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-[#1a1f17]/70 mb-2">${issue.description}</p>
+                            <div class="bg-white/60 rounded-[8px] p-2.5">
+                                <p class="text-[10px] font-bold text-[#3c4a35] mb-1">💡 建議</p>
+                                <p class="text-xs text-[#1a1f17]">${issue.suggestion}</p>
+                            </div>
+                        </div>`;
+                });
+                html += '</div>';
+            }
+
+            if (data.highlights && data.highlights.length > 0) {
+                html += `<div class="space-y-3 mt-4">
+                    <p class="label-sm text-[9px]" style="color:#16a34a">✨ 做得好 (${data.highlights.length})</p>`;
+                
+                data.highlights.forEach(h => {
+                    html += `
+                        <div class="p-3 rounded-[12px] bg-green-50 border border-green-200">
+                            <p class="text-sm font-bold text-green-700 mb-1">👍 ${h.title}</p>
+                            <p class="text-xs text-green-600">${h.description}</p>
+                        </div>`;
+                });
+                html += '</div>';
+            }
+
+            if (data.tips && data.tips.length > 0) {
+                html += `<div class="mt-4 p-4 rounded-[12px] bg-[#f5f0e8]">
+                    <p class="label-sm text-[9px] mb-2" style="color:#3c4a35">💡 額外建議</p>
+                    <ul class="space-y-1.5">`;
+                data.tips.forEach(tip => {
+                    html += `<li class="text-xs text-[#1a1f17]/70 flex items-start gap-2">
+                        <span class="text-[#3c4a35]">•</span>
+                        <span>${tip}</span>
+                    </li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            if ((!data.issues || data.issues.length === 0) && score >= 90) {
+                html += `<div class="text-center py-8">
+                    <div class="text-4xl mb-3">🎉</div>
+                    <p class="text-lg font-bold text-[#1a1f17] mb-2">完美的行程安排！</p>
+                    <p class="text-sm text-[#1a1f17]/50">你的行程規劃得很好，祝旅途愉快！</p>
+                </div>`;
+            }
+
+            container.innerHTML = html || '<p class="text-center text-[#1a1f17]/50 py-8">沒有找到問題 ✓</p>';
+        }
 
         window.resetAiPlanner = function() {
             _aiPlanData = null;
