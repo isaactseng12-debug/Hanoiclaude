@@ -1203,7 +1203,7 @@
         }
     }
 
-    // ── Claude API (via Vercel Edge Function) — for smart itinerary planning ─────────
+    // ── Claude API (via Vercel proxy) — for smart itinerary planning ─────────
     async function callClaude(systemPrompt, userPrompt) {
         const response = await fetch("/api/plan", {
             method: "POST",
@@ -1211,8 +1211,8 @@
             body: JSON.stringify({ systemPrompt, userPrompt })
         });
         if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            throw new Error(errData.error || `API error: ${response.status}`);
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error || "API error: " + response.status);
         }
         const data = await response.json();
         return data.text;
@@ -2867,6 +2867,7 @@ ${sheetContext}
         }
     }
 </script>
+
 
 </body>
 </html>
