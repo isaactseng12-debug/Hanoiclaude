@@ -3142,6 +3142,40 @@ ${scheduledNote}
 
                 if (!data.days || data.days.length === 0) throw new Error('沒有產生任何行程');
 
+                // ═══ 重複景點篩除（程式碼層面強制去重）═══
+                const seenPlaces = new Set();
+                let removedCount = 0;
+                
+                // 先收集已存在於行程中的景點
+                selectedDays.forEach(d => {
+                    const dayData = window.travelApp.itineraryData[d];
+                    (dayData?.items || []).forEach(i => { if(i.title) seenPlaces.add(i.title.toLowerCase().trim()); });
+                    (window.travelApp.customItems?.[d] || []).forEach(i => { 
+                        const name = i.title || i.name;
+                        if(name) seenPlaces.add(name.toLowerCase().trim()); 
+                    });
+                });
+                
+                // 遍歷 AI 回傳的每一天，移除重複景點
+                data.days.forEach(day => {
+                    if (!day.schedule) return;
+                    const originalLength = day.schedule.length;
+                    day.schedule = day.schedule.filter(item => {
+                        const name = (item.name || '').toLowerCase().trim();
+                        if (!name || name === '當地自行尋找') return true; // 保留空白或自行尋找
+                        if (seenPlaces.has(name)) {
+                            removedCount++;
+                            return false; // 移除重複
+                        }
+                        seenPlaces.add(name);
+                        return true;
+                    });
+                });
+                
+                if (removedCount > 0) {
+                    addLog(`⚠ 自動移除 ${removedCount} 個重複景點`);
+                }
+
                 _aiPlanData = data;
                 const totalSpots = data.days.reduce((s,d) => s + (d.schedule?.length||0), 0);
                 addLog(`規劃完成：${data.days.length} 天，共 ${totalSpots} 個地點`);
