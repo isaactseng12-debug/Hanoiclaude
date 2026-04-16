@@ -777,42 +777,6 @@
                             <p class="text-[10px] text-[#1a1f17]/40 mt-0.5">只清除手動加入的，原始表格資料不受影響</p>
                         </div>
                     </label>
-
-                    <!-- Transport Constraints -->
-                    <div class="border border-[#1a1f17]/10 rounded-[14px] overflow-hidden">
-                        <button onclick="toggleTransportSection()" class="w-full flex items-center justify-between p-4 bg-[#f5f0e8] hover:bg-[#ede6d8] transition-colors">
-                            <div class="flex items-center gap-2">
-                                <span class="text-base">✈️</span>
-                                <span class="text-sm font-bold text-[#1a1f17]">交通與航班限制</span>
-                                <span id="transportCount" class="text-[10px] bg-[#3c4a35] text-white px-2 py-0.5 rounded-full hidden">0</span>
-                            </div>
-                            <i data-lucide="chevron-down" class="w-4 h-4 text-[#1a1f17]/40 transition-transform" id="transportChevron"></i>
-                        </button>
-                        <div id="transportSection" class="hidden p-4 bg-white/50 space-y-3">
-                            <p class="text-[10px] text-[#1a1f17]/50">加入航班、火車等資訊，AI 會根據這些限制來安排行程</p>
-                            
-                            <div id="transportList" class="space-y-2"></div>
-                            
-                            <div class="grid grid-cols-12 gap-2">
-                                <select id="transportDay" class="col-span-3 text-xs p-2 rounded-[8px] border border-[#1a1f17]/10 bg-white">
-                                    <option value="">日期</option>
-                                </select>
-                                <select id="transportType" class="col-span-3 text-xs p-2 rounded-[8px] border border-[#1a1f17]/10 bg-white">
-                                    <option value="flight_arr">✈️ 抵達航班</option>
-                                    <option value="flight_dep">✈️ 離開航班</option>
-                                    <option value="train">🚂 火車</option>
-                                    <option value="bus">🚌 巴士</option>
-                                    <option value="other">📍 其他</option>
-                                </select>
-                                <input type="time" id="transportTime" class="col-span-3 text-xs p-2 rounded-[8px] border border-[#1a1f17]/10 bg-white" value="12:00">
-                                <button onclick="addTransport()" class="col-span-3 text-xs font-bold bg-[#3c4a35] text-white rounded-[8px] hover:bg-[#4a5a42] transition-colors">
-                                    + 新增
-                                </button>
-                            </div>
-                            <input type="text" id="transportDesc" placeholder="備註說明（如：航班編號、臥鋪火車去沙壩...）" 
-                                class="w-full text-xs p-2 rounded-[8px] border border-[#1a1f17]/10 bg-white">
-                        </div>
-                    </div>
                 </div>
 
                 <button onclick="runAiPlanner()" class="w-full py-4 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] font-bold text-sm flex items-center justify-center gap-2.5 hover:bg-[#2e3929] transition-all active:scale-95">
@@ -854,33 +818,18 @@
             </div>
         </div>
     </div>
-    <!-- ADD TO DAY MODAL -->
-    <div id="addToDayModal" class="modal-wrap" role="dialog" aria-modal="true">
-        <div class="modal-bg" id="addToDayModalBg" onclick="closeAddToDayModal()"></div>
-        <div class="modal-sheet" id="addToDayModalContent">
-            <div class="modal-handle md:hidden"></div>
-            <button onclick="closeAddToDayModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-white text-[#1c1612]/30 hover:bg-[var(--cream)] transition-colors">
-                <i data-lucide="x" class="w-4 h-4"></i>
-            </button>
-            <div class="mb-5 pr-10">
-                <p class="eyebrow mb-1.5 text-[#1a1f17]">Add to Plan</p>
-                <h3 class="display-title text-2xl text-[#1c1612] leading-tight truncate" id="addToDayItemName">Item Name</h3>
-            </div>
-            <div id="addToDayList" class="space-y-2.5 max-h-[50dvh] overflow-y-auto hide-scrollbar"></div>
-        </div>
-    </div>
 
-    <!-- OPTIMIZE MODAL (Tour Director) -->
-    <div id="optimizeModal" class="modal-wrap" role="dialog" aria-modal="true">
-        <div class="modal-bg" id="optimizeModalBg" onclick="closeOptimizeModal()"></div>
-        <div class="modal-sheet" id="optimizeModalContent" style="max-width:750px; max-height:92dvh; overflow-y:auto;">
+    <!-- TOUR DIRECTOR MODAL -->
+    <div id="tourModal" class="modal-wrap" role="dialog" aria-modal="true">
+        <div class="modal-bg" id="tourModalBg" onclick="closeTourModal()"></div>
+        <div class="modal-sheet" id="tourModalContent" style="max-width:750px; max-height:92dvh; overflow-y:auto;">
             <div class="modal-handle md:hidden"></div>
-            <button onclick="closeOptimizeModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-[#f5f0e8] text-[#1a1f17]/40 hover:bg-[#ede6d8] transition-colors z-10">
+            <button onclick="closeTourModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-[#f5f0e8] text-[#1a1f17]/40 hover:bg-[#ede6d8] transition-colors z-10">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
 
             <!-- Step 1: Mode Selection -->
-            <div id="optimizeStep1">
+            <div id="tourStep1">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-14 h-14 rounded-full bg-[#3c4a35] flex items-center justify-center flex-shrink-0">
                         <span class="text-2xl">🧭</span>
@@ -896,7 +845,7 @@
 
                 <!-- Mode Selection -->
                 <div class="space-y-2 mb-5">
-                    <label class="flex items-center gap-3 p-4 rounded-[14px] bg-[#1a1f17] cursor-pointer" onclick="setTourMode('plan')">
+                    <label class="tour-mode-card flex items-center gap-3 p-4 rounded-[14px] bg-[#1a1f17] cursor-pointer" data-mode="plan">
                         <input type="radio" name="tourMode" value="plan" class="sr-only" checked>
                         <div class="w-10 h-10 rounded-full bg-[#f5f0e8] flex items-center justify-center flex-shrink-0">
                             <span class="text-lg">✨</span>
@@ -905,11 +854,11 @@
                             <p class="text-sm font-bold text-[#f5f0e8]">規劃完整行程</p>
                             <p class="text-[10px] text-[#f5f0e8]/50">從零開始，幫你安排每一天的行程</p>
                         </div>
-                        <div class="w-5 h-5 rounded-full border-2 border-[#f5f0e8] flex items-center justify-center" id="modeCheckPlan">
+                        <div class="w-5 h-5 rounded-full border-2 border-[#f5f0e8] flex items-center justify-center tour-check">
                             <div class="w-2.5 h-2.5 rounded-full bg-[#f5f0e8]"></div>
                         </div>
                     </label>
-                    <label class="flex items-center gap-3 p-4 rounded-[14px] bg-[#f5f0e8] cursor-pointer" onclick="setTourMode('review')">
+                    <label class="tour-mode-card flex items-center gap-3 p-4 rounded-[14px] bg-[#f5f0e8] cursor-pointer" data-mode="review">
                         <input type="radio" name="tourMode" value="review" class="sr-only">
                         <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0">
                             <span class="text-lg">🔍</span>
@@ -918,8 +867,7 @@
                             <p class="text-sm font-bold text-[#1a1f17]">審核現有行程</p>
                             <p class="text-[10px] text-[#1a1f17]/50">檢查已安排的行程，提出修改建議</p>
                         </div>
-                        <div class="w-5 h-5 rounded-full border-2 border-[#1a1f17]/30 flex items-center justify-center" id="modeCheckReview">
-                        </div>
+                        <div class="w-5 h-5 rounded-full border-2 border-[#1a1f17]/30 flex items-center justify-center tour-check"></div>
                     </label>
                 </div>
 
@@ -929,7 +877,7 @@
                     <div id="tourDayCheckboxes" class="flex flex-wrap gap-2"></div>
                 </div>
 
-                <!-- Transport Constraints (collapsible) -->
+                <!-- Transport Constraints -->
                 <div class="border border-[#1a1f17]/10 rounded-[14px] overflow-hidden mb-5">
                     <button onclick="toggleTourTransport()" class="w-full flex items-center justify-between p-3 bg-[#f5f0e8] hover:bg-[#ede6d8] transition-colors">
                         <div class="flex items-center gap-2">
@@ -964,17 +912,17 @@
             </div>
 
             <!-- Step 2: Loading -->
-            <div id="optimizeStep2" class="hidden py-10 text-center">
+            <div id="tourStep2" class="hidden py-10 text-center">
                 <div class="w-16 h-16 rounded-full bg-[#f5f0e8] flex items-center justify-center mx-auto mb-5">
                     <span class="text-3xl animate-pulse">🧭</span>
                 </div>
                 <h3 class="display-title text-2xl text-[#1a1f17] mb-2" id="tourLoadingTitle">導遊規劃中…</h3>
-                <p id="optimizeStatus" class="text-sm text-[#1a1f17]/50 mb-6">正在分析景點清單</p>
-                <div class="space-y-2 text-left max-w-sm mx-auto text-xs text-[#1a1f17]/40" id="optimizeLog"></div>
+                <p id="tourStatus" class="text-sm text-[#1a1f17]/50 mb-6">正在分析景點清單</p>
+                <div class="space-y-2 text-left max-w-sm mx-auto text-xs text-[#1a1f17]/40" id="tourLog"></div>
             </div>
 
-            <!-- Step 3: Full Plan Result -->
-            <div id="optimizeStep3" class="hidden">
+            <!-- Step 3: Results -->
+            <div id="tourStep3" class="hidden">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-full bg-[#3c4a35] flex items-center justify-center flex-shrink-0">
@@ -982,23 +930,21 @@
                         </div>
                         <div>
                             <h3 class="display-title text-xl text-[#1a1f17]" id="tourResultTitle">導遊規劃</h3>
-                            <p class="text-xs text-[#1a1f17]/50" id="optimizeSummary"></p>
+                            <p class="text-xs text-[#1a1f17]/50" id="tourSummary"></p>
                         </div>
                     </div>
-                    <div id="optimizeScore" class="text-right hidden">
+                    <div id="tourScore" class="text-right hidden">
                         <p class="text-3xl font-black text-[#3c4a35]">--</p>
                         <p class="text-[9px] text-[#1a1f17]/40">整體評分</p>
                     </div>
                 </div>
 
                 <div id="tourOverview" class="bg-[#f5f0e8] rounded-[12px] p-4 mb-4 text-sm text-[#1a1f17]/80"></div>
-
                 <div id="tourPlanResult" class="space-y-4 mb-5 max-h-[45vh] overflow-y-auto"></div>
-                
                 <div id="tourExtras" class="mb-4"></div>
 
                 <div class="flex gap-3 pt-3 border-t border-[#1a1f17]/08">
-                    <button onclick="resetOptimize()" class="flex-1 py-3.5 bg-[#f5f0e8] text-[#1a1f17] rounded-[100px] text-sm font-bold hover:bg-[#ede6d8] transition-all flex items-center justify-center gap-2">
+                    <button onclick="resetTourDirector()" class="flex-1 py-3.5 bg-[#f5f0e8] text-[#1a1f17] rounded-[100px] text-sm font-bold hover:bg-[#ede6d8] transition-all flex items-center justify-center gap-2">
                         <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                         重新規劃
                     </button>
@@ -1010,14 +956,30 @@
             </div>
 
             <!-- Step 4: Applied -->
-            <div id="optimizeStep4" class="hidden py-10 text-center">
+            <div id="tourStep4" class="hidden py-10 text-center">
                 <div class="text-5xl mb-4">✅</div>
                 <h3 class="display-title text-2xl text-[#1a1f17] mb-2">行程已套用！</h3>
-                <p id="appliedSummary" class="text-sm text-[#1a1f17]/50 mb-6">已完成規劃</p>
-                <button onclick="closeOptimizeModal()" class="px-8 py-3.5 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] text-sm font-bold hover:bg-[#2e3929] transition-all">
+                <p id="tourAppliedSummary" class="text-sm text-[#1a1f17]/50 mb-6">已完成規劃</p>
+                <button onclick="closeTourModal()" class="px-8 py-3.5 bg-[#1a1f17] text-[#f5f0e8] rounded-[100px] text-sm font-bold hover:bg-[#2e3929] transition-all">
                     完成
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- ADD TO DAY MODAL -->
+    <div id="addToDayModal" class="modal-wrap" role="dialog" aria-modal="true">
+        <div class="modal-bg" id="addToDayModalBg" onclick="closeAddToDayModal()"></div>
+        <div class="modal-sheet" id="addToDayModalContent">
+            <div class="modal-handle md:hidden"></div>
+            <button onclick="closeAddToDayModal()" class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-[12px] bg-white text-[#1c1612]/30 hover:bg-[var(--cream)] transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <div class="mb-5 pr-10">
+                <p class="eyebrow mb-1.5 text-[#1a1f17]">Add to Plan</p>
+                <h3 class="display-title text-2xl text-[#1c1612] leading-tight truncate" id="addToDayItemName">Item Name</h3>
+            </div>
+            <div id="addToDayList" class="space-y-2.5 max-h-[50dvh] overflow-y-auto hide-scrollbar"></div>
         </div>
     </div>
 
@@ -1059,6 +1021,19 @@
 
         <!-- HOME -->
         <section id="home" class="tab-content space-y-4 md:space-y-6 pt-5 md:pt-8 pb-8">
+            <!-- DEBUG BUTTON -->
+            <button onclick="runColumnDebug()" class="w-full py-4 bg-red-500 text-white rounded-[16px] font-bold text-base shadow-lg">
+                🔍 檢查 Google Sheet 欄位對應（點我）
+            </button>
+            <div id="debugPanel" class="rounded-[12px] overflow-hidden hidden">
+                <div class="bg-[#1a1f17] text-white p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-black text-sm text-white">🔍 Google Sheet 診斷結果</span>
+                        <button onclick="document.getElementById('debugPanel').classList.add('hidden')" class="text-white/50 hover:text-white text-xs">關閉 ✕</button>
+                    </div>
+                    <div id="debugOutput" class="space-y-1.5 font-mono text-xs max-h-[400px] overflow-y-auto text-green-400"></div>
+                </div>
+            </div>
             <!-- HERO -->
             <div class="hero-wrap relative overflow-hidden rounded-[12px] md:rounded-[40px] h-[480px] md:h-[560px] bg-neutral-300">
                 <div class="hero-photo"></div>
@@ -1120,15 +1095,15 @@
                 <div class="flex items-center justify-between gap-3 mb-3">
                     <div id="dayButtons" class="flex flex-nowrap overflow-x-auto gap-2 hide-scrollbar flex-1"></div>
                     <button onclick="openSmartSchedule()"
-                        class="flex-shrink-0 flex items-center gap-2 bg-[#1c1612] text-white px-4 py-2.5 rounded-[12px] text-[10px] font-bold tracking-widest uppercase hover:bg-[#2c241c] active:scale-95 transition-all shadow-none whitespace-nowrap">
+                        class="flex-shrink-0 flex items-center gap-2 bg-[#f5f0e8] text-[#1a1f17] px-3 py-2.5 rounded-[12px] text-[10px] font-bold tracking-widest uppercase hover:bg-[#ede6d8] active:scale-95 transition-all whitespace-nowrap">
                         <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
-                        <span class="hidden sm:inline">智慧排程</span>
-                        <span class="sm:hidden">排程</span>
+                        <span class="hidden sm:inline">快速排程</span>
                     </button>
-                    <button onclick="openOptimizeCheck()"
-                        class="flex-shrink-0 flex items-center gap-2 bg-[#f5f0e8] text-[#1a1f17] px-4 py-2.5 rounded-[12px] text-[10px] font-bold tracking-widest uppercase hover:bg-[#ede6d8] active:scale-95 transition-all shadow-none whitespace-nowrap">
-                        <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
-                        <span class="hidden sm:inline">優化</span>
+                    <button onclick="openTourDirector()"
+                        class="flex-shrink-0 flex items-center gap-2 bg-[#1a1f17] text-[#f5f0e8] px-4 py-2.5 rounded-[12px] text-[10px] font-bold tracking-widest uppercase hover:bg-[#2e3929] active:scale-95 transition-all shadow-lg whitespace-nowrap">
+                        <span class="text-sm">🧭</span>
+                        <span class="hidden sm:inline">導遊規劃</span>
+                        <span class="sm:hidden">導遊</span>
                     </button>
                 </div>
             </div>
@@ -1142,15 +1117,6 @@
         <!-- EXPLORE -->
         <section id="explore" class="tab-content hidden pb-10">
 
-            <div id="debugPanel" class="mb-3 rounded-[12px] overflow-hidden hidden">
-                <div class="bg-[var(--ink)] text-white p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="font-black text-sm text-[#1a1f17]">🔍 Google Sheet 診斷</span>
-                        <button onclick="document.getElementById('debugPanel').classList.add('hidden')" class="text-white/50 hover:text-white text-xs">關閉 ✕</button>
-                    </div>
-                    <div id="debugOutput" class="space-y-1.5 font-mono text-xs max-h-72 overflow-y-auto"></div>
-                </div>
-            </div>
             <div class="flex flex-col sm:flex-row gap-3 sticky top-[65px] md:top-[69px] z-40 bg-[#3c4a35]/95 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-8 md:px-8 mb-3">
                 <div class="relative flex-1">
                     <select id="categoryFilter" class="field pr-10 text-[11px] font-bold tracking-widest appearance-none cursor-pointer"></select>
@@ -1392,19 +1358,22 @@
             }
         }
 
-        // ── Claude API (via Vercel proxy) — for smart itinerary planning ─────────
+        // ── Claude API (Anthropic) — for smart itinerary planning ─────────
         async function callClaude(systemPrompt, userPrompt) {
-            const response = await fetch("/api/plan", {
+            const response = await fetch("https://api.anthropic.com/v1/messages", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ systemPrompt, userPrompt })
+                body: JSON.stringify({
+                    model: "claude-sonnet-4-20250514",
+                    max_tokens: 4096,
+                    system: systemPrompt,
+                    messages: [{ role: "user", content: userPrompt }]
+                })
             });
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err.error || "API error: " + response.status);
-            }
+            if (!response.ok) throw new Error(`Claude API error: ${response.status}`);
             const data = await response.json();
-            return data.text;
+            const text = data.content.map(b => b.text || '').join('');
+            return text;
         }
 
         /* ── AI MODAL ── */
@@ -2120,6 +2089,108 @@
             } catch(e) {}
         };
 
+        /* ── COLUMN DEBUG ── */
+        window.runColumnDebug = async function() {
+            const debugPanel = document.getElementById('debugPanel');
+            const debugOutput = document.getElementById('debugOutput');
+            debugPanel.classList.remove('hidden');
+            debugOutput.innerHTML = '<div class="text-yellow-400">正在讀取 Google Sheet...</div>';
+            
+            try {
+                // Fetch Itinerary
+                let itinRows = null;
+                const itinNames = ["Itenerary","Itinerary","行程表","Day Plan","Sheet1"];
+                for (const name of itinNames) {
+                    try { 
+                        itinRows = await fetchSheet(name); 
+                        if (itinRows && itinRows.length > 0) {
+                            debugOutput.innerHTML += `<div class="text-cyan-400 mt-2">═══ 行程表 (${name}) ═══</div>`;
+                            break; 
+                        }
+                    } catch(e) {}
+                }
+                
+                if (itinRows && itinRows.length > 0) {
+                    // Show first 3 rows
+                    debugOutput.innerHTML += `<div class="text-white">找到 ${itinRows.length} 行數據</div>`;
+                    debugOutput.innerHTML += `<div class="text-gray-400 mt-1">前3行數據：</div>`;
+                    
+                    itinRows.slice(0, 3).forEach((row, rowIdx) => {
+                        if (!row || !row.c) return;
+                        let rowData = [];
+                        for (let i = 0; i < Math.min(row.c.length, 12); i++) {
+                            const cell = row.c[i];
+                            const val = cell ? (cell.f || cell.v || '') : '';
+                            rowData.push(`[${i}]${String(val).substring(0,15)}`);
+                        }
+                        debugOutput.innerHTML += `<div class="text-green-400">Row${rowIdx}: ${rowData.join(' | ')}</div>`;
+                    });
+                    
+                    debugOutput.innerHTML += `<div class="text-yellow-400 mt-2">期望欄位：</div>`;
+                    debugOutput.innerHTML += `<div class="text-white">[0]日期 [1]時間 [2]類型 [3]地區 [4]名稱 [5]備註 [6]地址 [7]電話 [8]圖片 [9]營業 [10]評分</div>`;
+                } else {
+                    debugOutput.innerHTML += `<div class="text-red-400">找不到行程表 Sheet</div>`;
+                }
+                
+                // Fetch Explore
+                let exploreRows = null;
+                const exploreNames = ["visit List","Visit List","Explore","景點清單","地點清單"];
+                for (const name of exploreNames) {
+                    try { 
+                        exploreRows = await fetchSheet(name); 
+                        if (exploreRows && exploreRows.length > 0) {
+                            debugOutput.innerHTML += `<div class="text-cyan-400 mt-4">═══ 景點清單 (${name}) ═══</div>`;
+                            break; 
+                        }
+                    } catch(e) {}
+                }
+                
+                if (exploreRows && exploreRows.length > 0) {
+                    debugOutput.innerHTML += `<div class="text-white">找到 ${exploreRows.length} 行數據</div>`;
+                    debugOutput.innerHTML += `<div class="text-gray-400 mt-1">前3行數據：</div>`;
+                    
+                    exploreRows.slice(0, 3).forEach((row, rowIdx) => {
+                        if (!row || !row.c) return;
+                        let rowData = [];
+                        for (let i = 0; i < Math.min(row.c.length, 12); i++) {
+                            const cell = row.c[i];
+                            const val = cell ? (cell.f || cell.v || '') : '';
+                            rowData.push(`[${i}]${String(val).substring(0,15)}`);
+                        }
+                        debugOutput.innerHTML += `<div class="text-green-400">Row${rowIdx}: ${rowData.join(' | ')}</div>`;
+                    });
+                    
+                    debugOutput.innerHTML += `<div class="text-yellow-400 mt-2">期望欄位：</div>`;
+                    debugOutput.innerHTML += `<div class="text-white">[0]分類 [1]地區 [2]名稱 [3]營業 [4]名稱備 [5]備註 [6]地址 [7-10]圖片 [10]評分</div>`;
+                } else {
+                    debugOutput.innerHTML += `<div class="text-red-400">找不到景點清單 Sheet</div>`;
+                }
+                
+                debugOutput.innerHTML += `<div class="text-yellow-400 mt-4">═══ 目前載入的數據 ═══</div>`;
+                const days = Object.keys(window.travelApp.itineraryData || {});
+                debugOutput.innerHTML += `<div class="text-white">行程：${days.length} 天</div>`;
+                if (days.length > 0) {
+                    const firstDay = days[0];
+                    const items = window.travelApp.itineraryData[firstDay]?.items || [];
+                    debugOutput.innerHTML += `<div class="text-gray-400">${firstDay} 有 ${items.length} 個項目</div>`;
+                    if (items.length > 0) {
+                        const item = items[0];
+                        debugOutput.innerHTML += `<div class="text-green-400">第一項: 時間=${item.time} 類型=${item.type} 地區=${item.area} 名稱=${item.title}</div>`;
+                    }
+                }
+                
+                const exploreItems = window.travelApp.exploreData || [];
+                debugOutput.innerHTML += `<div class="text-white mt-2">景點：${exploreItems.length} 個</div>`;
+                if (exploreItems.length > 0) {
+                    const item = exploreItems[0];
+                    debugOutput.innerHTML += `<div class="text-green-400">第一項: 分類=${item.category} 地區=${item.area} 名稱=${item.name}</div>`;
+                }
+                
+            } catch(e) {
+                debugOutput.innerHTML += `<div class="text-red-400">錯誤：${e.message}</div>`;
+            }
+        };
+
         /* ── LOAD EXPLORE ── */
         async function loadExplore() {
             try {
@@ -2414,140 +2485,6 @@
         /* ── AI DAY PLANNER ── */
         let _aiStartTime = '08:00';
         let _aiPlanData  = null;   // stores parsed plan from Gemini
-        let _transportConstraints = []; // stores transport/flight info
-
-        // Load transport constraints from localStorage
-        function loadTransportConstraints() {
-            try {
-                const saved = localStorage.getItem('hanoi_transport');
-                if (saved) _transportConstraints = JSON.parse(saved);
-            } catch(e) { console.error('Load transport error:', e); }
-            renderTransportList();
-            updateTransportCount();
-        }
-
-        function saveTransportConstraints() {
-            try {
-                localStorage.setItem('hanoi_transport', JSON.stringify(_transportConstraints));
-            } catch(e) { console.error('Save transport error:', e); }
-            updateTransportCount();
-        }
-
-        function updateTransportCount() {
-            const countEl = document.getElementById('transportCount');
-            if (countEl) {
-                if (_transportConstraints.length > 0) {
-                    countEl.textContent = _transportConstraints.length;
-                    countEl.classList.remove('hidden');
-                } else {
-                    countEl.classList.add('hidden');
-                }
-            }
-        }
-
-        window.toggleTransportSection = function() {
-            const section = document.getElementById('transportSection');
-            const chevron = document.getElementById('transportChevron');
-            if (section.classList.contains('hidden')) {
-                section.classList.remove('hidden');
-                chevron.style.transform = 'rotate(180deg)';
-                populateTransportDays();
-            } else {
-                section.classList.add('hidden');
-                chevron.style.transform = 'rotate(0deg)';
-            }
-        };
-
-        function populateTransportDays() {
-            const select = document.getElementById('transportDay');
-            if (!select) return;
-            const days = Object.keys(window.travelApp.itineraryData).sort((a,b)=>{
-                const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
-                return (am*100+(ad||0))-(bm*100+(bd||0));
-            });
-            select.innerHTML = '<option value="">日期</option>' + days.map(d => `<option value="${d}">${d}</option>`).join('');
-        }
-
-        window.addTransport = function() {
-            const day = document.getElementById('transportDay').value;
-            const type = document.getElementById('transportType').value;
-            const time = document.getElementById('transportTime').value;
-            const desc = document.getElementById('transportDesc').value.trim();
-            
-            if (!day) { showToast('請選擇日期'); return; }
-            if (!time) { showToast('請選擇時間'); return; }
-
-            const typeLabels = {
-                'flight_arr': '✈️ 抵達航班',
-                'flight_dep': '✈️ 離開航班',
-                'train': '🚂 火車',
-                'bus': '🚌 巴士',
-                'other': '📍 其他'
-            };
-
-            _transportConstraints.push({
-                id: 'tr_' + Date.now(),
-                day, type, time, desc,
-                label: typeLabels[type] || type
-            });
-
-            saveTransportConstraints();
-            renderTransportList();
-            
-            // Clear inputs
-            document.getElementById('transportDesc').value = '';
-            showToast('已新增交通限制');
-        };
-
-        window.removeTransport = function(id) {
-            _transportConstraints = _transportConstraints.filter(t => t.id !== id);
-            saveTransportConstraints();
-            renderTransportList();
-        };
-
-        function renderTransportList() {
-            const list = document.getElementById('transportList');
-            if (!list) return;
-            
-            if (_transportConstraints.length === 0) {
-                list.innerHTML = '<p class="text-[10px] text-[#1a1f17]/30 text-center py-2">尚未新增任何交通限制</p>';
-                return;
-            }
-
-            list.innerHTML = _transportConstraints.map(t => `
-                <div class="flex items-center justify-between p-2 bg-[#f5f0e8] rounded-[8px] text-xs">
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-[#3c4a35]">${t.day}</span>
-                        <span class="text-[#1a1f17]/60">${t.time}</span>
-                        <span>${t.label}</span>
-                        ${t.desc ? `<span class="text-[#1a1f17]/40">· ${t.desc}</span>` : ''}
-                    </div>
-                    <button onclick="removeTransport('${t.id}')" class="text-red-400 hover:text-red-600 px-2">✕</button>
-                </div>
-            `).join('');
-        }
-
-        function getTransportGuideForAI() {
-            if (_transportConstraints.length === 0) return '';
-            
-            const constraints = _transportConstraints.map(t => {
-                let impact = '';
-                if (t.type === 'flight_arr') {
-                    impact = `${t.day} ${t.time} 才抵達，當天行程要從這個時間之後開始安排`;
-                } else if (t.type === 'flight_dep') {
-                    impact = `${t.day} ${t.time} 要搭機離開，需提前3-4小時結束行程去機場`;
-                } else if (t.type === 'train') {
-                    impact = `${t.day} ${t.time} 要搭火車，需提前1小時抵達車站`;
-                } else if (t.type === 'bus') {
-                    impact = `${t.day} ${t.time} 要搭巴士，需提前30分鐘抵達上車點`;
-                } else {
-                    impact = `${t.day} ${t.time} 有交通安排，請注意時間`;
-                }
-                return `- ${t.label}：${t.desc || ''} → ${impact}`;
-            }).join('\n');
-
-            return `\n═══ 交通限制（非常重要！必須遵守）═══\n${constraints}\n`;
-        }
 
         // ── UI helpers ───────────────────────────────────────────────────
         window.setStartTime = function(t) {
@@ -2598,9 +2535,6 @@
                 showToast('請先到「探索」頁確認景點資料已載入');
                 return;
             }
-            // Load transport constraints
-            loadTransportConstraints();
-            
             // Populate day checkboxes
             const days = Object.keys(window.travelApp.itineraryData).sort((a,b)=>{
                 const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
@@ -2639,598 +2573,6 @@
             document.getElementById('smartModalContent').classList.remove('visible');
             setTimeout(() => document.getElementById('smartModal').classList.remove('open'), 350);
         };
-
-        // ── Tour Director Functions ────────────────────────────
-        let _tourMode = 'plan'; // 'plan' or 'review'
-        let _tourPlanData = null;
-        let _tourTransport = [];
-
-        window.setTourMode = function(mode) {
-            _tourMode = mode;
-            const planCheck = document.getElementById('modeCheckPlan');
-            const reviewCheck = document.getElementById('modeCheckReview');
-            const planLabel = planCheck?.closest('label');
-            const reviewLabel = reviewCheck?.closest('label');
-            const actionBtn = document.getElementById('tourActionBtn');
-            
-            if (mode === 'plan') {
-                planLabel.className = 'flex items-center gap-3 p-4 rounded-[14px] bg-[#1a1f17] cursor-pointer';
-                planLabel.querySelector('p.text-sm').className = 'text-sm font-bold text-[#f5f0e8]';
-                planLabel.querySelector('p.text-\\[10px\\]').className = 'text-[10px] text-[#f5f0e8]/50';
-                planCheck.innerHTML = '<div class="w-2.5 h-2.5 rounded-full bg-[#f5f0e8]"></div>';
-                
-                reviewLabel.className = 'flex items-center gap-3 p-4 rounded-[14px] bg-[#f5f0e8] cursor-pointer';
-                reviewLabel.querySelector('p.text-sm').className = 'text-sm font-bold text-[#1a1f17]';
-                reviewLabel.querySelector('p.text-\\[10px\\]').className = 'text-[10px] text-[#1a1f17]/50';
-                reviewCheck.innerHTML = '';
-                
-                actionBtn.textContent = '開始規劃';
-            } else {
-                reviewLabel.className = 'flex items-center gap-3 p-4 rounded-[14px] bg-[#1a1f17] cursor-pointer';
-                reviewLabel.querySelector('p.text-sm').className = 'text-sm font-bold text-[#f5f0e8]';
-                reviewLabel.querySelector('p.text-\\[10px\\]').className = 'text-[10px] text-[#f5f0e8]/50';
-                reviewCheck.innerHTML = '<div class="w-2.5 h-2.5 rounded-full bg-[#f5f0e8]"></div>';
-                
-                planLabel.className = 'flex items-center gap-3 p-4 rounded-[14px] bg-[#f5f0e8] cursor-pointer';
-                planLabel.querySelector('p.text-sm').className = 'text-sm font-bold text-[#1a1f17]';
-                planLabel.querySelector('p.text-\\[10px\\]').className = 'text-[10px] text-[#1a1f17]/50';
-                planCheck.innerHTML = '';
-                
-                actionBtn.textContent = '開始審核';
-            }
-        };
-
-        window.openOptimizeCheck = function() {
-            _tourPlanData = null;
-            _tourMode = 'plan';
-            
-            // Load transport
-            try {
-                const saved = localStorage.getItem('hanoi_transport');
-                if (saved) _tourTransport = JSON.parse(saved);
-            } catch(e) { _tourTransport = []; }
-            
-            // Populate days
-            const days = Object.keys(window.travelApp.itineraryData).sort((a,b)=>{
-                const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
-                return (am*100+(ad||0))-(bm*100+(bd||0));
-            });
-            
-            const dayBox = document.getElementById('tourDayCheckboxes');
-            if (dayBox) {
-                dayBox.innerHTML = days.map(d => `
-                    <label class="flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all bg-[#1a1f17] text-[#f5f0e8]">
-                        <input type="checkbox" value="${d}" class="tour-day-cb sr-only" checked>
-                        <span class="text-[11px] font-bold">${d}</span>
-                    </label>`).join('');
-                dayBox.querySelectorAll('label').forEach(lbl => {
-                    lbl.addEventListener('click', () => {
-                        setTimeout(() => {
-                            const checked = lbl.querySelector('input').checked;
-                            lbl.className = `flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all ${
-                                checked ? 'bg-[#1a1f17] text-[#f5f0e8]' : 'bg-[#f5f0e8] text-[#1a1f17]/50'}`;
-                        },0);
-                    });
-                });
-            }
-            
-            // Populate transport day select
-            const transportDaySelect = document.getElementById('tourTransportDay');
-            if (transportDaySelect) {
-                transportDaySelect.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join('');
-            }
-            
-            renderTourTransportList();
-            updateTourTransportCount();
-            
-            showOptimizeStep('optimizeStep1');
-            const modal = document.getElementById('optimizeModal');
-            modal.classList.add('open');
-            setTimeout(() => {
-                document.getElementById('optimizeModalBg').classList.add('visible');
-                document.getElementById('optimizeModalContent').classList.add('visible');
-            }, 10);
-            safeCreateIcons();
-        };
-
-        window.closeOptimizeModal = function() {
-            document.getElementById('optimizeModalBg').classList.remove('visible');
-            document.getElementById('optimizeModalContent').classList.remove('visible');
-            setTimeout(() => document.getElementById('optimizeModal').classList.remove('open'), 350);
-        };
-
-        window.resetOptimize = function() {
-            _tourPlanData = null;
-            showOptimizeStep('optimizeStep1');
-        };
-
-        function showOptimizeStep(id) {
-            ['optimizeStep1','optimizeStep2','optimizeStep3','optimizeStep4'].forEach(s => {
-                const el = document.getElementById(s);
-                if (el) el.classList.toggle('hidden', s !== id);
-            });
-            safeCreateIcons();
-        }
-
-        function addOptimizeLog(msg) {
-            const log = document.getElementById('optimizeLog');
-            if (!log) return;
-            const d = document.createElement('div');
-            d.className = 'flex items-center gap-2';
-            d.innerHTML = `<span class="text-[#3c4a35]">✓</span><span>${msg}</span>`;
-            log.appendChild(d);
-        }
-
-        // Transport management for Tour Director
-        window.toggleTourTransport = function() {
-            const section = document.getElementById('tourTransportSection');
-            const chevron = document.getElementById('tourTransportChevron');
-            if (section.classList.contains('hidden')) {
-                section.classList.remove('hidden');
-                chevron.style.transform = 'rotate(180deg)';
-            } else {
-                section.classList.add('hidden');
-                chevron.style.transform = 'rotate(0deg)';
-            }
-        };
-
-        window.addTourTransport = function() {
-            const day = document.getElementById('tourTransportDay').value;
-            const type = document.getElementById('tourTransportType').value;
-            const time = document.getElementById('tourTransportTime').value;
-            const desc = document.getElementById('tourTransportDesc').value.trim();
-            
-            if (!day || !time) { showToast('請選擇日期和時間'); return; }
-
-            const typeLabels = {
-                'flight_arr': '✈️ 抵達',
-                'flight_dep': '✈️ 離開',
-                'train': '🚂 火車',
-                'bus': '🚌 巴士'
-            };
-
-            _tourTransport.push({ id: 'tr_' + Date.now(), day, type, time, desc, label: typeLabels[type] });
-            localStorage.setItem('hanoi_transport', JSON.stringify(_tourTransport));
-            renderTourTransportList();
-            updateTourTransportCount();
-            document.getElementById('tourTransportDesc').value = '';
-        };
-
-        window.removeTourTransport = function(id) {
-            _tourTransport = _tourTransport.filter(t => t.id !== id);
-            localStorage.setItem('hanoi_transport', JSON.stringify(_tourTransport));
-            renderTourTransportList();
-            updateTourTransportCount();
-        };
-
-        function renderTourTransportList() {
-            const list = document.getElementById('tourTransportList');
-            if (!list) return;
-            if (_tourTransport.length === 0) {
-                list.innerHTML = '<p class="text-[10px] text-[#1a1f17]/30 text-center py-1">尚未新增交通限制</p>';
-                return;
-            }
-            list.innerHTML = _tourTransport.map(t => `
-                <div class="flex items-center justify-between p-1.5 bg-[#f5f0e8] rounded-[6px]">
-                    <span><strong>${t.day}</strong> ${t.time} ${t.label} ${t.desc ? '· '+t.desc : ''}</span>
-                    <button onclick="removeTourTransport('${t.id}')" class="text-red-400 hover:text-red-600 px-1">✕</button>
-                </div>
-            `).join('');
-        }
-
-        function updateTourTransportCount() {
-            const countEl = document.getElementById('tourTransportCount');
-            if (countEl) {
-                if (_tourTransport.length > 0) {
-                    countEl.textContent = _tourTransport.length;
-                    countEl.classList.remove('hidden');
-                } else {
-                    countEl.classList.add('hidden');
-                }
-            }
-        }
-
-        function getTourTransportGuide() {
-            if (_tourTransport.length === 0) return '';
-            const lines = _tourTransport.map(t => {
-                if (t.type === 'flight_arr') return `- ${t.day} ${t.time} 航班抵達：當天行程從這時間之後開始 ${t.desc ? '('+t.desc+')' : ''}`;
-                if (t.type === 'flight_dep') return `- ${t.day} ${t.time} 航班離開：當天行程必須提前3-4小時結束，留時間去機場 ${t.desc ? '('+t.desc+')' : ''}`;
-                if (t.type === 'train') return `- ${t.day} ${t.time} 搭火車：當天行程必須提前2小時結束，留時間拿行李去車站 ${t.desc ? '('+t.desc+')' : ''}`;
-                if (t.type === 'bus') return `- ${t.day} ${t.time} 搭巴士：當天行程必須提前1小時結束 ${t.desc ? '('+t.desc+')' : ''}`;
-                return `- ${t.day} ${t.time} ${t.label} ${t.desc || ''}`;
-            }).join('\n');
-            return `\n═══ 交通限制（必須嚴格遵守）═══\n${lines}\n`;
-        }
-
-        // Main Tour Director function
-        window.runTourDirector = async function() {
-            const selectedDays = [...document.querySelectorAll('.tour-day-cb:checked')].map(cb => cb.value);
-            if (selectedDays.length === 0) { showToast('請選擇至少一天'); return; }
-
-            showOptimizeStep('optimizeStep2');
-            document.getElementById('optimizeLog').innerHTML = '';
-            
-            const isPlanning = _tourMode === 'plan';
-            document.getElementById('tourLoadingTitle').textContent = isPlanning ? '導遊規劃中…' : '導遊審核中…';
-            document.getElementById('optimizeStatus').textContent = isPlanning ? '正在分析景點清單' : '正在檢查現有行程';
-
-            // Get explore data (Google Sheet places)
-            const exploreData = window.travelApp.exploreData || [];
-            addOptimizeLog(`Google Sheet 有 ${exploreData.length} 個景點`);
-
-            // Get existing itinerary
-            const existingItinerary = selectedDays.map(day => {
-                const dayData = window.travelApp.itineraryData[day] || { items: [] };
-                const customItems = window.travelApp.customItems?.[day] || [];
-                return {
-                    date: day,
-                    accommodation: dayData.accommodation?.title || '',
-                    sheetItems: (dayData.items || []).map(i => ({ name: i.title, type: i.type, time: i.time })),
-                    customItems: customItems.map(i => ({ name: i.title || i.name, type: i.type, time: i.time }))
-                };
-            });
-            
-            addOptimizeLog(`選擇了 ${selectedDays.length} 天`);
-
-            // Build places list
-            const placesList = exploreData.map(p => {
-                return `【${p.name || p.title}】類別:${p.category || '景點'} | 地區:${p.area || ''} | 評分:${p.rating || ''} | 營業:${p.openTime || ''}`;
-            }).join('\n');
-
-            const transportGuide = getTourTransportGuide();
-            if (_tourTransport.length > 0) {
-                addOptimizeLog(`交通限制：${_tourTransport.length} 項`);
-            }
-
-            const systemPrompt = `你是一位有20年經驗的越南河內資深導遊，專門帶台灣旅客自由行。
-
-你的專業：
-- 熟悉河內每個區域的地理位置和交通時間
-- 知道每個景點最適合的參觀時段
-- 了解台灣旅客的喜好（咖啡、美食、拍照）
-- 會考慮旅客體力（第一天輕鬆、中間充實、最後一天留時間購物）
-- 絕對不會讓同一個景點出現兩次
-
-規劃原則：
-- 優先使用客人清單上的景點
-- 清單不足時，補充你知道的河內私房景點
-- 每天行程要有節奏：早餐→景點→午餐→咖啡→景點→晚餐
-- 同一天的景點盡量在同一區域
-
-你必須回覆有效的 JSON 格式。`;
-
-            let userPrompt;
-            
-            if (isPlanning) {
-                userPrompt = `請幫我規劃河內旅遊行程。
-
-═══ 客人的景點清單（優先使用這些）═══
-${placesList || '（清單為空，請用你的推薦）'}
-${transportGuide}
-═══ 需要規劃的日期 ═══
-${selectedDays.join('、')}
-
-═══ 現有資料參考 ═══
-${JSON.stringify(existingItinerary, null, 2)}
-
-═══ 規劃要求 ═══
-1. 每天從早餐開始，到晚餐結束
-2. 優先使用清單上的景點，名稱要完全一致
-3. 清單沒有的，可以補充你推薦的河內景點（標記 from_guide: true）
-4. 同一個景點只能出現一次（整趟旅程不重複）
-5. 每天 5-7 個地點
-6. 如有交通限制，必須嚴格遵守時間
-
-═══ 回覆格式（JSON）═══
-{
-  "overview": "整體規劃說明，2-3句話",
-  "days": [
-    {
-      "date": "4/17",
-      "theme": "今日主題（有畫面感）",
-      "schedule": [
-        {
-          "time": "08:00",
-          "name": "景點名稱",
-          "type": "早餐",
-          "duration": 60,
-          "tip": "一句貼心說明",
-          "from_guide": false
-        }
-      ]
-    }
-  ],
-  "tips": ["旅遊小提醒1", "旅遊小提醒2"]
-}
-
-type 可以是：早餐、午餐、晚餐、咖啡、景點、購物、夜間
-請用繁體中文回覆。`;
-            } else {
-                // Review mode
-                userPrompt = `請審核這個河內行程，找出問題並提供修改建議。
-
-═══ 現有行程 ═══
-${JSON.stringify(existingItinerary, null, 2)}
-
-═══ 客人的景點清單 ═══
-${placesList}
-${transportGuide}
-═══ 回覆格式（JSON）═══
-{
-  "score": 78,
-  "overview": "整體評價，說明優缺點",
-  "issues": [
-    {
-      "priority": "high",
-      "title": "問題標題",
-      "description": "問題說明",
-      "suggestion": "具體建議"
-    }
-  ],
-  "recommendations": [
-    {
-      "day": "4/17",
-      "action": "add",
-      "name": "建議新增的景點",
-      "time": "15:00",
-      "reason": "為什麼要加這個"
-    }
-  ],
-  "highlights": ["做得好的地方"],
-  "tips": ["旅遊小提醒"]
-}
-
-priority: high/medium/low
-action: add/remove/move/change_time
-請用繁體中文回覆。`;
-            }
-
-            addOptimizeLog('等待導遊回覆…');
-
-            try {
-                const raw = await callClaude(systemPrompt, userPrompt);
-                addOptimizeLog('收到回覆，解析中…');
-
-                const cleaned = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
-                const jStart = cleaned.indexOf('{');
-                const jEnd = cleaned.lastIndexOf('}');
-                if (jStart === -1) throw new Error('回覆格式錯誤');
-                _tourPlanData = JSON.parse(cleaned.slice(jStart, jEnd+1));
-                _tourPlanData._mode = _tourMode;
-                _tourPlanData._selectedDays = selectedDays;
-
-                if (isPlanning) {
-                    // Deduplicate across days
-                    const seen = new Set();
-                    let removed = 0;
-                    (_tourPlanData.days || []).forEach(day => {
-                        if (!day.schedule) return;
-                        day.schedule = day.schedule.filter(item => {
-                            const name = (item.name || '').toLowerCase().replace(/\s+/g,'');
-                            if (!name || name.includes('自行尋找')) return true;
-                            if (seen.has(name)) { removed++; return false; }
-                            seen.add(name);
-                            return true;
-                        });
-                    });
-                    if (removed > 0) addOptimizeLog(`自動移除 ${removed} 個重複景點`);
-                }
-
-                renderTourPlanResult(_tourPlanData);
-                showOptimizeStep('optimizeStep3');
-
-            } catch(e) {
-                console.error('Tour Director error:', e);
-                document.getElementById('optimizeStatus').textContent = '發生錯誤，請稍後再試';
-                addOptimizeLog('⚠ 錯誤：' + (e.message || String(e)));
-            }
-        };
-
-        function renderTourPlanResult(data) {
-            const isPlanning = data._mode === 'plan';
-            
-            document.getElementById('tourResultTitle').textContent = isPlanning ? '導遊規劃' : '審核報告';
-            document.getElementById('optimizeSummary').textContent = isPlanning 
-                ? `${data.days?.length || 0} 天完整行程` 
-                : `${data.issues?.length || 0} 項建議`;
-
-            // Score (review mode only)
-            const scoreEl = document.getElementById('optimizeScore');
-            if (isPlanning) {
-                scoreEl.classList.add('hidden');
-            } else {
-                scoreEl.classList.remove('hidden');
-                const score = data.score || 75;
-                scoreEl.innerHTML = `
-                    <p class="text-3xl font-black ${score >= 80 ? 'text-green-600' : score >= 60 ? 'text-amber-600' : 'text-red-600'}">${score}</p>
-                    <p class="text-[9px] text-[#1a1f17]/40">整體評分</p>`;
-            }
-
-            // Overview
-            document.getElementById('tourOverview').innerHTML = `<p class="leading-relaxed">${data.overview || ''}</p>`;
-
-            // Main content
-            const container = document.getElementById('tourPlanResult');
-            
-            if (isPlanning && data.days) {
-                // Planning mode: show day-by-day schedule with checkboxes
-                container.innerHTML = data.days.map((day, dayIdx) => {
-                    const scheduleHtml = (day.schedule || []).map((item, itemIdx) => {
-                        const isFromGuide = item.from_guide;
-                        return `
-                            <div class="flex items-start gap-2 py-2 ${itemIdx < day.schedule.length - 1 ? 'border-b border-[#1a1f17]/05' : ''}">
-                                <span class="text-[10px] text-[#1a1f17]/40 w-12 flex-shrink-0 pt-0.5">${item.time}</span>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-xs font-bold text-[#1a1f17]">${item.name}</span>
-                                        ${isFromGuide ? '<span class="text-[8px] bg-[#3c4a35] text-white px-1.5 py-0.5 rounded-full">導遊推薦</span>' : ''}
-                                    </div>
-                                    <p class="text-[10px] text-[#1a1f17]/50">${item.tip || ''}</p>
-                                </div>
-                                <span class="text-[9px] px-2 py-0.5 rounded-full bg-[#f5f0e8] text-[#1a1f17]/60">${item.type}</span>
-                            </div>
-                        `;
-                    }).join('');
-
-                    return `
-                        <div class="border border-[#1a1f17]/10 rounded-[14px] overflow-hidden">
-                            <label class="flex items-center gap-3 p-3 bg-[#f5f0e8] cursor-pointer">
-                                <input type="checkbox" class="tour-day-apply-cb accent-[#3c4a35] w-5 h-5" data-day-idx="${dayIdx}" checked>
-                                <div class="flex-1">
-                                    <p class="text-sm font-bold text-[#1a1f17]">${day.date}</p>
-                                    <p class="text-[10px] text-[#1a1f17]/50">${day.theme || ''}</p>
-                                </div>
-                                <span class="text-[10px] text-[#1a1f17]/40">${day.schedule?.length || 0} 個地點</span>
-                            </label>
-                            <div class="p-3 bg-white/50">
-                                ${scheduleHtml}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } else if (data.issues || data.recommendations) {
-                // Review mode: show issues and recommendations
-                let html = '';
-                
-                if (data.issues && data.issues.length > 0) {
-                    html += data.issues.map(issue => {
-                        const style = issue.priority === 'high' ? 'border-l-red-500 bg-red-50' 
-                            : issue.priority === 'medium' ? 'border-l-amber-500 bg-amber-50' 
-                            : 'border-l-blue-500 bg-blue-50';
-                        return `
-                            <div class="p-3 rounded-[12px] border-l-4 ${style}">
-                                <p class="text-sm font-bold text-[#1a1f17] mb-1">${issue.title}</p>
-                                <p class="text-xs text-[#1a1f17]/60 mb-2">${issue.description}</p>
-                                <p class="text-xs text-[#3c4a35]">💡 ${issue.suggestion}</p>
-                            </div>
-                        `;
-                    }).join('');
-                }
-                
-                if (data.recommendations && data.recommendations.length > 0) {
-                    html += `<p class="text-[10px] font-bold text-[#3c4a35] mt-4 mb-2">推薦修改</p>`;
-                    html += data.recommendations.map((rec, idx) => `
-                        <label class="flex items-start gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer mb-2">
-                            <input type="checkbox" class="tour-rec-cb accent-[#3c4a35] w-4 h-4 mt-0.5" data-idx="${idx}" checked>
-                            <div class="flex-1">
-                                <p class="text-xs font-bold text-[#1a1f17]">${rec.day} · ${rec.action === 'add' ? '新增' : rec.action === 'remove' ? '移除' : '調整'} ${rec.name}</p>
-                                <p class="text-[10px] text-[#1a1f17]/50">${rec.reason || ''}</p>
-                            </div>
-                        </label>
-                    `).join('');
-                }
-                
-                container.innerHTML = html || '<p class="text-center py-6 text-[#1a1f17]/50">🎉 行程很完美！</p>';
-            }
-
-            // Extras
-            let extrasHtml = '';
-            if (data.highlights && data.highlights.length > 0) {
-                extrasHtml += `<div class="bg-green-50 rounded-[12px] p-3 mb-2">
-                    <p class="text-[10px] font-bold text-green-700 mb-1">✨ 亮點</p>
-                    <ul class="text-xs text-green-600 space-y-0.5">
-                        ${data.highlights.map(h => `<li>• ${h}</li>`).join('')}
-                    </ul>
-                </div>`;
-            }
-            if (data.tips && data.tips.length > 0) {
-                extrasHtml += `<div class="bg-[#f5f0e8] rounded-[12px] p-3">
-                    <p class="text-[10px] font-bold text-[#3c4a35] mb-1">💡 小提醒</p>
-                    <ul class="text-xs text-[#1a1f17]/60 space-y-0.5">
-                        ${data.tips.map(t => `<li>• ${t}</li>`).join('')}
-                    </ul>
-                </div>`;
-            }
-            document.getElementById('tourExtras').innerHTML = extrasHtml;
-        }
-
-        window.applyTourPlan = function() {
-            if (!_tourPlanData) return;
-            
-            const isPlanning = _tourPlanData._mode === 'plan';
-            let appliedCount = 0;
-
-            if (isPlanning && _tourPlanData.days) {
-                // Get selected days to apply
-                const selectedDayIdxs = [...document.querySelectorAll('.tour-day-apply-cb:checked')].map(cb => parseInt(cb.dataset.dayIdx));
-                
-                selectedDayIdxs.forEach(idx => {
-                    const dayPlan = _tourPlanData.days[idx];
-                    if (!dayPlan || !dayPlan.schedule) return;
-                    
-                    const dayKey = dayPlan.date;
-                    
-                    // Clear existing custom items for this day
-                    window.travelApp.customItems[dayKey] = [];
-                    
-                    // Add all items from plan
-                    dayPlan.schedule.forEach(item => {
-                        window.travelApp.customItems[dayKey].push({
-                            id: 'tour_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
-                            title: item.name,
-                            time: item.time,
-                            type: item.type,
-                            note: item.tip || '',
-                            isCustom: true,
-                            fromGuide: item.from_guide || false
-                        });
-                    });
-                    appliedCount++;
-                });
-            } else if (_tourPlanData.recommendations) {
-                // Review mode: apply selected recommendations
-                const selectedRecs = [...document.querySelectorAll('.tour-rec-cb:checked')].map(cb => parseInt(cb.dataset.idx));
-                
-                selectedRecs.forEach(idx => {
-                    const rec = _tourPlanData.recommendations[idx];
-                    if (!rec) return;
-                    
-                    if (!window.travelApp.customItems[rec.day]) {
-                        window.travelApp.customItems[rec.day] = [];
-                    }
-                    
-                    if (rec.action === 'add') {
-                        window.travelApp.customItems[rec.day].push({
-                            id: 'rec_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
-                            title: rec.name,
-                            time: rec.time || '12:00',
-                            type: rec.type || '景點',
-                            isCustom: true
-                        });
-                        appliedCount++;
-                    } else if (rec.action === 'remove') {
-                        const items = window.travelApp.customItems[rec.day] || [];
-                        const removeIdx = items.findIndex(i => (i.title || i.name) === rec.name);
-                        if (removeIdx > -1) {
-                            items.splice(removeIdx, 1);
-                            appliedCount++;
-                        }
-                    }
-                });
-            }
-
-            // Save to localStorage
-            try {
-                localStorage.setItem('hanoi_customItems', JSON.stringify(window.travelApp.customItems || {}));
-            } catch(e) { console.error('Save error:', e); }
-
-            // Refresh display
-            if (window.travelApp.selectedDay) {
-                renderDaySchedule(window.travelApp.selectedDay);
-            }
-
-            document.getElementById('appliedSummary').textContent = isPlanning 
-                ? `已套用 ${appliedCount} 天的行程` 
-                : `已套用 ${appliedCount} 項修改`;
-            showOptimizeStep('optimizeStep4');
-            showToast(isPlanning ? `已套用 ${appliedCount} 天行程` : `已套用 ${appliedCount} 項修改`);
-        };
-
-        function saveCustomItemsToLocalStorage() {
-            try {
-                localStorage.setItem('hanoi_customItems', JSON.stringify(window.travelApp.customItems || {}));
-            } catch(e) { console.error('Save error:', e); }
-        }
 
         window.resetAiPlanner = function() {
             _aiPlanData = null;
@@ -3300,12 +2642,6 @@ ${prefs.includes('culture') ? '- 🏛 文化景點：優先安排歷史/文化�
 ${prefs.includes('market') ? '- 🛒 市集購物：安排夜市或市場，適合傍晚到夜間' : ''}
 ${prefs.includes('night') ? '- 🍺 夜生活：晚上9點後安排酒吧或夜間景點' : ''}` : '';
 
-            // Get transport constraints
-            const transportGuide = getTransportGuideForAI();
-            if (_transportConstraints.length > 0) {
-                addLog(`交通限制：${_transportConstraints.length} 項`);
-            }
-
             // Check which days have existing sheet itinerary items
             const sheetContext = selectedDays.map(d => {
                 const dayData = window.travelApp.itineraryData[d];
@@ -3313,17 +2649,6 @@ ${prefs.includes('night') ? '- 🍺 夜生活：晚上9點後安排酒吧或夜�
                 const sheetItems = (dayData?.items || []).map(i => i.title).join('、');
                 return `${d}：${accName ? '住宿:'+accName : '無住宿資訊'} | 表格已排:${sheetItems || '無'}`;
            }).join('\n');
-
-            // Collect already scheduled items to avoid duplicates
-            const alreadyScheduled = [];
-            selectedDays.forEach(d => {
-                const dayData = window.travelApp.itineraryData[d];
-                (dayData?.items || []).forEach(i => { if(i.title) alreadyScheduled.push(i.title); });
-                (window.travelApp.customItems?.[d] || []).forEach(i => { if(i.title || i.name) alreadyScheduled.push(i.title || i.name); });
-            });
-            const scheduledNote = alreadyScheduled.length > 0 
-                ? `\n═══ 已排定景點（請勿重複安排這些）═══\n${[...new Set(alreadyScheduled)].join('、')}\n` 
-                : '';
 
             const systemPrompt = `你是一位對河內瞭如指掌的資深旅遊規劃師，同時也是美食達人和咖啡愛好者。
 你擅長安排人性化的旅遊行程，深知旅人在不同時段的需求：
@@ -3339,8 +2664,6 @@ ${prefs.includes('night') ? '- 🍺 夜生活：晚上9點後安排酒吧或夜�
 2. 類型的合理搭配（不會連續安排三個景點，要穿插飲食）
 3. 每個地點的特性（例如：早上去人少的景點、咖啡廳適合下午去拍照）
 4. 實際的交通時間（兩個地點之間留15-30分鐘交通時間）
-5. 【重要】絕對不重複安排同一個景點（即使是不同天也不行）
-6. 【重要】嚴格遵守交通限制（航班、火車時間）
 
 回覆必須是有效的 JSON 格式，不要有任何前言或解釋。`;
 
@@ -3348,7 +2671,7 @@ ${prefs.includes('night') ? '- 🍺 夜生活：晚上9點後安排酒吧或夜�
 
 ═══ 可選景點清單（只能使用這些地點）═══
 ${placesList}
-${transportGuide}
+
 ═══ 行程設定 ═══
 需安排日期：${selectedDays.join('、')}
 每天出發時間：${_aiStartTime}
@@ -3357,8 +2680,8 @@ ${prefGuide}
 
 ═══ 現有行程參考 ═══
 ${sheetContext}
-${scheduledNote}
-═══ 規劃要求（必須全部遵守）═══
+
+═══ 規劃要求 ═══
 1. 每天第一站必須是早餐（從清單中找咖啡廳/餐廳/小吃類，標記 type:"早餐"）
 2. 上午安排1-2個景點（標記 type:"景點"）
 3. 午餐從清單中選適合的餐廳（標記 type:"午餐"）
@@ -3369,9 +2692,6 @@ ${scheduledNote}
 8. 如果某天清單中找不到合適的餐廳，可以標記 name 為「當地自行尋找」
 9. duration_min 要符合實際（早餐60-90分、景點90-180分、咖啡45-60分、午晚餐60-90分）
 10. tip 欄位寫一句有溫度的說明，例如「趁早上涼爽，在人少時感受這裡的寧靜」
-11. 【嚴格禁止】同一個景點絕對不能出現兩次（不同天也不行）
-12. 【嚴格遵守】如果有交通限制，必須確保行程時間符合要求（例：搭火車前要提早結束行程）
-13. 如果是搭夜間火車/巴士的那天，晚上的行程要在出發時間前2小時結束，讓旅客有時間回飯店拿行李、前往車站
 
 請回傳 JSON 格式：
 {
@@ -3407,68 +2727,6 @@ ${scheduledNote}
                 const data = JSON.parse(cleaned.slice(jStart, jEnd+1));
 
                 if (!data.days || data.days.length === 0) throw new Error('沒有產生任何行程');
-
-                // ═══ 重複景點篩除（程式碼層面強制去重）═══
-                // 標準化名稱：移除所有空格、標點、轉小寫
-                function normalizeName(name) {
-                    if (!name) return '';
-                    return name.toLowerCase()
-                        .replace(/\s+/g, '')
-                        .replace(/[，。、·\-\(\)（）「」【】]/g, '')
-                        .trim();
-                }
-                
-                const seenPlaces = new Set();
-                const seenPlacesOriginal = {}; // 保存原始名稱用於 log
-                let removedCount = 0;
-                let removedNames = [];
-                
-                // 先收集已存在於行程中的景點（所有天，不只選中的天）
-                Object.keys(window.travelApp.itineraryData).forEach(d => {
-                    const dayData = window.travelApp.itineraryData[d];
-                    (dayData?.items || []).forEach(i => { 
-                        if(i.title) {
-                            const norm = normalizeName(i.title);
-                            seenPlaces.add(norm);
-                            seenPlacesOriginal[norm] = i.title;
-                        }
-                    });
-                });
-                Object.keys(window.travelApp.customItems || {}).forEach(d => {
-                    (window.travelApp.customItems[d] || []).forEach(i => { 
-                        const name = i.title || i.name;
-                        if(name) {
-                            const norm = normalizeName(name);
-                            seenPlaces.add(norm);
-                            seenPlacesOriginal[norm] = name;
-                        }
-                    });
-                });
-                
-                addLog(`現有行程已有 ${seenPlaces.size} 個景點`);
-                
-                // 遍歷 AI 回傳的每一天，移除重複景點
-                data.days.forEach(day => {
-                    if (!day.schedule) return;
-                    day.schedule = day.schedule.filter(item => {
-                        const name = item.name || '';
-                        const norm = normalizeName(name);
-                        if (!norm || norm === '當地自行尋找' || norm === '当地自行寻找') return true;
-                        if (seenPlaces.has(norm)) {
-                            removedCount++;
-                            removedNames.push(`${day.date}: ${name}`);
-                            return false; // 移除重複
-                        }
-                        seenPlaces.add(norm);
-                        seenPlacesOriginal[norm] = name;
-                        return true;
-                    });
-                });
-                
-                if (removedCount > 0) {
-                    addLog(`⚠ 自動移除 ${removedCount} 個重複景點`);
-                    console.log('移除的重複景點:', removedNames);
-                }
 
                 _aiPlanData = data;
                 const totalSpots = data.days.reduce((s,d) => s + (d.schedule?.length||0), 0);
@@ -3646,6 +2904,493 @@ ${scheduledNote}
                     if (days.length) renderDay(days[0]);
                 }
             }, 150);
+        };
+
+        // ══════════════════════════════════════════════════════════════════
+        // TOUR DIRECTOR FUNCTIONS
+        // ══════════════════════════════════════════════════════════════════
+        let _tourMode = 'plan';
+        let _tourPlanData = null;
+        let _tourTransport = [];
+
+        window.openTourDirector = function() {
+            _tourPlanData = null;
+            _tourMode = 'plan';
+            
+            // Load transport from localStorage
+            try {
+                const saved = localStorage.getItem('hanoi_transport');
+                if (saved) _tourTransport = JSON.parse(saved);
+            } catch(e) { _tourTransport = []; }
+            
+            // Populate days
+            const days = Object.keys(window.travelApp.itineraryData).sort((a,b)=>{
+                const[am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);
+                return (am*100+(ad||0))-(bm*100+(bd||0));
+            });
+            
+            const dayBox = document.getElementById('tourDayCheckboxes');
+            if (dayBox) {
+                dayBox.innerHTML = days.map(d => `
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all bg-[#1a1f17] text-[#f5f0e8]">
+                        <input type="checkbox" value="${d}" class="tour-day-cb sr-only" checked>
+                        <span class="text-[11px] font-bold">${d}</span>
+                    </label>`).join('');
+                dayBox.querySelectorAll('label').forEach(lbl => {
+                    lbl.addEventListener('click', () => {
+                        setTimeout(() => {
+                            const checked = lbl.querySelector('input').checked;
+                            lbl.className = `flex items-center gap-2 px-3 py-1.5 rounded-[100px] cursor-pointer transition-all ${
+                                checked ? 'bg-[#1a1f17] text-[#f5f0e8]' : 'bg-[#f5f0e8] text-[#1a1f17]/50'}`;
+                        },0);
+                    });
+                });
+            }
+            
+            // Transport day select
+            const transportDaySelect = document.getElementById('tourTransportDay');
+            if (transportDaySelect) {
+                transportDaySelect.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join('');
+            }
+            
+            // Mode selection click handlers
+            document.querySelectorAll('.tour-mode-card').forEach(card => {
+                card.onclick = () => {
+                    const mode = card.dataset.mode;
+                    _tourMode = mode;
+                    document.querySelectorAll('.tour-mode-card').forEach(c => {
+                        const isActive = c.dataset.mode === mode;
+                        c.className = `tour-mode-card flex items-center gap-3 p-4 rounded-[14px] cursor-pointer ${isActive ? 'bg-[#1a1f17]' : 'bg-[#f5f0e8]'}`;
+                        c.querySelector('p.text-sm').className = `text-sm font-bold ${isActive ? 'text-[#f5f0e8]' : 'text-[#1a1f17]'}`;
+                        c.querySelector('p.text-\\[10px\\]').className = `text-[10px] ${isActive ? 'text-[#f5f0e8]/50' : 'text-[#1a1f17]/50'}`;
+                        const check = c.querySelector('.tour-check');
+                        check.className = `w-5 h-5 rounded-full border-2 flex items-center justify-center tour-check ${isActive ? 'border-[#f5f0e8]' : 'border-[#1a1f17]/30'}`;
+                        check.innerHTML = isActive ? '<div class="w-2.5 h-2.5 rounded-full bg-[#f5f0e8]"></div>' : '';
+                    });
+                    document.getElementById('tourActionBtn').textContent = mode === 'plan' ? '開始規劃' : '開始審核';
+                };
+            });
+            
+            renderTourTransportList();
+            updateTourTransportCount();
+            
+            showTourStep('tourStep1');
+            const modal = document.getElementById('tourModal');
+            modal.classList.add('open');
+            setTimeout(() => {
+                document.getElementById('tourModalBg').classList.add('visible');
+                document.getElementById('tourModalContent').classList.add('visible');
+            }, 10);
+            safeCreateIcons();
+        };
+
+        window.closeTourModal = function() {
+            document.getElementById('tourModalBg').classList.remove('visible');
+            document.getElementById('tourModalContent').classList.remove('visible');
+            setTimeout(() => document.getElementById('tourModal').classList.remove('open'), 350);
+        };
+
+        window.resetTourDirector = function() {
+            _tourPlanData = null;
+            showTourStep('tourStep1');
+        };
+
+        function showTourStep(id) {
+            ['tourStep1','tourStep2','tourStep3','tourStep4'].forEach(s => {
+                const el = document.getElementById(s);
+                if (el) el.classList.toggle('hidden', s !== id);
+            });
+            safeCreateIcons();
+        }
+
+        function addTourLog(msg) {
+            const log = document.getElementById('tourLog');
+            if (!log) return;
+            const d = document.createElement('div');
+            d.className = 'flex items-center gap-2';
+            d.innerHTML = `<span class="text-[#3c4a35]">✓</span><span>${msg}</span>`;
+            log.appendChild(d);
+        }
+
+        // Transport management
+        window.toggleTourTransport = function() {
+            const section = document.getElementById('tourTransportSection');
+            const chevron = document.getElementById('tourTransportChevron');
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                section.classList.add('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        };
+
+        window.addTourTransport = function() {
+            const day = document.getElementById('tourTransportDay').value;
+            const type = document.getElementById('tourTransportType').value;
+            const time = document.getElementById('tourTransportTime').value;
+            const desc = document.getElementById('tourTransportDesc').value.trim();
+            if (!day || !time) { showToast('請選擇日期和時間'); return; }
+            const typeLabels = { 'flight_arr': '✈️ 抵達', 'flight_dep': '✈️ 離開', 'train': '🚂 火車', 'bus': '🚌 巴士' };
+            _tourTransport.push({ id: 'tr_' + Date.now(), day, type, time, desc, label: typeLabels[type] });
+            localStorage.setItem('hanoi_transport', JSON.stringify(_tourTransport));
+            renderTourTransportList();
+            updateTourTransportCount();
+            document.getElementById('tourTransportDesc').value = '';
+        };
+
+        window.removeTourTransport = function(id) {
+            _tourTransport = _tourTransport.filter(t => t.id !== id);
+            localStorage.setItem('hanoi_transport', JSON.stringify(_tourTransport));
+            renderTourTransportList();
+            updateTourTransportCount();
+        };
+
+        function renderTourTransportList() {
+            const list = document.getElementById('tourTransportList');
+            if (!list) return;
+            if (_tourTransport.length === 0) {
+                list.innerHTML = '<p class="text-[10px] text-[#1a1f17]/30 text-center py-1">尚未新增交通限制</p>';
+                return;
+            }
+            list.innerHTML = _tourTransport.map(t => `
+                <div class="flex items-center justify-between p-1.5 bg-[#f5f0e8] rounded-[6px]">
+                    <span><strong>${t.day}</strong> ${t.time} ${t.label} ${t.desc ? '· '+t.desc : ''}</span>
+                    <button onclick="removeTourTransport('${t.id}')" class="text-red-400 hover:text-red-600 px-1">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function updateTourTransportCount() {
+            const countEl = document.getElementById('tourTransportCount');
+            if (countEl) {
+                if (_tourTransport.length > 0) {
+                    countEl.textContent = _tourTransport.length;
+                    countEl.classList.remove('hidden');
+                } else {
+                    countEl.classList.add('hidden');
+                }
+            }
+        }
+
+        function getTourTransportGuide() {
+            if (_tourTransport.length === 0) return '';
+            const lines = _tourTransport.map(t => {
+                if (t.type === 'flight_arr') return `- ${t.day} ${t.time} 航班抵達：當天行程從這時間之後開始`;
+                if (t.type === 'flight_dep') return `- ${t.day} ${t.time} 航班離開：當天行程必須提前3-4小時結束`;
+                if (t.type === 'train') return `- ${t.day} ${t.time} 搭火車：當天行程必須提前2小時結束`;
+                if (t.type === 'bus') return `- ${t.day} ${t.time} 搭巴士：當天行程必須提前1小時結束`;
+                return `- ${t.day} ${t.time} ${t.label}`;
+            }).join('\n');
+            return `\n═══ 交通限制（必須遵守）═══\n${lines}\n`;
+        }
+
+        // Main Tour Director function
+        window.runTourDirector = async function() {
+            const selectedDays = [...document.querySelectorAll('.tour-day-cb:checked')].map(cb => cb.value);
+            if (selectedDays.length === 0) { showToast('請選擇至少一天'); return; }
+
+            showTourStep('tourStep2');
+            document.getElementById('tourLog').innerHTML = '';
+            
+            const isPlanning = _tourMode === 'plan';
+            document.getElementById('tourLoadingTitle').textContent = isPlanning ? '導遊規劃中…' : '導遊審核中…';
+            document.getElementById('tourStatus').textContent = isPlanning ? '正在分析景點清單' : '正在檢查現有行程';
+
+            const exploreData = window.travelApp.exploreData || [];
+            addTourLog(`Google Sheet 有 ${exploreData.length} 個景點`);
+
+            const existingItinerary = selectedDays.map(day => {
+                const dayData = window.travelApp.itineraryData[day] || { items: [] };
+                const customItems = window.travelApp.customItems?.[day] || [];
+                return {
+                    date: day,
+                    accommodation: dayData.accommodation?.title || '',
+                    sheetItems: (dayData.items || []).map(i => ({ name: i.title, type: i.type, time: i.time })),
+                    customItems: customItems.map(i => ({ name: i.title || i.name, type: i.type, time: i.time }))
+                };
+            });
+            
+            addTourLog(`選擇了 ${selectedDays.length} 天`);
+
+            const placesList = exploreData.map(p => {
+                return `【${p.name || p.title}】類別:${p.category || '景點'} | 地區:${p.area || ''} | 評分:${p.rating || ''} | 營業:${p.openTime || ''}`;
+            }).join('\n');
+
+            const transportGuide = getTourTransportGuide();
+            if (_tourTransport.length > 0) addTourLog(`交通限制：${_tourTransport.length} 項`);
+
+            const systemPrompt = `你是一位有20年經驗的越南河內資深導遊，專門帶台灣旅客自由行。
+
+你的專業：熟悉河內每個區域，知道每個景點最適合的時段，了解台灣旅客喜好，會考慮體力分配。
+
+規劃原則：優先使用客人清單上的景點，清單不足時補充私房推薦，每天行程有節奏（早餐→景點→午餐→咖啡→景點→晚餐），同一天景點盡量在同一區域，絕對不讓同一個景點出現兩次。
+
+你必須回覆有效的 JSON 格式。`;
+
+            let userPrompt;
+            if (isPlanning) {
+                userPrompt = `請幫我規劃河內旅遊行程。
+
+═══ 客人的景點清單（優先使用）═══
+${placesList || '（清單為空，請用你的推薦）'}
+${transportGuide}
+═══ 需要規劃的日期 ═══
+${selectedDays.join('、')}
+
+═══ 現有資料參考 ═══
+${JSON.stringify(existingItinerary, null, 2)}
+
+═══ 規劃要求 ═══
+1. 每天從早餐開始到晚餐結束
+2. 優先使用清單上的景點，名稱要完全一致
+3. 清單沒有的可以補充推薦（標記 from_guide: true）
+4. 同一個景點只能出現一次
+5. 每天 5-7 個地點
+6. 如有交通限制必須遵守
+
+═══ 回覆格式（JSON）═══
+{
+  "overview": "整體規劃說明",
+  "days": [
+    {
+      "date": "4/17",
+      "theme": "今日主題",
+      "schedule": [
+        { "time": "08:00", "name": "景點名稱", "type": "早餐", "duration": 60, "tip": "說明", "from_guide": false }
+      ]
+    }
+  ],
+  "tips": ["旅遊小提醒"]
+}
+type 可以是：早餐、午餐、晚餐、咖啡、景點、購物、夜間
+請用繁體中文回覆。`;
+            } else {
+                userPrompt = `請審核這個河內行程，找出問題並提供建議。
+
+═══ 現有行程 ═══
+${JSON.stringify(existingItinerary, null, 2)}
+
+═══ 客人的景點清單 ═══
+${placesList}
+${transportGuide}
+═══ 回覆格式（JSON）═══
+{
+  "score": 78,
+  "overview": "整體評價",
+  "issues": [
+    { "priority": "high", "title": "問題標題", "description": "問題說明", "suggestion": "建議" }
+  ],
+  "recommendations": [
+    { "day": "4/17", "action": "add", "name": "景點名稱", "time": "15:00", "reason": "原因" }
+  ],
+  "highlights": ["做得好的地方"],
+  "tips": ["旅遊小提醒"]
+}
+priority: high/medium/low, action: add/remove/move
+請用繁體中文回覆。`;
+            }
+
+            addTourLog('等待導遊回覆…');
+
+            try {
+                const raw = await callClaude(systemPrompt, userPrompt);
+                addTourLog('收到回覆，解析中…');
+
+                const cleaned = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+                const jStart = cleaned.indexOf('{');
+                const jEnd = cleaned.lastIndexOf('}');
+                if (jStart === -1) throw new Error('回覆格式錯誤');
+                _tourPlanData = JSON.parse(cleaned.slice(jStart, jEnd+1));
+                _tourPlanData._mode = _tourMode;
+                _tourPlanData._selectedDays = selectedDays;
+
+                if (isPlanning) {
+                    // Deduplicate
+                    const seen = new Set();
+                    let removed = 0;
+                    (_tourPlanData.days || []).forEach(day => {
+                        if (!day.schedule) return;
+                        day.schedule = day.schedule.filter(item => {
+                            const name = (item.name || '').toLowerCase().replace(/\s+/g,'');
+                            if (!name || name.includes('自行尋找')) return true;
+                            if (seen.has(name)) { removed++; return false; }
+                            seen.add(name);
+                            return true;
+                        });
+                    });
+                    if (removed > 0) addTourLog(`自動移除 ${removed} 個重複景點`);
+                }
+
+                renderTourPlanResult(_tourPlanData);
+                showTourStep('tourStep3');
+
+            } catch(e) {
+                console.error('Tour Director error:', e);
+                document.getElementById('tourStatus').textContent = '發生錯誤，請稍後再試';
+                addTourLog('⚠ 錯誤：' + (e.message || String(e)));
+            }
+        };
+
+        function renderTourPlanResult(data) {
+            const isPlanning = data._mode === 'plan';
+            
+            document.getElementById('tourResultTitle').textContent = isPlanning ? '導遊規劃' : '審核報告';
+            document.getElementById('tourSummary').textContent = isPlanning 
+                ? `${data.days?.length || 0} 天完整行程` 
+                : `${data.issues?.length || 0} 項建議`;
+
+            const scoreEl = document.getElementById('tourScore');
+            if (isPlanning) {
+                scoreEl.classList.add('hidden');
+            } else {
+                scoreEl.classList.remove('hidden');
+                const score = data.score || 75;
+                scoreEl.innerHTML = `<p class="text-3xl font-black ${score >= 80 ? 'text-green-600' : score >= 60 ? 'text-amber-600' : 'text-red-600'}">${score}</p><p class="text-[9px] text-[#1a1f17]/40">整體評分</p>`;
+            }
+
+            document.getElementById('tourOverview').innerHTML = `<p class="leading-relaxed">${data.overview || ''}</p>`;
+
+            const container = document.getElementById('tourPlanResult');
+            
+            if (isPlanning && data.days) {
+                container.innerHTML = data.days.map((day, dayIdx) => {
+                    const scheduleHtml = (day.schedule || []).map((item, itemIdx) => {
+                        const isFromGuide = item.from_guide;
+                        return `
+                            <div class="flex items-start gap-2 py-2 ${itemIdx < day.schedule.length - 1 ? 'border-b border-[#1a1f17]/05' : ''}">
+                                <span class="text-[10px] text-[#1a1f17]/40 w-12 flex-shrink-0 pt-0.5">${item.time}</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-[#1a1f17]">${item.name}</span>
+                                        ${isFromGuide ? '<span class="text-[8px] bg-[#3c4a35] text-white px-1.5 py-0.5 rounded-full">導遊推薦</span>' : ''}
+                                    </div>
+                                    <p class="text-[10px] text-[#1a1f17]/50">${item.tip || ''}</p>
+                                </div>
+                                <span class="text-[9px] px-2 py-0.5 rounded-full bg-[#f5f0e8] text-[#1a1f17]/60">${item.type}</span>
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="border border-[#1a1f17]/10 rounded-[14px] overflow-hidden">
+                            <label class="flex items-center gap-3 p-3 bg-[#f5f0e8] cursor-pointer">
+                                <input type="checkbox" class="tour-day-apply-cb accent-[#3c4a35] w-5 h-5" data-day-idx="${dayIdx}" checked>
+                                <div class="flex-1">
+                                    <p class="text-sm font-bold text-[#1a1f17]">${day.date}</p>
+                                    <p class="text-[10px] text-[#1a1f17]/50">${day.theme || ''}</p>
+                                </div>
+                                <span class="text-[10px] text-[#1a1f17]/40">${day.schedule?.length || 0} 個地點</span>
+                            </label>
+                            <div class="p-3 bg-white/50">${scheduleHtml}</div>
+                        </div>
+                    `;
+                }).join('');
+            } else if (data.issues || data.recommendations) {
+                let html = '';
+                if (data.issues && data.issues.length > 0) {
+                    html += data.issues.map(issue => {
+                        const style = issue.priority === 'high' ? 'border-l-red-500 bg-red-50' 
+                            : issue.priority === 'medium' ? 'border-l-amber-500 bg-amber-50' : 'border-l-blue-500 bg-blue-50';
+                        return `<div class="p-3 rounded-[12px] border-l-4 ${style} mb-2">
+                            <p class="text-sm font-bold text-[#1a1f17] mb-1">${issue.title}</p>
+                            <p class="text-xs text-[#1a1f17]/60 mb-2">${issue.description}</p>
+                            <p class="text-xs text-[#3c4a35]">💡 ${issue.suggestion}</p>
+                        </div>`;
+                    }).join('');
+                }
+                if (data.recommendations && data.recommendations.length > 0) {
+                    html += `<p class="text-[10px] font-bold text-[#3c4a35] mt-4 mb-2">推薦修改</p>`;
+                    html += data.recommendations.map((rec, idx) => `
+                        <label class="flex items-start gap-3 p-3 rounded-[12px] bg-[#f5f0e8] cursor-pointer mb-2">
+                            <input type="checkbox" class="tour-rec-cb accent-[#3c4a35] w-4 h-4 mt-0.5" data-idx="${idx}" checked>
+                            <div class="flex-1">
+                                <p class="text-xs font-bold text-[#1a1f17]">${rec.day} · ${rec.action === 'add' ? '新增' : rec.action === 'remove' ? '移除' : '調整'} ${rec.name}</p>
+                                <p class="text-[10px] text-[#1a1f17]/50">${rec.reason || ''}</p>
+                            </div>
+                        </label>
+                    `).join('');
+                }
+                container.innerHTML = html || '<p class="text-center py-6 text-[#1a1f17]/50">🎉 行程很完美！</p>';
+            }
+
+            let extrasHtml = '';
+            if (data.highlights && data.highlights.length > 0) {
+                extrasHtml += `<div class="bg-green-50 rounded-[12px] p-3 mb-2"><p class="text-[10px] font-bold text-green-700 mb-1">✨ 亮點</p><ul class="text-xs text-green-600 space-y-0.5">${data.highlights.map(h => `<li>• ${h}</li>`).join('')}</ul></div>`;
+            }
+            if (data.tips && data.tips.length > 0) {
+                extrasHtml += `<div class="bg-[#f5f0e8] rounded-[12px] p-3"><p class="text-[10px] font-bold text-[#3c4a35] mb-1">💡 小提醒</p><ul class="text-xs text-[#1a1f17]/60 space-y-0.5">${data.tips.map(t => `<li>• ${t}</li>`).join('')}</ul></div>`;
+            }
+            document.getElementById('tourExtras').innerHTML = extrasHtml;
+        }
+
+        window.applyTourPlan = function() {
+            if (!_tourPlanData) return;
+            
+            const isPlanning = _tourPlanData._mode === 'plan';
+            let appliedCount = 0;
+
+            if (isPlanning && _tourPlanData.days) {
+                const selectedDayIdxs = [...document.querySelectorAll('.tour-day-apply-cb:checked')].map(cb => parseInt(cb.dataset.dayIdx));
+                
+                selectedDayIdxs.forEach(idx => {
+                    const dayPlan = _tourPlanData.days[idx];
+                    if (!dayPlan || !dayPlan.schedule) return;
+                    
+                    const dayKey = dayPlan.date;
+                    window.travelApp.customItems[dayKey] = [];
+                    
+                    dayPlan.schedule.forEach(item => {
+                        window.travelApp.customItems[dayKey].push({
+                            id: 'tour_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+                            title: item.name,
+                            time: item.time,
+                            type: item.type,
+                            note: item.tip || '',
+                            isCustom: true,
+                            fromGuide: item.from_guide || false
+                        });
+                    });
+                    appliedCount++;
+                });
+            } else if (_tourPlanData.recommendations) {
+                const selectedRecs = [...document.querySelectorAll('.tour-rec-cb:checked')].map(cb => parseInt(cb.dataset.idx));
+                
+                selectedRecs.forEach(idx => {
+                    const rec = _tourPlanData.recommendations[idx];
+                    if (!rec) return;
+                    
+                    if (!window.travelApp.customItems[rec.day]) window.travelApp.customItems[rec.day] = [];
+                    
+                    if (rec.action === 'add') {
+                        window.travelApp.customItems[rec.day].push({
+                            id: 'rec_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+                            title: rec.name,
+                            time: rec.time || '12:00',
+                            type: rec.type || '景點',
+                            isCustom: true
+                        });
+                        appliedCount++;
+                    } else if (rec.action === 'remove') {
+                        const items = window.travelApp.customItems[rec.day] || [];
+                        const removeIdx = items.findIndex(i => (i.title || i.name) === rec.name);
+                        if (removeIdx > -1) { items.splice(removeIdx, 1); appliedCount++; }
+                    }
+                });
+            }
+
+            try {
+                localStorage.setItem('hanoi_customItems', JSON.stringify(window.travelApp.customItems || {}));
+                window.saveCustomItemsToCloud(window.travelApp.customItems);
+            } catch(e) { console.error('Save error:', e); }
+
+            if (window.travelApp.selectedDay) renderDaySchedule(window.travelApp.selectedDay);
+
+            document.getElementById('tourAppliedSummary').textContent = isPlanning 
+                ? `已套用 ${appliedCount} 天的行程` 
+                : `已套用 ${appliedCount} 項修改`;
+            showTourStep('tourStep4');
+            showToast(isPlanning ? `已套用 ${appliedCount} 天行程` : `已套用 ${appliedCount} 項修改`);
         };
 
         // Keep backward compat stubs
